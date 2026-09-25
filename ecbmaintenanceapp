@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECB Reinigungssysteme - Digitales Wartungssystem (Cloud)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- jsPDF for professional PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ecbGreen: '#65a30d',
+                        ecbDarkGreen: '#3f6212',
+                        ecbLightGreen: '#ecfccb',
+                        ecbDark: '#0f172a',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .signature-canvas { touch-action: none; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
+
+    <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-50 backdrop-blur-md bg-opacity-95">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
+            <div class="flex items-center space-x-3.5">
+                <!-- EXAKT REPRODUZIERTES ORIGINAL-LOGO MIT GESCHWUNGENEN WELLEN -->
+                <div class="w-12 h-12 rounded-2xl bg-[#65a30d] p-0.5 shadow-md flex items-center justify-center transform hover:rotate-3 transition duration-300 overflow-hidden border border-white/20">
+                    <svg viewBox="0 0 500 500" class="w-full h-full rounded-xl">
+                        <rect width="500" height="500" fill="#65a30d"/>
+                        <path d="M 20 330 C 80 270 200 270 300 320 C 380 360 430 360 480 300 C 470 320 420 390 350 390 C 250 390 120 410 40 370 C 25 362 20 345 20 330 Z" fill="#ffffff" opacity="0.95"/>
+                        <path d="M 110 390 C 180 370 270 340 380 395 C 420 415 450 400 465 385 C 445 405 390 425 320 425 C 220 425 150 420 110 390 Z" fill="#ffffff" opacity="0.85"/>
+                        <text x="155" y="210" font-family="Inter, sans-serif" font-weight="700" font-style="italic" font-size="145" fill="#ffffff">ecb</text>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight flex items-center gap-2">
+                        ECB Reinigungssysteme
+                    </h1>
+                    <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse"></span>
+                        Digitales Wartungssystem (Projekt: ecb-maintenance)
+                    </p>
+                </div>
+            </div>
+            <nav class="flex items-center space-x-2 mt-3 sm:mt-0 flex-wrap gap-2">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group"></i> Dashboard
+                </button>
+                <button onclick="switchTab('dguv')" id="nav-dguv" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2">
+                    <i class="fa-solid fa-plug-circle-check"></i> DGUV V3 <span id="dguv-count" class="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+                </button>
+                <button onclick="switchTab('history')" id="nav-history" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Protokolle <span id="protocol-count" class="bg-ecbGreen text-white text-xs px-2 py-0.5 rounded-full">0</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
+
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="space-y-8 animate-fade-in">
+            <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
+                <div class="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-ecbLightGreen/40 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="relative z-10 max-w-2xl">
+                    <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen- &amp; Maschinenwartung</h2>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll mit kompletter Einzelpunkt-Prüfung, Fotodokumentation und digitaler Signatur in Echtzeit in der Cloud zu speichern.</p>
+                </div>
+            </div>
+
+            <!-- CATEGORY CARDS GRID -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Waschmaschinen -->
+                <div onclick="openWashingMachineMenu()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-ecbGreen hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+                    <div>
+                        <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
+                            <i class="fa-solid fa-shirt"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900">Waschmaschinen</h3>
+                        <p class="text-xs font-semibold text-ecbGreen mt-1 uppercase tracking-wider">Intervall: Alle 2 Wochen</p>
+                        <p class="text-sm text-slate-600 mt-3">Milnor Maschinen 1-4 mit detaillierter Einzelauswertung aller Prüfpunkte.</p>
+                    </div>
+                    <div class="mt-8 flex items-center justify-between text-sm font-bold text-ecbDarkGreen group-hover:text-ecbGreen">
+                        <span>Wartung starten</span>
+                        <div class="w-8 h-8 rounded-full bg-ecbLightGreen flex items-center justify-center group-hover:translate-x-1 transition">
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trockner -->
+                <div onclick="openDryerMenu()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-amber-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+                    <div>
+                        <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
+                            <i class="fa-solid fa-wind"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900">Trockner</h3>
+                        <p class="text-xs font-semibold text-amber-600 mt-1 uppercase tracking-wider">Intervall: Alle 4 Wochen</p>
+                        <p class="text-sm text-slate-600 mt-3">Trockner 1-4 mit detaillierten Prüfpunkten &amp; Fotodokumentation.</p>
+                    </div>
+                    <div class="mt-8 flex items-center justify-between text-sm font-bold text-amber-700 group-hover:text-amber-600">
+                        <span>Wartung starten</span>
+                        <div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center group-hover:translate-x-1 transition">
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kompressor Routine -->
+                <div onclick="openCompressorRoutine()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-sky-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+                    <div>
+                        <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
+                            <i class="fa-solid fa-gauge-high"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900">Kompressor Wartung</h3>
+                        <p class="text-xs font-semibold text-sky-600 mt-1 uppercase tracking-wider">Intervall: Alle 2 Wochen</p>
+                        <p class="text-sm text-slate-600 mt-3">Betriebsstunden, Ölstand, Keilriemen, Filter &amp; Behälter prüfen.</p>
+                    </div>
+                    <div class="mt-8 flex items-center justify-between text-sm font-bold text-sky-700 group-hover:text-sky-600">
+                        <span>Wartung starten</span>
+                        <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center group-hover:translate-x-1 transition">
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kompressor Jahreswartung -->
+                <div onclick="openCompressorAnnual()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-purple-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+                    <div>
+                        <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
+                            <i class="fa-solid fa-calendar-days"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900">Kompressor Jahreswartung</h3>
+                        <p class="text-xs font-semibold text-purple-600 mt-1 uppercase tracking-wider">Alle 3.000 Std. / 180 Tage</p>
+                        <p class="text-sm text-slate-600 mt-3">Ölwechsel, Filterwechsel, Ölabscheider &amp; Sichtkontrolle.</p>
+                    </div>
+                    <div class="mt-8 flex items-center justify-between text-sm font-bold text-purple-700 group-hover:text-purple-600">
+                        <span>Wartung starten</span>
+                        <div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center group-hover:translate-x-1 transition">
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DGUV V3 TAB -->
+        <div id="tab-dguv" class="hidden space-y-6 animate-fade-in">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
+                <div>
+                    <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Prüfmanagement</span>
+                    <h2 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen (Elektrische Betriebsmittel)</h2>
+                    <p class="text-sm text-slate-600 mt-1">Erfassen Sie alle Geräte, hinterlegen Sie Fälligkeitstage und laden Sie Messprotokolle hoch, um den Status automatisch auf „Erledigt“ zu setzen (Cloud-synchronisiert).</p>
+                </div>
+                <button onclick="openDguvModal()" class="px-5 py-3 bg-gradient-to-r from-sky-600 to-sky-700 hover:opacity-95 text-white rounded-2xl font-bold text-sm transition shadow-lg shadow-sky-600/20 flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-plus"></i> Neues Gerät erfassen
+                </button>
+            </div>
+            <div id="dguv-devices-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+
+        <!-- HISTORY TAB -->
+        <div id="tab-history" class="hidden space-y-6 animate-fade-in">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle (Cloud Historie)</h2>
+                    <p class="text-sm text-slate-600 mt-1">Hier finden Sie alle archivierten Protokolle mit Zeitstempel, Einzelpunkt-Prüfung, PDF-Export und E-Mail-Versand.</p>
+                </div>
+                <button onclick="clearHistory()" class="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-bold transition flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-trash-can"></i> Gesamte Historie leeren
+                </button>
+            </div>
+            <div id="protocols-container" class="space-y-4"></div>
+        </div>
+
+        <!-- FORM VIEW -->
+        <div id="form-view" class="hidden space-y-6 animate-fade-in">
+            <button onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 transition shadow-sm flex items-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-arrow-left"></i> Zurück zur Übersicht
+            </button>
+            <div id="dynamic-form-content" class="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200/80"></div>
+        </div>
+
+    </main>
+
+    <!-- DGUV DEVICE MODAL -->
+    <div id="modal-dguv" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+                <h3 class="text-xl font-extrabold text-slate-900">Neues Gerät für DGUV V3 erfassen</h3>
+                <button onclick="closeDguvModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form onsubmit="saveDguvDevice(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-800 mb-1.5">Gerätebezeichnung / Inventar-Nr.: <span class="text-red-500">*</span></label>
+                    <input type="text" id="dguv-dev-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium" placeholder="z. B. Industriestaubsauger #2">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-800 mb-1.5">Standort / Abteilung: <span class="text-red-500">*</span></label>
+                    <input type="text" id="dguv-dev-location" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium" placeholder="z. B. Waschebene Halle 1">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-800 mb-1.5">Nächster Fälligkeitstermin: <span class="text-red-500">*</span></label>
+                    <input type="date" id="dguv-dev-duedate" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium">
+                </div>
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold shadow-lg shadow-sky-600/20 transition cursor-pointer">Gerät speichern &amp; Prüftermin anlegen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- GENERAL MESSAGE MODAL -->
+    <div id="modal-message" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl border border-slate-100 text-center">
+            <div id="modal-icon" class="w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h3 id="modal-title" class="text-xl font-extrabold text-slate-900">Meldung</h3>
+            <p id="modal-text" class="text-sm text-slate-600 leading-relaxed"></p>
+            <div class="pt-2">
+                <button onclick="closeModal()" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-2xl font-bold shadow-lg shadow-ecbGreen/20 transition cursor-pointer">Verstanden</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Project ecb-maintenance connection configuration
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-maintenance';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyDummyKeyForLocalTesting",
+            authDomain: "ecb-maintenance.firebaseapp.com",
+            projectId: "ecb-maintenance",
+            storageBucket: "ecb-maintenance.appspot.com",
+            messagingSenderId: "229926423123",
+            appId: "1:229926423123:web:ecbmaintenance"
+        };
+
+        let app, db, auth, userId = null;
+        let protocols = [];
+        let dguvDevices = [];
+        let activePhotos = [];
+        let signaturePadInstance = null;
+
+        window.onload = async function() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
+                        initFirestoreListeners();
+                    }
+                });
+            } catch (err) {
+                console.warn("Firebase Init Fallback (Offline/Local mode):", err);
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
+                protocols = JSON.parse(localStorage.getItem('ecb_protocols_offline') || '[]');
+                dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_offline') || '[]');
+                updateUI();
+            }
+        }
+
+        function initFirestoreListeners() {
+            if (!userId) return;
+
+            // Public / shared collaboration path per rules for project ecb-maintenance
+            const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
+            onSnapshot(protocolsCol, (snapshot) => {
+                protocols = [];
+                snapshot.forEach(docSnap => {
+                    protocols.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                });
+                protocols.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+                updateUI();
+            }, (error) => {
+                console.error("Protocols listener error:", error);
+            });
+
+            const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
+            onSnapshot(dguvCol, (snapshot) => {
+                dguvDevices = [];
+                snapshot.forEach(docSnap => {
+                    dguvDevices.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                });
+                updateUI();
+            }, (error) => {
+                console.error("DGUV listener error:", error);
+            });
+        }
+
+        window.switchTab = function(tabId) {
+            document.getElementById('tab-dashboard').classList.add('hidden');
+            document.getElementById('tab-dguv').classList.add('hidden');
+            document.getElementById('tab-history').classList.add('hidden');
+            document.getElementById('form-view').classList.add('hidden');
+
+            document.getElementById('nav-dashboard').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2";
+            document.getElementById('nav-dguv').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2";
+            document.getElementById('nav-history').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2";
+
+            if (tabId === 'dashboard') {
+                document.getElementById('tab-dashboard').classList.remove('hidden');
+                document.getElementById('nav-dashboard').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2";
+            } else if (tabId === 'dguv') {
+                document.getElementById('tab-dguv').classList.remove('hidden');
+                document.getElementById('nav-dguv').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2";
+                renderDguvDevices();
+            } else if (tabId === 'history') {
+                document.getElementById('tab-history').classList.remove('hidden');
+                document.getElementById('nav-history').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2";
+                renderHistory();
+            } else if (tabId === 'form') {
+                document.getElementById('form-view').classList.remove('hidden');
+                setTimeout(() => {
+                    initSignaturePad();
+                }, 200);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.showModal = function(title, text, isSuccess = true) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-text').innerText = text;
+            const iconDiv = document.getElementById('modal-icon');
+            if (isSuccess) {
+                iconDiv.className = "w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner";
+                iconDiv.innerHTML = '<i class="fa-solid fa-check"></i>';
+            } else {
+                iconDiv.className = "w-16 h-16 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl mx-auto shadow-inner";
+                iconDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            }
+            document.getElementById('modal-message').classList.remove('hidden');
+        }
+
+        window.closeModal = function() {
+            document.getElementById('modal-message').classList.add('hidden');
+        }
+
+        function updateUI() {
+            updateProtocolCount();
+            updateDguvCount();
+            renderHistory();
+            renderDguvDevices();
+        }
+
+        function renderCommonHeaderFields() {
+            return `
+                <div class="p-6 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-4 mb-8 shadow-sm">
+                    <div class="flex items-center gap-2 text-ecbDarkGreen font-bold text-sm border-b border-slate-200 pb-3">
+                        <i class="fa-solid fa-user-shield text-base"></i> Mitarbeiter-Authentifizierung &amp; Zeitstempel
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-800 mb-1.5">Name des zuständigen Technikers (Pflichtfeld): <span class="text-red-500">*</span></label>
+                        <input type="text" id="employee-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-white shadow-sm font-medium" placeholder="Vor- und Nachname eintragen...">
+                    </div>
+                    <div class="text-xs text-slate-500 flex items-center gap-1.5">
+                        <i class="fa-regular fa-clock text-ecbGreen"></i> Ein rechtssicherer Zeitstempel (Datum &amp; Uhrzeit) wird automatisch beim Absenden generiert.
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- WASHING MACHINE FORM ---
+        window.openWashingMachineMenu = function() {
+            const container = document.getElementById('dynamic-form-content');
+            let html = `
+                <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Waschmaschinen</span>
+                        <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungsprotokoll: Waschmaschinen (Milnor)</h2>
+                        <p class="text-sm text-slate-500 mt-0.5">Intervall: Alle 2 Wochen</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-ecbLightGreen flex items-center justify-center text-ecbDarkGreen text-xl font-bold shadow-sm">
+                        <i class="fa-solid fa-shirt"></i>
+                    </div>
+                </div>
+                <form id="maintenance-form" onsubmit="submitProtocol(event, 'Waschmaschine')" class="space-y-8">
+                    ${renderCommonHeaderFields()}
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-800 mb-2">Maschine auswählen:</label>
+                        <select id="machine-select" class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-white shadow-sm font-medium">
+                            <option value="Waschmaschine 1 (Milnor)">Waschmaschine 1 - Milnor</option>
+                            <option value="Waschmaschine 2 (Milnor)">Waschmaschine 2 - Milnor</option>
+                            <option value="Waschmaschine 3 (Milnor)">Waschmaschine 3 - Milnor</option>
+                            <option value="Waschmaschine 4 (Milnor)">Waschmaschine 4 - Milnor</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Detaillierte Prüfpunkte (Alle Punkte müssen einzeln bestätigt werden)</h3>
+                        ${renderCheckPoint(1, 'Schmieren der Maschine', true)}
+                        ${renderCheckPoint(2, 'Reinigen der Maschine', true)}
+                        ${renderCheckPoint(3, 'Maschine auf Mängelfreiheit prüfen', true)}
+                        ${renderCheckPoint(4, 'Wassertank gereinigt', true)}
+                    </div>
+
+                    ${renderPhotoSection()}
+                    ${renderRemarksSection()}
+                    ${renderSignatureSection()}
+
+                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-ecbDarkGreen to-ecbGreen hover:opacity-95 text-white rounded-2xl font-extrabold shadow-xl shadow-ecbGreen/20 transition text-base flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Protokoll speichern, in Cloud sichern &amp; PDF erstellen
+                    </button>
+                </form>
+            `;
+            container.innerHTML = html;
+            activePhotos = [];
+            switchTab('form');
+        }
+
+        // --- DRYER FORM ---
+        window.openDryerMenu = function() {
+            const container = document.getElementById('dynamic-form-content');
+            let html = `
+                <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold uppercase tracking-wider">Trockner</span>
+                        <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungsprotokoll: Trockner</h2>
+                        <p class="text-sm text-slate-500 mt-0.5">Intervall: Alle 4 Wochen</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 text-xl font-bold shadow-sm">
+                        <i class="fa-solid fa-wind"></i>
+                    </div>
+                </div>
+                <form id="maintenance-form" onsubmit="submitProtocol(event, 'Trockner')" class="space-y-8">
+                    ${renderCommonHeaderFields()}
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-800 mb-2">Trockner auswählen:</label>
+                        <select id="machine-select" class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white shadow-sm font-medium">
+                            <option value="Trockner 1">Trockner 1</option>
+                            <option value="Trockner 2">Trockner 2</option>
+                            <option value="Trockner 3">Trockner 3</option>
+                            <option value="Trockner 4">Trockner 4</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Detaillierte Prüfpunkte (Alle Punkte müssen einzeln bestätigt werden)</h3>
+                        ${renderCheckPoint(1, 'Gründliche Reinigung des Trockners', true)}
+                        ${renderCheckPoint(2, 'Trockner ohne Mängel geprüft', true)}
+                    </div>
+
+                    ${renderPhotoSection()}
+                    ${renderRemarksSection()}
+                    ${renderSignatureSection()}
+
+                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-ecbDarkGreen to-ecbGreen hover:opacity-95 text-white rounded-2xl font-extrabold shadow-xl shadow-ecbGreen/20 transition text-base flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Protokoll speichern, in Cloud sichern &amp; PDF erstellen
+                    </button>
+                </form>
+            `;
+            container.innerHTML = html;
+            activePhotos = [];
+            switchTab('form');
+        }
+
+        // --- COMPRESSOR ROUTINE MAINTENANCE ---
+        window.openCompressorRoutine = function() {
+            const container = document.getElementById('dynamic-form-content');
+            let html = `
+                <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Kompressor</span>
+                        <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Kompressor Wartung (2-Wochen-Intervall)</h2>
+                        <p class="text-sm text-slate-500 mt-0.5">Regelmäßige Routineprüfung</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center text-sky-600 text-xl font-bold shadow-sm">
+                        <i class="fa-solid fa-gauge-high"></i>
+                    </div>
+                </div>
+                <form id="maintenance-form" onsubmit="submitProtocol(event, 'Kompressor 2-Wochen')" class="space-y-8">
+                    ${renderCommonHeaderFields()}
+                    <input type="hidden" id="machine-select" value="Kompressor (2-Wochen-Wartung)">
+
+                    <div class="p-6 bg-sky-50/80 rounded-2xl border border-sky-100 space-y-2 shadow-sm">
+                        <label class="block text-sm font-bold text-sky-900">
+                            <i class="fa-solid fa-clock-rotate-left mr-1"></i> Laufleistung / Betriebsstunden (Pflichtfeld): <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" id="runtime-hours" required class="w-full border border-sky-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium shadow-sm" placeholder="z. B. 4850 Std.">
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Detaillierte Prüfpunkte (Alle Punkte einzeln zu prüfen)</h3>
+                        ${renderCheckPoint(1, 'Ölstand prüfen und nachfüllen', true)}
+                        ${renderCheckPoint(2, 'Ansaugfilter prüfen, gegebenenfalls wechseln', true)}
+                        ${renderCheckPoint(3, 'Kompressor reinigen', true)}
+                        ${renderCheckPoint(4, 'Keilriemen prüfen', true)}
+                        ${renderCheckPoint(5, 'Lufttrockner reinigen', true)}
+                        ${renderCheckPoint(6, 'Ölabscheidebehälter kontrollieren, gegebenenfalls leeren', true)}
+                    </div>
+
+                    ${renderPhotoSection()}
+                    ${renderRemarksSection()}
+                    ${renderSignatureSection()}
+
+                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-ecbDarkGreen to-ecbGreen hover:opacity-95 text-white rounded-2xl font-extrabold shadow-xl shadow-ecbGreen/20 transition text-base flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Protokoll speichern, in Cloud sichern &amp; PDF erstellen
+                    </button>
+                </form>
+            `;
+            container.innerHTML = html;
+            activePhotos = [];
+            switchTab('form');
+        }
+
+        // --- COMPRESSOR ANNUAL MAINTENANCE ---
+        window.openCompressorAnnual = function() {
+            const container = document.getElementById('dynamic-form-content');
+            let html = `
+                <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold uppercase tracking-wider">Kompressor</span>
+                        <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Kompressor Jahreswartung</h2>
+                        <p class="text-sm text-slate-500 mt-0.5">Alle 3.000 Stunden oder 180 Tage</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 text-xl font-bold shadow-sm">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </div>
+                </div>
+                <form id="maintenance-form" onsubmit="submitProtocol(event, 'Kompressor Jahreswartung')" class="space-y-8">
+                    ${renderCommonHeaderFields()}
+                    <input type="hidden" id="machine-select" value="Kompressor (Jahreswartung)">
+
+                    <div class="p-6 bg-purple-50/80 rounded-2xl border border-purple-100 space-y-2 shadow-sm">
+                        <label class="block text-sm font-bold text-purple-900">
+                            <i class="fa-solid fa-clock-rotate-left mr-1"></i> Laufleistung / Betriebsstunden (Pflichtfeld): <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" id="runtime-hours" required class="w-full border border-purple-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none bg-white font-medium shadow-sm" placeholder="z. B. 6000 Std.">
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Detaillierte Jahreswartungspunkte (Alle Punkte einzeln prüfen)</h3>
+                        ${renderCheckPoint(1, 'Ölwechsel', true)}
+                        ${renderCheckPoint(2, 'Ölfilter wechseln', true)}
+                        ${renderCheckPoint(3, 'Luftfilter wechseln', true)}
+                        ${renderCheckPoint(4, 'Ölabscheiderpatrone wechseln', true)}
+                        ${renderCheckPoint(5, 'Ansaugfilter wechseln', true)}
+                        ${renderCheckPoint(6, 'Kompressor reinigen', true)}
+                        ${renderCheckPoint(7, 'Sichtkontrolle auf Fälligkeiten', true)}
+                        ${renderCheckPoint(8, 'Druckbehälter kontrollieren und Wasser ablassen', true)}
+                    </div>
+
+                    ${renderPhotoSection()}
+                    ${renderRemarksSection()}
+                    ${renderSignatureSection()}
+
+                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-ecbDarkGreen to-ecbGreen hover:opacity-95 text-white rounded-2xl font-extrabold shadow-xl shadow-ecbGreen/20 transition text-base flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Protokoll speichern, in Cloud sichern &amp; PDF erstellen
+                    </button>
+                </form>
+            `;
+            container.innerHTML = html;
+            activePhotos = [];
+            switchTab('form');
+        }
+
+        function renderCheckPoint(index, title, allowFaultOption = true) {
+            return `
+                <div class="p-5 bg-slate-50/70 rounded-2xl border border-slate-200/80 space-y-3 hover:bg-slate-50 transition" data-title="${title}">
+                    <div class="font-bold text-slate-900 text-sm flex items-center justify-between">
+                        <span>${index}. ${title}</span>
+                        <span class="text-xs text-red-500 font-semibold">* Pflichtfeld</span>
+                    </div>
+                    <div class="flex flex-wrap gap-6 pt-1">
+                        <label class="flex items-center space-x-2.5 text-sm cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm hover:border-ecbGreen transition flex-grow sm:flex-grow-0">
+                            <input type="radio" name="point_${index}" value="erledigt" checked class="text-ecbGreen focus:ring-ecbGreen w-4 h-4">
+                            <span class="text-slate-800 font-bold">Erledigt (OK)</span>
+                        </label>
+                        ${allowFaultOption ? `
+                        <label class="flex items-center space-x-2.5 text-sm cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm hover:border-red-500 transition flex-grow sm:flex-grow-0">
+                            <input type="radio" name="point_${index}" value="nicht in Ordnung" class="text-red-500 focus:ring-red-500 w-4 h-4">
+                            <span class="text-red-600 font-bold">Nicht in Ordnung</span>
+                        </label>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPhotoSection() {
+            return `
+                <div class="space-y-3 pt-2">
+                    <label class="block text-sm font-bold text-slate-800">
+                        <i class="fa-solid fa-camera mr-1.5 text-ecbGreen"></i> Fotodokumentation über Handykamera (beliebig viele Fotos):
+                    </label>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <label class="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-sm cursor-pointer transition shadow-md flex items-center gap-2">
+                            <i class="fa-solid fa-camera-retro"></i> Foto aufnehmen / hochladen
+                            <input type="file" accept="image/*" capture="environment" onchange="handlePhotoCapture(event)" class="hidden">
+                        </label>
+                        <span id="photo-counter" class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-2 rounded-xl border border-slate-200">0 Fotos hinzugefügt</span>
+                    </div>
+                    <div id="photo-preview-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3"></div>
+                </div>
+            `;
+        }
+
+        function renderRemarksSection() {
+            return `
+                <div class="space-y-2 pt-2">
+                    <label class="block text-sm font-bold text-slate-800">Bemerkungen / Mängelfeststellung / Notizen:</label>
+                    <textarea id="remarks-input" rows="3" class="w-full border border-slate-300 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none shadow-sm font-medium" placeholder="Optionale Notizen oder Details zu den Arbeiten..."></textarea>
+                </div>
+            `;
+        }
+
+        function renderSignatureSection() {
+            return `
+                <div class="space-y-3 pt-2">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-sm font-bold text-slate-800">Digitale Unterschrift des Technikers: <span class="text-red-500">*</span></label>
+                        <button type="button" onclick="clearSignature()" class="text-xs text-red-600 hover:text-red-800 font-bold bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition cursor-pointer">
+                            <i class="fa-solid fa-rotate-left mr-1"></i> Unterschrift zurücksetzen
+                        </button>
+                    </div>
+                    <div class="border-2 border-dashed border-slate-300 rounded-2xl overflow-hidden bg-white shadow-inner relative">
+                        <canvas id="signature-canvas" class="signature-canvas w-full h-44 cursor-crosshair block"></canvas>
+                        <div class="absolute bottom-2 right-3 text-[10px] text-slate-400 font-semibold pointer-events-none">Hier unterschreiben</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handlePhotoCapture(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                activePhotos.push(e.target.result);
+                updatePhotoPreview();
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function updatePhotoPreview() {
+            const grid = document.getElementById('photo-preview-grid');
+            const counter = document.getElementById('photo-counter');
+            if (!grid || !counter) return;
+            counter.innerText = `${activePhotos.length} Foto(s) hinzugefügt`;
+            grid.innerHTML = '';
+            activePhotos.forEach((photo, index) => {
+                let div = document.createElement('div');
+                div.className = "relative rounded-2xl overflow-hidden border-2 border-slate-200 h-28 bg-slate-50 group shadow-sm";
+                div.innerHTML = `
+                    <img src="${photo}" class="w-full h-full object-cover">
+                    <button type="button" onclick="removePhoto(${index})" class="absolute top-2 right-2 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs shadow-md hover:bg-red-700 transition cursor-pointer">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        window.removePhoto = function(index) {
+            activePhotos.splice(index, 1);
+            updatePhotoPreview();
+        }
+
+        function initSignaturePad() {
+            const canvas = document.getElementById('signature-canvas');
+            if (!canvas) return;
+
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width > 0 ? rect.width : canvas.parentElement.clientWidth;
+            canvas.height = 176;
+
+            const ctx = canvas.getContext('2d');
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            let isDrawing = false;
+
+            const newCanvas = canvas.cloneNode(true);
+            canvas.parentNode.replaceChild(newCanvas, canvas);
+            const activeCanvas = document.getElementById('signature-canvas');
+            const activeCtx = activeCanvas.getContext('2d');
+            activeCtx.strokeStyle = '#0f172a';
+            activeCtx.lineWidth = 3;
+            activeCtx.lineCap = 'round';
+            activeCtx.lineJoin = 'round';
+
+            function getCoordinates(e) {
+                const r = activeCanvas.getBoundingClientRect();
+                const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+                const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+                return {
+                    x: clientX - r.left,
+                    y: clientY - r.top
+                };
+            }
+
+            function startPosition(e) {
+                isDrawing = true;
+                const pos = getCoordinates(e);
+                activeCtx.beginPath();
+                activeCtx.moveTo(pos.x, pos.y);
+                if (e.cancelable) e.preventDefault();
+            }
+
+            function drawPosition(e) {
+                if (!isDrawing) return;
+                const pos = getCoordinates(e);
+                activeCtx.lineTo(pos.x, pos.y);
+                activeCtx.stroke();
+                if (signaturePadInstance) signaturePadInstance.hasSigned = true;
+                if (e.cancelable) e.preventDefault();
+            }
+
+            function endPosition(e) {
+                if (!isDrawing) return;
+                isDrawing = false;
+                activeCtx.beginPath();
+                if (e && e.cancelable) e.preventDefault();
+            }
+
+            activeCanvas.addEventListener('mousedown', startPosition);
+            activeCanvas.addEventListener('mousemove', drawPosition);
+            activeCanvas.addEventListener('mouseup', endPosition);
+            activeCanvas.addEventListener('mouseleave', endPosition);
+
+            activeCanvas.addEventListener('touchstart', startPosition, { passive: false });
+            activeCanvas.addEventListener('touchmove', drawPosition, { passive: false });
+            activeCanvas.addEventListener('touchend', endPosition, { passive: false });
+
+            signaturePadInstance = {
+                canvas: activeCanvas,
+                ctx: activeCtx,
+                hasSigned: false,
+                clear: function() {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.hasSigned = false;
+                }
+            };
+        }
+
+        window.clearSignature = function() {
+            if (signaturePadInstance) {
+                signaturePadInstance.clear();
+            }
+        }
+
+        window.submitProtocol = async function(event, categoryKey) {
+            event.preventDefault();
+
+            const employeeName = document.getElementById('employee-name').value.trim();
+            if (!employeeName) {
+                showModal('Fehler', 'Bitte tragen Sie den Namen des zuständigen Technikers ein (Pflichtfeld).', false);
+                return;
+            }
+
+            if (!signaturePadInstance || !signaturePadInstance.hasSigned) {
+                showModal('Fehler', 'Bitte leisten Sie im Unterschriftenfeld eine gültige Unterschrift.', false);
+                return;
+            }
+
+            const machineSelect = document.getElementById('machine-select');
+            const machineName = machineSelect ? machineSelect.value : categoryKey;
+            const remarks = document.getElementById('remarks-input').value;
+            const runtimeHours = document.getElementById('runtime-hours') ? document.getElementById('runtime-hours').value : null;
+
+            const radios = document.querySelectorAll('input[type="radio"]:checked');
+            let pointsData = [];
+            radios.forEach((r, idx) => {
+                const pointNum = idx + 1;
+                const parentDiv = r.closest('[data-title]');
+                const titleText = parentDiv ? parentDiv.getAttribute('data-title') : `Prüfpunkt ${pointNum}`;
+                pointsData.push({
+                    pointNumber: pointNum,
+                    title: titleText,
+                    status: r.value
+                });
+            });
+
+            const signatureData = signaturePadInstance.canvas.toDataURL();
+            const timestamp = new Date().toLocaleString('de-DE');
+
+            const protocol = {
+                id: 'ECB-' + Math.floor(100000 + Math.random() * 900000),
+                category: categoryKey,
+                machine: machineName,
+                employee: employeeName,
+                runtime: runtimeHours,
+                date: timestamp,
+                points: pointsData,
+                remarks: remarks,
+                photos: [...activePhotos],
+                signature: signatureData
+            };
+
+            // Save to Firestore if available, else local storage fallback
+            try {
+                if (db && userId) {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'), protocol);
+                } else {
+                    protocols.unshift(protocol);
+                    localStorage.setItem('ecb_protocols_offline', JSON.stringify(protocols));
+                }
+            } catch (err) {
+                console.error("Error saving protocol to Cloud:", err);
+            }
+
+            generatePDF(protocol);
+
+            activePhotos = [];
+            updateProtocolCount();
+            showModal('Protokoll erfolgreich', `Das Wartungsprotokoll für ${machineName} wurde in der Cloud gespeichert und das PDF-Dokument automatisch heruntergeladen!`, true);
+            switchTab('history');
+        }
+
+        // --- DGUV V3 MANAGEMENT LOGIC ---
+        window.openDguvModal = function() {
+            document.getElementById('modal-dguv').classList.remove('hidden');
+        }
+
+        window.closeDguvModal = function() {
+            document.getElementById('modal-dguv').classList.add('hidden');
+        }
+
+        window.saveDguvDevice = async function(event) {
+            event.preventDefault();
+            const name = document.getElementById('dguv-dev-name').value.trim();
+            const location = document.getElementById('dguv-dev-location').value.trim();
+            const dueDate = document.getElementById('dguv-dev-duedate').value;
+
+            if (!name || !location || !dueDate) return;
+
+            const newDev = {
+                id: 'DGUV-' + Math.floor(1000 + Math.random() * 9000),
+                name: name,
+                location: location,
+                dueDate: dueDate,
+                status: 'Offen',
+                uploadDate: null,
+                fileName: null,
+                fileData: null
+            };
+
+            try {
+                if (db && userId) {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), newDev);
+                } else {
+                    dguvDevices.unshift(newDev);
+                    localStorage.setItem('ecb_dguv_devices_offline', JSON.stringify(dguvDevices));
+                }
+            } catch (err) {
+                console.error("Error saving DGUV device:", err);
+            }
+
+            closeDguvModal();
+            updateDguvCount();
+            renderDguvDevices();
+            showModal('Erfolgreich', 'Das Gerät wurde erfasst und der Prüftermin in der Cloud hinterlegt.', true);
+        }
+
+        window.handleProtocolUpload = async function(event, firestoreId, localId) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const uploadDate = new Date().toLocaleString('de-DE');
+                const fileName = file.name;
+                const fileData = e.target.result;
+
+                try {
+                    if (db && userId && firestoreId) {
+                        const devRef = doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId);
+                        await updateDoc(devRef, {
+                            status: 'Erledigt',
+                            uploadDate: uploadDate,
+                            fileName: fileName,
+                            fileData: fileData
+                        });
+                    } else {
+                        const dev = dguvDevices.find(d => d.id === localId);
+                        if (dev) {
+                            dev.status = 'Erledigt';
+                            dev.uploadDate = uploadDate;
+                            dev.fileName = fileName;
+                            dev.fileData = fileData;
+                            localStorage.setItem('ecb_dguv_devices_offline', JSON.stringify(dguvDevices));
+                        }
+                    }
+                    renderDguvDevices();
+                    showModal('Protokoll zugeordnet', `Das Messprotokoll wurde hochgeladen und der Status auf „Erledigt“ gesetzt.`, true);
+                } catch (err) {
+                    console.error("Error updating DGUV device upload:", err);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        window.deleteDguvDevice = async function(firestoreId, index) {
+            try {
+                if (db && userId && firestoreId) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId));
+                } else {
+                    dguvDevices.splice(index, 1);
+                    localStorage.setItem('ecb_dguv_devices_offline', JSON.stringify(dguvDevices));
+                }
+                updateDguvCount();
+                renderDguvDevices();
+            } catch (err) {
+                console.error("Error deleting DGUV device:", err);
+            }
+        }
+
+        function updateDguvCount() {
+            const el = document.getElementById('dguv-count');
+            if (el) el.innerText = dguvDevices.length;
+        }
+
+        function renderDguvDevices() {
+            const container = document.getElementById('dguv-devices-container');
+            if (!container) return;
+
+            if (dguvDevices.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full bg-white rounded-3xl p-16 text-center border border-slate-200/80 text-slate-500 shadow-sm">
+                        <div class="w-16 h-16 rounded-2xl bg-sky-50 flex items-center justify-center text-3xl mx-auto mb-4 text-sky-600">
+                            <i class="fa-solid fa-plug-circle-xmark"></i>
+                        </div>
+                        <p class="text-lg font-bold text-slate-800">Keine DGUV V3 Geräte erfasst</p>
+                        <p class="text-sm text-slate-500 mt-1 max-w-md mx-auto">Klicken Sie auf „Neues Gerät erfassen“, um elektrische Betriebsmittel und Prüftermine zu hinterlegen.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            dguvDevices.forEach((dev, idx) => {
+                const isDone = dev.status === 'Erledigt';
+                html += `
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 flex flex-col justify-between space-y-4 hover:shadow-md transition">
+                        <div>
+                            <div class="flex justify-between items-start gap-2">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${isDone ? 'bg-emerald-50 text-ecbGreen' : 'bg-amber-50 text-amber-600'}">${dev.status}</span>
+                                <button onclick="deleteDguvDevice('${dev.firestoreId || ''}', ${idx})" class="text-slate-400 hover:text-red-600 transition text-sm cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                            <h3 class="text-xl font-extrabold text-slate-900 mt-3">${dev.name}</h3>
+                            <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-sky-600 mr-1"></i> Standort: <strong class="text-slate-700">${dev.location}</strong></p>
+                            <p class="text-xs text-slate-500 mt-1"><i class="fa-regular fa-calendar-days text-sky-600 mr-1"></i> Fälligkeitstermin: <strong class="text-slate-700">${dev.dueDate}</strong></p>
+                        </div>
+
+                        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-2">
+                            <div class="text-xs font-bold text-slate-700">Messprotokoll Upload:</div>
+                            ${isDone ? `
+                                <div class="text-xs text-emerald-700 bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 flex items-center justify-between">
+                                    <span class="truncate"><i class="fa-solid fa-file-pdf mr-1"></i> ${dev.fileName}</span>
+                                    <a href="${dev.fileData}" download="${dev.fileName}" class="font-bold underline ml-2">Ansehen</a>
+                                </div>
+                                <div class="text-[10px] text-slate-400">Hochgeladen am: ${dev.uploadDate}</div>
+                            ` : `
+                                <label class="w-full py-2.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl font-bold text-xs text-slate-700 transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                                    <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Messprotokoll hochladen
+                                    <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.firestoreId || ''}', '${dev.id}')" class="hidden">
+                                </label>
+                            `}
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // --- PROFESSIONAL PDF GENERATION USING jsPDF ---
+        function generatePDF(p) {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+
+                const primaryColor = [63, 98, 18];    // #3f6212 ECB Dark Green
+                const ecbGreen = [101, 163, 13];       // #65a30d ECB Green
+                const darkTextColor = [15, 23, 42];    // Slate 900
+                const lightGrayBg = [241, 245, 249];   // Slate 100
+
+                // Header Banner Background
+                doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                doc.rect(0, 0, 210, 38, 'F');
+
+                // Draw exact vector logo recreation directly onto the PDF header with waves
+                doc.setFillColor(ecbGreen[0], ecbGreen[1], ecbGreen[2]);
+                doc.roundedRect(15, 6, 26, 26, 4, 4, 'F');
+                
+                doc.setFillColor(255, 255, 255);
+                doc.circle(28, 20, 1.5, 'F');
+                doc.circle(23, 23, 1.2, 'F');
+                doc.circle(33, 22, 1.2, 'F');
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.text('ecb', 18, 20);
+
+                // Header Title text
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(18);
+                doc.text('ECB REINIGUNGSSYSTEME', 48, 17);
+                
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                doc.text('Digitales Wartungs- und Instandhaltungsprotokoll', 48, 25);
+
+                // Document Metadata Box
+                doc.setFillColor(lightGrayBg[0], lightGrayBg[1], lightGrayBg[2]);
+                doc.roundedRect(15, 44, 180, 28, 3, 3, 'F');
+
+                doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(11);
+                doc.text(`Anlage / Maschine: ${p.machine}`, 20, 52);
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                doc.text(`Kategorie: ${p.category}`, 20, 59);
+                doc.text(`Protokoll-ID: ${p.id}`, 120, 59);
+
+                doc.text(`Techniker: ${p.employee}`, 20, 65);
+                doc.text(`Zeitstempel: ${p.date}`, 120, 65);
+                if (p.runtime) {
+                    doc.text(`Laufleistung: ${p.runtime} Betriebsstunden`, 120, 52);
+                }
+
+                let startY = 78;
+
+                // Section: Prüfpunkte
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                doc.text('Wartungs- und Prüfpunkte (Detaillierte Einzelaufstellung)', 15, startY);
+                startY += 4;
+
+                doc.setDrawColor(200, 200, 200);
+                doc.line(15, startY, 195, startY);
+                startY += 7;
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                p.points.forEach((pt, i) => {
+                    const isOk = pt.status === 'erledigt';
+                    
+                    doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+                    doc.text(`${pt.pointNumber}. ${pt.title}:`, 20, startY);
+                    
+                    if (isOk) {
+                        doc.setTextColor(46, 125, 50);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('ERLEDIGT (OK)', 140, startY);
+                    } else {
+                        doc.setTextColor(211, 47, 47);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('NICHT IN ORDNUNG', 140, startY);
+                    }
+                    doc.setFont('helvetica', 'normal');
+                    startY += 7;
+                });
+
+                startY += 4;
+
+                // Section: Bemerkungen
+                if (startY > 230) { doc.addPage(); startY = 20; }
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                doc.text('Bemerkungen & Mängelfeststellung', 15, startY);
+                startY += 4;
+                doc.line(15, startY, 195, startY);
+                startY += 7;
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+       
