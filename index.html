@@ -129,6 +129,25 @@
         </div>
     </div>
 
+    <!-- DGUV DEVICE HISTORY MODAL -->
+    <div id="modal-dguv-history" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-xl w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+                <div>
+                    <h3 id="dguv-history-title" class="text-xl font-extrabold text-slate-900">Geräte-Prüfprotokolle</h3>
+                    <p id="dguv-history-subtitle" class="text-xs text-sky-700 font-bold mt-0.5"></p>
+                </div>
+                <button onclick="closeDguvHistoryModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-clock-rotate-left mr-1 text-sky-600"></i> Historie aller Messprotokolle (chronologisch)</h4>
+                <div id="dguv-history-list" class="space-y-3 max-h-96 overflow-y-auto pr-1"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- HEADER -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
@@ -336,7 +355,7 @@
             </div>
             <form onsubmit="saveDguvDevice(event)" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-bold text-slate-800 mb-1.5">Gerätebezeichnung / Inventar-Nr.: <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-bold text-slate-800 mb-1.5">Gerätebezeichnung: <span class="text-red-500">*</span></label>
                     <input type="text" id="dguv-dev-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium" placeholder="z. B. Industriestaubsauger #2">
                 </div>
                 <div>
@@ -346,6 +365,9 @@
                 <div>
                     <label class="block text-sm font-bold text-slate-800 mb-1.5">Nächster Fälligkeitstermin: <span class="text-red-500">*</span></label>
                     <input type="date" id="dguv-dev-duedate" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium">
+                </div>
+                <div class="p-3 bg-sky-50 rounded-xl text-xs text-sky-800 font-semibold">
+                    <i class="fa-solid fa-barcode mr-1"></i> Eine 6-stellige Inventarnummer wird beim Speichern automatisch generiert und unter dem Gerätenamen angezeigt.
                 </div>
                 <div class="pt-2">
                     <button type="submit" class="w-full py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold shadow-lg shadow-sky-600/20 transition cursor-pointer">Gerät speichern &amp; Prüftermin anlegen</button>
@@ -1065,10 +1087,17 @@
 
             if (!name || !location || !dueDate) return;
 
+            // Automatically generate 6-digit inventory number
+            const inventoryNumber = String(Math.floor(100000 + Math.random() * 900000));
+
             const newDev = {
                 id: 'DGUV-' + Math.floor(1000 + Math.random() * 9000),
-                name, location, dueDate, status: 'Offen',
-                uploadDate: null, fileName: null, fileData: null
+                name,
+                inventoryNumber,
+                location,
+                dueDate,
+                status: 'Offen',
+                protocolHistory: [] // Array to hold all uploaded protocols across years
             };
 
             try {
@@ -1081,7 +1110,7 @@
 
             closeDguvModal();
             updateUI();
-            showModal('Erfolg', 'DGUV V3 Gerät in der Cloud gespeichert!', true);
+            showModal('Erfolg', `DGUV V3 Gerät gespeichert (Inventarnummer: ${inventoryNumber})!`, true);
         }
 
         window.handleProtocolUpload = async function(event, firestoreId) {
@@ -1094,19 +1123,66 @@
                 const fileName = file.name;
                 const fileData = e.target.result;
 
+                const dev = dguvDevices.find(d => d.firestoreId === firestoreId);
+                if (!dev) return;
+
+                if (!dev.protocolHistory) dev.protocolHistory = [];
+                dev.protocolHistory.unshift({
+                    date: uploadDate,
+                    fileName: fileName,
+                    fileData: fileData
+                });
+
                 try {
                     if (db && firestoreId) {
                         await updateDoc(doc(db, 'ecb_dguv_devices', firestoreId), {
-                            status: 'Erledigt', uploadDate, fileName, fileData
+                            status: 'Erledigt',
+                            protocolHistory: dev.protocolHistory
                         });
                     }
                     updateUI();
-                    showModal('Erfolg', 'Messprotokoll in der Cloud aktualisiert!', true);
+                    showModal('Erfolg', 'Messprotokoll wurde zur Historie des Geräts hinzugefügt und in der Cloud gespeichert!', true);
                 } catch(err) {
                     console.error(err);
                 }
             };
             reader.readAsDataURL(file);
+        }
+
+        window.openDguvHistory = function(firestoreId) {
+            const dev = dguvDevices.find(d => d.firestoreId === firestoreId);
+            if (!dev) return;
+
+            document.getElementById('dguv-history-title').innerText = dev.name;
+            document.getElementById('dguv-history-subtitle').innerText = `Inventar-Nr.: ${dev.inventoryNumber || '---'} | Standort: ${dev.location}`;
+
+            const listContainer = document.getElementById('dguv-history-list');
+            let historyHtml = '';
+
+            if (!dev.protocolHistory || dev.protocolHistory.length === 0) {
+                historyHtml = `<div class="p-4 bg-slate-50 rounded-xl text-center text-xs text-slate-500">Noch keine Messprotokolle für dieses Gerät hochgeladen.</div>`;
+            } else {
+                dev.protocolHistory.forEach((item, idx) => {
+                    historyHtml += `
+                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
+                            <div>
+                                <strong class="text-xs text-slate-800 block"><i class="fa-solid fa-file-pdf text-red-500 mr-1"></i> ${item.fileName}</strong>
+                                <span class="text-[11px] text-slate-500">Hochgeladen am: ${item.date}</span>
+                            </div>
+                            <a href="${item.fileData}" download="${item.fileName}" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                                <i class="fa-solid fa-download"></i> Herunterladen
+                            </a>
+                        </div>
+                    `;
+                });
+            }
+
+            listContainer.innerHTML = historyHtml;
+            document.getElementById('modal-dguv-history').classList.remove('hidden');
+        }
+
+        window.closeDguvHistoryModal = function() {
+            document.getElementById('modal-dguv-history').classList.add('hidden');
         }
 
         window.deleteDguvDevice = async function(firestoreId) {
@@ -1207,7 +1283,7 @@
                 doc.setFillColor(63, 98, 18); // ecbDarkGreen
                 doc.rect(0, 0, 210, 40, 'F');
 
-                // Draw Exact Logo matching user image
+                // Draw Exact Vector Logo matching user image with waves
                 doc.setFillColor(101, 163, 13); // ecbGreen
                 doc.roundedRect(15, 7, 26, 26, 4, 4, 'F');
                 
@@ -1310,6 +1386,7 @@
             } else {
                 dguvDevices.forEach(dev => {
                     const isDone = dev.status === 'Erledigt';
+                    const historyCount = dev.protocolHistory ? dev.protocolHistory.length : 0;
                     html += `
                         <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-4 shadow-sm flex flex-col justify-between">
                             <div>
@@ -1317,17 +1394,18 @@
                                     <span class="px-3 py-1 rounded-full text-xs font-bold ${isDone ? 'bg-emerald-50 text-ecbGreen' : 'bg-amber-50 text-amber-600'}">${dev.status}</span>
                                     <button onclick="deleteDguvDevice('${dev.firestoreId || ''}')" class="text-red-500 hover:text-red-700 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                                 </div>
-                                <h3 class="text-xl font-bold text-slate-900 mt-2">${dev.name}</h3>
+                                <h3 onclick="openDguvHistory('${dev.firestoreId || ''}')" class="text-xl font-bold text-slate-900 mt-2 hover:text-sky-600 cursor-pointer transition" title="Klicken, um Historie anzuzeigen">${dev.name} <i class="fa-solid fa-clock-rotate-left text-xs text-slate-400 ml-1"></i></h3>
+                                <p class="text-xs font-bold text-sky-700 mt-0.5"><i class="fa-solid fa-barcode mr-1"></i> Inventar-Nr.: ${dev.inventoryNumber || '------'}</p>
                                 <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-sky-600 mr-1"></i> ${dev.location}</p>
                                 <p class="text-xs text-slate-500 mt-1"><i class="fa-regular fa-calendar-days text-sky-600 mr-1"></i> Fällig: ${dev.dueDate}</p>
+                                ${historyCount > 0 ? `<div class="mt-2"><button onclick="openDguvHistory('${dev.firestoreId || ''}')" class="text-xs text-sky-700 hover:underline font-bold"><i class="fa-solid fa-folder-open mr-1"></i> ${historyCount} Messprotokoll(e) in Historie verfügbar</button></div>` : ''}
                             </div>
-                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                ${isDone ? `<span class="text-xs text-emerald-700 font-bold"><i class="fa-solid fa-file-pdf mr-1"></i> Protokoll hochgeladen</span>` : `
-                                    <label class="w-full py-2 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                                        <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Messprotokoll hochladen
-                                        <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.firestoreId || ''}')" class="hidden">
-                                    </label>
-                                `}
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2">
+                                <label class="w-full py-2 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                                    <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Neues Protokoll hochladen
+                                    <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.firestoreId || ''}')" class="hidden">
+                                </label>
+                                ${historyCount > 0 ? `<button onclick="openDguvHistory('${dev.firestoreId || ''}')" class="w-full py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 rounded-lg text-xs font-bold flex items-center justify-center gap-1 cursor-pointer">Historie ansehen</button>` : ''}
                             </div>
                         </div>
                     `;
