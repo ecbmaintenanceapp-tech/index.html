@@ -200,6 +200,7 @@
 
     </main>
 
+    <!-- DGUV MODAL -->
     <div id="modal-dguv" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -228,6 +229,7 @@
         </div>
     </div>
 
+    <!-- MESSAGE MODAL -->
     <div id="modal-message" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl border border-slate-100 text-center">
             <div id="modal-icon" class="w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner">
@@ -253,7 +255,7 @@
         });
 
         function initEventListeners() {
-            // Navigation
+            // Navigation Tabs
             const navDash = document.getElementById('nav-dashboard-btn');
             if (navDash) navDash.addEventListener('click', () => switchTab('dashboard'));
 
@@ -266,7 +268,7 @@
             const backDash = document.getElementById('back-to-dash-btn');
             if (backDash) backDash.addEventListener('click', () => switchTab('dashboard'));
 
-            // Dashboard Cards
+            // Dashboard Maintenance Cards
             const cardWasher = document.getElementById('card-washer');
             if (cardWasher) cardWasher.addEventListener('click', openWashingMachineMenu);
 
@@ -1099,4 +1101,107 @@
             }
 
             let html = '';
-            protocols.forEach((p, id
+            protocols.forEach((p, idx) => {
+                let pointsHtml = (p.points || []).map(pt => `
+                    <div class="text-xs flex justify-between py-1.5 border-b border-slate-100 items-center">
+                        <span class="text-slate-700 font-medium">${pt.pointNumber}. ${pt.title}</span>
+                        <span class="font-bold px-2 py-0.5 rounded-md ${pt.status === 'erledigt' ? 'bg-emerald-50 text-ecbGreen' : 'bg-red-50 text-red-600'}">${pt.status.toUpperCase()}</span>
+                    </div>
+                `).join('');
+
+                let photosHtml = (p.photos || []).map(ph => `<img src="${ph}" class="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-sm">`).join('');
+
+                html += `
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6 hover:shadow-md transition">
+                        <div class="flex flex-wrap justify-between items-start gap-4 border-b border-slate-100 pb-5">
+                            <div>
+                                <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">${p.category}</span>
+                                <h3 class="text-xl font-extrabold text-slate-900 mt-2">${p.machine}</h3>
+                                <p class="text-xs text-slate-500 mt-1 flex flex-wrap gap-3">
+                                    <span><i class="fa-regular fa-clock text-ecbGreen mr-1"></i> ${p.date}</span>
+                                    <span><i class="fa-solid fa-user text-slate-400 mr-1"></i> Techniker: <strong class="text-slate-700">${p.employee}</strong></span>
+                                    ${p.runtime ? `<span><i class="fa-solid fa-gauge text-sky-600 mr-1"></i> Laufleistung: <strong class="text-sky-700">${p.runtime} Std.</strong></span>` : ''}
+                                    <span>ID: ${p.id}</span>
+                                </p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button type="button" onclick="downloadProtocolPDF(${idx})" class="px-4 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm cursor-pointer">
+                                    <i class="fa-solid fa-file-pdf"></i> PDF herunterladen
+                                </button>
+                                <button type="button" onclick="emailProtocol(${idx})" class="px-4 py-2.5 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm cursor-pointer">
+                                    <i class="fa-solid fa-envelope"></i> E-Mail
+                                </button>
+                                <button type="button" onclick="deleteProtocol(${idx})" class="px-3.5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-xs font-bold transition cursor-pointer">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-list-check text-ecbGreen"></i> Detaillierter Prüfpunkt-Status
+                                </h4>
+                                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-1">
+                                    ${pointsHtml}
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-comment-dots text-ecbGreen"></i> Bemerkungen &amp; Fotos
+                                </h4>
+                                <p class="text-xs text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-3 leading-relaxed">${p.remarks || 'Keine Bemerkungen angegeben.'}</p>
+                                <div class="flex flex-wrap gap-2">
+                                    ${photosHtml || '<span class="text-xs text-slate-400 italic">Keine Fotos angehängt</span>'}
+                                </div>
+                            </div>
+                        </div>
+                        ${p.signature ? `
+                            <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
+                                <span class="text-xs font-bold text-slate-500">Digitale Signatur (${p.employee}):</span>
+                                <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                                    <img src="${p.signature}" class="h-12 object-contain">
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        window.deleteProtocol = function(index) {
+            protocols.splice(index, 1);
+            localStorage.setItem('ecb_protocols', JSON.stringify(protocols));
+            updateProtocolCount();
+            renderHistory();
+        }
+
+        function clearHistory() {
+            if (!confirm('Möchten Sie wirklich die gesamte Historie unwiderruflich löschen?')) return;
+            protocols = [];
+            localStorage.removeItem('ecb_protocols');
+            updateProtocolCount();
+            renderHistory();
+        }
+
+        window.emailProtocol = function(index) {
+            const p = protocols[index];
+            const subject = encodeURIComponent(`Wartungsprotokoll: ${p.machine} (${p.id})`);
+            let pointsText = (p.points || []).map(pt => `- ${pt.title}: ${pt.status.toUpperCase()}`).join('\n');
+            const body = encodeURIComponent(
+                `ECB Reinigungssysteme - Digitales Wartungssystem\n\n` +
+                `Anlage: ${p.machine}\n` +
+                `Kategorie: ${p.category}\n` +
+                `Techniker: ${p.employee}\n` +
+                `Zeitstempel: ${p.date}\n` +
+                (p.runtime ? `Laufleistung: ${p.runtime} Std.\n` : '') +
+                `Protokoll-ID: ${p.id}\n\n` +
+                `Detaillierte Prüfpunkte:\n${pointsText}\n\n` +
+                `Bemerkungen:\n${p.remarks || 'Keine'}\n\n` +
+                `Dieses Protokoll wurde im digitalen Wartungssystem erfasst, mit Zeitstempel versehen und rechtsverbindlich unterzeichnet.`
+            );
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        }
+    </script>
+</body>
+</html>
