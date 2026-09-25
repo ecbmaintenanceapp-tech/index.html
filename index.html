@@ -10,8 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- jsPDF for professional PDF generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -33,20 +31,20 @@
         body { font-family: 'Inter', sans-serif; }
         .signature-canvas { touch-action: none; }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
+            from { opacity: 0; transform: translateY(4px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in {
-            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: fadeIn 0.25s ease-out forwards;
         }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
-    <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-50 backdrop-blur-md bg-opacity-95">
+    <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
-                <div class="w-12 h-12 rounded-2xl bg-[#65a30d] p-0.5 shadow-md flex items-center justify-center transform hover:rotate-3 transition duration-300 overflow-hidden border border-white/20">
+                <div class="w-12 h-12 rounded-2xl bg-[#65a30d] p-0.5 shadow-md flex items-center justify-center overflow-hidden border border-white/20">
                     <svg viewBox="0 0 500 500" class="w-full h-full rounded-xl">
                         <rect width="500" height="500" fill="#65a30d"/>
                         <path d="M 20 330 C 80 270 200 270 300 320 C 380 360 430 360 480 300 C 470 320 420 390 350 390 C 250 390 120 410 40 370 C 25 362 20 345 20 330 Z" fill="#ffffff" opacity="0.95"/>
@@ -56,20 +54,17 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
-                    <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                        Digitales Wartungssystem (Aktiv)
-                    </p>
+                    <p class="text-xs text-ecbLightGreen font-medium">Digitales Wartungssystem (Aktiv)</p>
                 </div>
             </div>
             <nav class="flex items-center space-x-2 mt-3 sm:mt-0 flex-wrap gap-2">
-                <button type="button" id="nav-dashboard-btn" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer">
+                <button type="button" data-tab="dashboard" class="nav-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-layer-group"></i> Dashboard
                 </button>
-                <button type="button" id="nav-dguv-btn" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
+                <button type="button" data-tab="dguv" class="nav-btn px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-plug-circle-check"></i> DGUV V3 <span id="dguv-count" class="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
                 </button>
-                <button type="button" id="nav-history-btn" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
+                <button type="button" data-tab="history" class="nav-btn px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-clock-rotate-left"></i> Protokolle <span id="protocol-count" class="bg-ecbGreen text-white text-xs px-2 py-0.5 rounded-full">0</span>
                 </button>
             </nav>
@@ -81,79 +76,81 @@
         <!-- DASHBOARD TAB -->
         <div id="tab-dashboard" class="space-y-8 animate-fade-in">
             <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
-                <div class="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-ecbLightGreen/40 rounded-full blur-3xl pointer-events-none"></div>
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen- &amp; Maschinenwartung</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll mit kompletter Einzelpunkt-Prüfung, Fotodokumentation und digitaler Signatur zu erstellen.</p>
+                    <p class="text-slate-600 mt-2 text-base">Klicken Sie unten auf eine Kategorie, um das Wartungsprotokoll zu starten.</p>
                 </div>
             </div>
 
-            <!-- CARDS GRID -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div id="card-washer" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-ecbGreen hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+                <!-- Waschmaschinen Card -->
+                <div data-action="washer" class="maintenance-card bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-ecbGreen hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
                             <i class="fa-solid fa-shirt"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900">Waschmaschinen</h3>
                         <p class="text-xs font-semibold text-ecbGreen mt-1 uppercase tracking-wider">Intervall: Alle 2 Wochen</p>
-                        <p class="text-sm text-slate-600 mt-3">Milnor Maschinen 1-4 mit detaillierter Einzelauswertung aller Prüfpunkte.</p>
+                        <p class="text-sm text-slate-600 mt-3">Milnor Maschinen 1-4 mit detaillierter Einzelauswertung.</p>
                     </div>
                     <div class="mt-8 flex items-center justify-between text-sm font-bold text-ecbDarkGreen group-hover:text-ecbGreen">
                         <span>Wartung starten</span>
-                        <div class="w-8 h-8 rounded-full bg-ecbLightGreen flex items-center justify-center group-hover:translate-x-1 transition">
+                        <div class="w-8 h-8 rounded-full bg-ecbLightGreen flex items-center justify-center">
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </div>
                     </div>
                 </div>
 
-                <div id="card-dryer" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-amber-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+                <!-- Trockner Card -->
+                <div data-action="dryer" class="maintenance-card bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-amber-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
                             <i class="fa-solid fa-wind"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900">Trockner</h3>
                         <p class="text-xs font-semibold text-amber-600 mt-1 uppercase tracking-wider">Intervall: Alle 4 Wochen</p>
-                        <p class="text-sm text-slate-600 mt-3">Trockner 1-4 mit detaillierten Prüfpunkten &amp; Fotodokumentation.</p>
+                        <p class="text-sm text-slate-600 mt-3">Trockner 1-4 mit Prüfpunkten &amp; Fotodokumentation.</p>
                     </div>
-                    <div class="mt-8 flex items-center justify-between text-sm font-bold text-amber-700 group-hover:text-amber-600">
+                    <div class="mt-8 flex items-center justify-between text-sm font-bold text-amber-700">
                         <span>Wartung starten</span>
-                        <div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center group-hover:translate-x-1 transition">
+                        <div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center">
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </div>
                     </div>
                 </div>
 
-                <div id="card-comp-routine" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-sky-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+                <!-- Kompressor Routine Card -->
+                <div data-action="comp-routine" class="maintenance-card bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-sky-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
                             <i class="fa-solid fa-gauge-high"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900">Kompressor Wartung</h3>
                         <p class="text-xs font-semibold text-sky-600 mt-1 uppercase tracking-wider">Intervall: Alle 2 Wochen</p>
-                        <p class="text-sm text-slate-600 mt-3">Betriebsstunden, Ölstand, Keilriemen, Filter &amp; Behälter prüfen.</p>
+                        <p class="text-sm text-slate-600 mt-3">Betriebsstunden, Ölstand, Keilriemen &amp; Filter.</p>
                     </div>
-                    <div class="mt-8 flex items-center justify-between text-sm font-bold text-sky-700 group-hover:text-sky-600">
+                    <div class="mt-8 flex items-center justify-between text-sm font-bold text-sky-700">
                         <span>Wartung starten</span>
-                        <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center group-hover:translate-x-1 transition">
+                        <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center">
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </div>
                     </div>
                 </div>
 
-                <div id="card-comp-annual" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-purple-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
+                <!-- Kompressor Annual Card -->
+                <div data-action="comp-annual" class="maintenance-card bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-purple-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
                             <i class="fa-solid fa-calendar-days"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900">Kompressor Jahreswartung</h3>
                         <p class="text-xs font-semibold text-purple-600 mt-1 uppercase tracking-wider">Alle 3.000 Std. / 180 Tage</p>
-                        <p class="text-sm text-slate-600 mt-3">Ölwechsel, Filterwechsel, Ölabscheider &amp; Sichtkontrolle.</p>
+                        <p class="text-sm text-slate-600 mt-3">Ölwechsel, Filterwechsel &amp; Ölabscheider.</p>
                     </div>
-                    <div class="mt-8 flex items-center justify-between text-sm font-bold text-purple-700 group-hover:text-purple-600">
+                    <div class="mt-8 flex items-center justify-between text-sm font-bold text-purple-700">
                         <span>Wartung starten</span>
-                        <div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center group-hover:translate-x-1 transition">
+                        <div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center">
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </div>
                     </div>
@@ -167,9 +164,9 @@
                 <div>
                     <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Prüfmanagement</span>
                     <h2 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen (Elektrische Betriebsmittel)</h2>
-                    <p class="text-sm text-slate-600 mt-1">Geräte erfassen, Fälligkeitstage hinterlegen und Messprotokolle per Upload zuordnen.</p>
+                    <p class="text-sm text-slate-600 mt-1">Geräte erfassen, Fälligkeitstage hinterlegen und Messprotokolle zuordnen.</p>
                 </div>
-                <button type="button" id="open-dguv-modal-btn" class="px-5 py-3 bg-gradient-to-r from-sky-600 to-sky-700 hover:opacity-95 text-white rounded-2xl font-bold text-sm transition shadow-lg shadow-sky-600/20 flex items-center gap-2 cursor-pointer">
+                <button type="button" id="open-dguv-btn" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm transition shadow-lg shadow-sky-600/20 flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-plus"></i> Neues Gerät erfassen
                 </button>
             </div>
@@ -181,7 +178,7 @@
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle</h2>
-                    <p class="text-sm text-slate-600 mt-1">Alle archivierten Protokolle mit Zeitstempel, PDF-Export und E-Mail-Versand.</p>
+                    <p class="text-sm text-slate-600 mt-1">Alle archivierten Protokolle mit Zeitstempel und PDF-Export.</p>
                 </div>
                 <button type="button" id="clear-history-btn" class="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-bold transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-trash-can"></i> Verlauf leeren
@@ -192,7 +189,7 @@
 
         <!-- FORM VIEW -->
         <div id="form-view" class="hidden space-y-6 animate-fade-in">
-            <button type="button" id="back-to-dash-btn" class="px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 transition shadow-sm flex items-center gap-2 cursor-pointer">
+            <button type="button" id="back-to-dash" class="px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 transition shadow-sm flex items-center gap-2 cursor-pointer">
                 <i class="fa-solid fa-arrow-left"></i> Zurück zur Übersicht
             </button>
             <div id="dynamic-form-content" class="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200/80"></div>
@@ -205,1002 +202,423 @@
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
                 <h3 class="text-xl font-extrabold text-slate-900">Neues Gerät für DGUV V3 erfassen</h3>
-                <button type="button" id="close-dguv-modal-btn" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
+                <button type="button" id="close-dguv-modal" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
             <form id="dguv-form" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-bold text-slate-800 mb-1.5">Gerätebezeichnung / Inventar-Nr.: <span class="text-red-500">*</span></label>
-                    <input type="text" id="dguv-dev-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium" placeholder="z. B. Industriestaubsauger #2">
+                    <label class="block text-sm font-bold text-slate-800 mb-1.5">Gerätebezeichnung / Inventar-Nr.: *</label>
+                    <input type="text" id="dguv-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none" placeholder="z. B. Industriestaubsauger #2">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-800 mb-1.5">Standort / Abteilung: <span class="text-red-500">*</span></label>
-                    <input type="text" id="dguv-dev-location" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium" placeholder="z. B. Waschebene Halle 1">
+                    <label class="block text-sm font-bold text-slate-800 mb-1.5">Standort / Abteilung: *</label>
+                    <input type="text" id="dguv-location" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none" placeholder="z. B. Waschebene Halle 1">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-800 mb-1.5">Nächster Fälligkeitstermin: <span class="text-red-500">*</span></label>
-                    <input type="date" id="dguv-dev-duedate" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium">
+                    <label class="block text-sm font-bold text-slate-800 mb-1.5">Nächster Fälligkeitstermin: *</label>
+                    <input type="date" id="dguv-date" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
                 </div>
-                <div class="pt-2">
-                    <button type="submit" class="w-full py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold shadow-lg shadow-sky-600/20 transition cursor-pointer">Gerät speichern &amp; Prüftermin anlegen</button>
-                </div>
+                <button type="submit" class="w-full py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold shadow-lg transition cursor-pointer">Gerät speichern</button>
             </form>
         </div>
     </div>
 
     <!-- MESSAGE MODAL -->
-    <div id="modal-message" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
-        <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl border border-slate-100 text-center">
-            <div id="modal-icon" class="w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner">
+    <div id="modal-msg" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl text-center">
+            <div id="msg-icon" class="w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto">
                 <i class="fa-solid fa-check"></i>
             </div>
-            <h3 id="modal-title" class="text-xl font-extrabold text-slate-900">Meldung</h3>
-            <p id="modal-text" class="text-sm text-slate-600 leading-relaxed"></p>
-            <div class="pt-2">
-                <button type="button" id="close-msg-modal-btn" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-2xl font-bold shadow-lg shadow-ecbGreen/20 transition cursor-pointer">Verstanden</button>
-            </div>
+            <h3 id="msg-title" class="text-xl font-extrabold text-slate-900">Meldung</h3>
+            <p id="msg-text" class="text-sm text-slate-600 leading-relaxed"></p>
+            <button type="button" id="close-msg-btn" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-2xl font-bold shadow-lg transition cursor-pointer">Verstanden</button>
         </div>
     </div>
 
     <script>
+        // Lokaler State
         let protocols = JSON.parse(localStorage.getItem('ecb_protocols') || '[]');
         let dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices') || '[]');
         let activePhotos = [];
         let signaturePadInstance = null;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initEventListeners();
-            updateUI();
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
         });
 
-        function initEventListeners() {
-            // Navigation Tabs
-            const navDash = document.getElementById('nav-dashboard-btn');
-            if (navDash) navDash.addEventListener('click', () => switchTab('dashboard'));
+        function initApp() {
+            updateCounts();
+            setupNavigation();
+            setupMaintenanceCards();
+            setupModals();
+        }
 
-            const navDguv = document.getElementById('nav-dguv-btn');
-            if (navDguv) navDguv.addEventListener('click', () => switchTab('dguv'));
+        function updateCounts() {
+            document.getElementById('protocol-count').innerText = protocols.length;
+            document.getElementById('dguv-count').innerText = dguvDevices.length;
+        }
 
-            const navHist = document.getElementById('nav-history-btn');
-            if (navHist) navHist.addEventListener('click', () => switchTab('history'));
+        function setupNavigation() {
+            const navBtns = document.querySelectorAll('.nav-btn');
+            navBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tab = this.getAttribute('data-tab');
+                    switchTab(tab);
+                });
+            });
 
-            const backDash = document.getElementById('back-to-dash-btn');
-            if (backDash) backDash.addEventListener('click', () => switchTab('dashboard'));
-
-            // Dashboard Maintenance Cards
-            const cardWasher = document.getElementById('card-washer');
-            if (cardWasher) cardWasher.addEventListener('click', openWashingMachineMenu);
-
-            const cardDryer = document.getElementById('card-dryer');
-            if (cardDryer) cardDryer.addEventListener('click', openDryerMenu);
-
-            const cardCompRoutine = document.getElementById('card-comp-routine');
-            if (cardCompRoutine) cardCompRoutine.addEventListener('click', openCompressorRoutine);
-
-            const cardCompAnnual = document.getElementById('card-comp-annual');
-            if (cardCompAnnual) cardCompAnnual.addEventListener('click', openCompressorAnnual);
-
-            // Modals & Actions
-            const openDguvBtn = document.getElementById('open-dguv-modal-btn');
-            if (openDguvBtn) openDguvBtn.addEventListener('click', openDguvModal);
-
-            const closeDguvBtn = document.getElementById('close-dguv-modal-btn');
-            if (closeDguvBtn) closeDguvBtn.addEventListener('click', closeDguvModal);
-
-            const closeMsgBtn = document.getElementById('close-msg-modal-btn');
-            if (closeMsgBtn) closeMsgBtn.addEventListener('click', closeModal);
-
-            const clearHistBtn = document.getElementById('clear-history-btn');
-            if (clearHistBtn) clearHistBtn.addEventListener('click', clearHistory);
-
-            // Forms
-            const dguvForm = document.getElementById('dguv-form');
-            if (dguvForm) dguvForm.addEventListener('submit', saveDguvDevice);
+            const backDash = document.getElementById('back-to-dash');
+            if (backDash) {
+                backDash.addEventListener('click', function() {
+                    switchTab('dashboard');
+                });
+            }
         }
 
         function switchTab(tabId) {
-            const tabDash = document.getElementById('tab-dashboard');
-            const tabDguv = document.getElementById('tab-dguv');
-            const tabHist = document.getElementById('tab-history');
-            const formView = document.getElementById('form-view');
+            document.getElementById('tab-dashboard').classList.add('hidden');
+            document.getElementById('tab-dguv').classList.add('hidden');
+            document.getElementById('tab-history').classList.add('hidden');
+            document.getElementById('form-view').classList.add('hidden');
 
-            if (tabDash) tabDash.classList.add('hidden');
-            if (tabDguv) tabDguv.classList.add('hidden');
-            if (tabHist) tabHist.classList.add('hidden');
-            if (formView) formView.classList.add('hidden');
-
-            const navDash = document.getElementById('nav-dashboard-btn');
-            const navDguv = document.getElementById('nav-dguv-btn');
-            const navHist = document.getElementById('nav-history-btn');
-
-            if (navDash) navDash.className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
-            if (navDguv) navDguv.className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
-            if (navHist) navHist.className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.className = "nav-btn px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
+            });
 
             if (tabId === 'dashboard') {
-                if (tabDash) tabDash.classList.remove('hidden');
-                if (navDash) navDash.className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
+                document.getElementById('tab-dashboard').classList.remove('hidden');
+                document.querySelector('[data-tab="dashboard"]').className = "nav-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
             } else if (tabId === 'dguv') {
-                if (tabDguv) tabDguv.classList.remove('hidden');
-                if (navDguv) navDguv.className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
+                document.getElementById('tab-dguv').classList.remove('hidden');
+                document.querySelector('[data-tab="dguv"]').className = "nav-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
                 renderDguvDevices();
             } else if (tabId === 'history') {
-                if (tabHist) tabHist.classList.remove('hidden');
-                if (navHist) navHist.className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
+                document.getElementById('tab-history').classList.remove('hidden');
+                document.querySelector('[data-tab="history"]').className = "nav-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
                 renderHistory();
             } else if (tabId === 'form') {
-                if (formView) formView.classList.remove('hidden');
-                setTimeout(() => { initSignaturePad(); }, 150);
+                document.getElementById('form-view').classList.remove('hidden');
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function showModal(title, text, isSuccess = true) {
-            const mTitle = document.getElementById('modal-title');
-            const mText = document.getElementById('modal-text');
-            const iconDiv = document.getElementById('modal-icon');
-            const modalMsg = document.getElementById('modal-message');
-
-            if (mTitle) mTitle.innerText = title;
-            if (mText) mText.innerText = text;
-            if (iconDiv) {
-                if (isSuccess) {
-                    iconDiv.className = "w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner";
-                    iconDiv.innerHTML = '<i class="fa-solid fa-check"></i>';
-                } else {
-                    iconDiv.className = "w-16 h-16 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl mx-auto shadow-inner";
-                    iconDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-                }
-            }
-            if (modalMsg) modalMsg.classList.remove('hidden');
-        }
-
-        function closeModal() {
-            const modalMsg = document.getElementById('modal-message');
-            if (modalMsg) modalMsg.classList.add('hidden');
-        }
-
-        function updateUI() {
-            updateProtocolCount();
-            updateDguvCount();
-            renderHistory();
-            renderDguvDevices();
-        }
-
-        function renderCommonHeaderFields() {
-            return `
-                <div class="p-6 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-4 mb-8 shadow-sm">
-                    <div class="flex items-center gap-2 text-ecbDarkGreen font-bold text-sm border-b border-slate-200 pb-3">
-                        <i class="fa-solid fa-user-shield text-base"></i> Mitarbeiter-Authentifizierung &amp; Zeitstempel
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-800 mb-1.5">Name des zuständigen Technikers (Pflichtfeld): <span class="text-red-500">*</span></label>
-                        <input type="text" id="employee-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-white shadow-sm font-medium" placeholder="Vor- und Nachname eintragen...">
-                    </div>
-                    <div class="text-xs text-slate-500 flex items-center gap-1.5">
-                        <i class="fa-regular fa-clock text-ecbGreen"></i> Ein rechtssicherer Zeitstempel (Datum &amp; Uhrzeit) wird automatisch beim Absenden generiert.
-                    </div>
-                </div>
-            `;
-        }
-
-        function openWashingMachineMenu() {
-            const container = document.getElementById('dynamic-form-content');
-            if (!container) return;
-            container.innerHTML = `
-                <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
-                    <div>
-                        <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Waschmaschinen</span>
-                        <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungsprotokoll: Waschmaschinen (Milnor)</h2>
-                        <p class="text-sm text-slate-500 mt-0.5">Intervall: Alle 2 Wochen</p>
-                    </div>
-                    <div class="w-12 h-12 rounded-xl bg-ecbLightGreen flex items-center justify-center text-ecbDarkGreen text-xl font-bold shadow-sm">
-                        <i class="fa-solid fa-shirt"></i>
-                    </div>
-                </div>
-                <form id="active-maintenance-form" class="space-y-8">
-                    ${renderCommonHeaderFields()}
-                    <div>
-                        <label class="block text-sm font-bold text-slate-800 mb-2">Maschine auswählen:</label>
-                        <select id="machine-select" class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-white shadow-sm font-medium">
-                            <option value="Waschmaschine 1 (Milnor)">Waschmaschine 1 - Milnor</option>
-                            <option value="Waschmaschine 2 (Milnor)">Waschmaschine 2 - Milnor</option>
-                            <option value="Waschmaschine 3 (Milnor)">Waschmaschine 3 - Milnor</option>
-                            <option value="Waschmaschine 4 (Milnor)">Waschmaschine 4 - Milnor</option>
-                        </select>
-                    </div>
-                    <div class="space-y-4">
-                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Detaillierte Prüfpunkte</h3>
-                        ${renderCheckPoint(1, 'Schmieren der Maschine', true)}
-                        ${renderCheckPoint(2, 'Reinigen der Maschine', true)}
-                        ${renderCheckPoint(3, 'Maschine auf Mängelfreiheit prüfen', true)}
-                        ${renderCheckPoint(4, 'Wassertank gereinigt', true)}
-                    </div>
-                    ${renderPhotoSection()}
-                    ${renderRemarksSection()}
-                    ${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-ecbDarkGreen to-ecbGreen hover:opacity-95 text-white rounded-2xl font-extrabold shadow-xl shadow-ecbGreen/20 transition text-base flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Protokoll speichern, PDF erstellen &amp; abschließen
-                    </button>
-                </form>
-            `;
-            activePhotos = [];
-            document.getElementById('active-maintenance-form').addEventListener('submit', (e) => submitProtocol(e, 'Waschmaschine'));
-            document.getElementById('photo-upload-input').addEventListener('change', handlePhotoCapture);
-            switchTab('form');
-        }
-
-        function openDryerMenu() {
-            const container = document.getElementById('dynamic-form-content');
-            if (!container) return;
-            container.innerHTML = `
-                <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
-                    <div>
-                        <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold uppercase tracking-wider">Trockner</span>
-                        <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungsprotokoll: Trockner</h2>
-                        <p class="text-sm text-slate-500 mt-0.5">Intervall: Alle 4 Wochen</p>
-                    </div>
-                    <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 text-xl font-bold shadow-sm">
-                        <i class="fa-solid fa-wind"></i>
-                    </div>
-                </div>
-                <form id="active-maintenance-form" class="space-y-8">
-                    ${renderCommonHeaderFields()}
-                    <div>
-                        <label class="block text-sm font-bold text-slate-800 mb-2">Trockner auswählen:</label>
-                        <select id="machine-select" class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white shadow-sm font-medium">
-                            <option value="Trockner 1">Trockner 1</option>
-                            <option value="Trockner 2">Trockner 2</option>
-                            <option value="Trockner 3">Trockner 3</option>
-                            <option value="Trockner 4">Trockner 4</option>
-                        </select>
-                    </div>
-                    <div class="space-y-4">
-                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Detaillierte Prüfpunkte</h3>
-                        ${renderCheckPoint(1, 'Gründliche Reinigung des Trockners', true)}
-                        ${renderCheckPoint(2, 'Trockner ohne Mängel geprüft', true)}
-                    </div>
-                    ${renderPhotoSection()}
-                    ${renderRemarksSection()}
-                    ${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-ecbDarkGreen to-ecbGreen hover:opacity-95 text-white rounded-2xl font-extrabold shadow-xl shadow-ecbGreen/20 transition text-base flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Protokoll speichern, PDF erstellen &amp; abschließen
-                    </button>
-                </form>
-            `;
-            activePhotos = [];
-            document.getElementById('active-maintenance-form').addEventListener('submit', (e) => submitProtocol(e, 'Trockner'));
-            document.getElementById('photo-upload-input').addEventListener('change', handlePhotoCapture);
-            switchTab('form');
-        }
-
-        function openCompressorRoutine() {
-            const container = document.getElementById('dynamic-form-content');
-            if (!container) return;
-            container.innerHTML = `
-                <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
-                    <div>
-                        <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Kompressor</span>
-                        <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Kompressor Wartung (2-Wochen-Intervall)</h2>
-                        <p class="text-sm text-slate-500 mt-0.5">Regelmäßige Routineprüfung</p>
-                    </div>
-                    <div class="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center text-sky-600 text-xl font-bold shadow-sm">
-                        <i class="fa-solid fa-gauge-high"></i>
-                    </div>
-                </div>
-                <form id="active-maintenance-form" class="space-y-8">
-                    ${renderCommonHeaderFields()}
-                    <input type="hidden" id="machine-select" value="Kompressor (2-Wochen-Wartung)">
-                    <div class="p-6 bg-sky-50/80 rounded-2xl border border-sky-100 space-y-2 shadow-sm">
-                        <label class="block text-sm font-bold text-sky-900"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Laufleistung / Betriebsstunden: <span class="text-red-500">*</span></label>
-                        <input type="number" id="runtime-hours" required class="w-full border border-sky-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium shadow-sm" placeholder="z. B. 4850 Std.">
-                    </div>
-                    <div class="space-y-4">
-                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Detaillierte Prüfpunkte</h3>
-                        ${renderCheckPoint(1, 'Ölstand prüfen und nachfüllen', true)}
-                        ${renderCheckPoint(2, 'Ansaugfilter prüfen, gegebenenfalls wechseln', true)}
-                        ${renderCheckPoint(3, 'Kompressor reinigen', true)}
-                        ${renderCheckPoint(4, 'Keilriemen prüfen', true)}
-                        ${renderCheckPoint(5, 'Lufttrockner reinigen', true)}
-                        ${renderCheckPoint(6, 'Ölabscheidebehälter kontrollieren, gegebenenfalls leeren', true)}
-                    </div>
-                    ${renderPhotoSection()}
-                    ${renderRemarksSection()}
-                    ${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-ecbDarkGreen to-ecbGreen hover:opacity-95 text-white rounded-2xl font-extrabold shadow-xl shadow-ecbGreen/20 transition text-base flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Protokoll speichern, PDF erstellen &amp; abschließen
-                    </button>
-                </form>
-            `;
-            activePhotos = [];
-            document.getElementById('active-maintenance-form').addEventListener('submit', (e) => submitProtocol(e, 'Kompressor 2-Wochen'));
-            document.getElementById('photo-upload-input').addEventListener('change', handlePhotoCapture);
-            switchTab('form');
-        }
-
-        function openCompressorAnnual() {
-            const container = document.getElementById('dynamic-form-content');
-            if (!container) return;
-            container.innerHTML = `
-                <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
-                    <div>
-                        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold uppercase tracking-wider">Kompressor</span>
-                        <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Kompressor Jahreswartung</h2>
-                        <p class="text-sm text-slate-500 mt-0.5">Alle 3.000 Stunden oder 180 Tage</p>
-                    </div>
-                    <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 text-xl font-bold shadow-sm">
-                        <i class="fa-solid fa-calendar-days"></i>
-                    </div>
-                </div>
-                <form id="active-maintenance-form" class="space-y-8">
-                    ${renderCommonHeaderFields()}
-                    <input type="hidden" id="machine-select" value="Kompressor (Jahreswartung)">
-                    <div class="p-6 bg-purple-50/80 rounded-2xl border border-purple-100 space-y-2 shadow-sm">
-                        <label class="block text-sm font-bold text-purple-900"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Laufleistung / Betriebsstunden: <span class="text-red-500">*</span></label>
-                        <input type="number" id="runtime-hours" required class="w-full border border-purple-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none bg-white font-medium shadow-sm" placeholder="z. B. 6000 Std.">
-                    </div>
-                    <div class="space-y-4">
-                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Detaillierte Jahreswartungspunkte</h3>
-                        ${renderCheckPoint(1, 'Ölwechsel', true)}
-                        ${renderCheckPoint(2, 'Ölfilter wechseln', true)}
-                        ${renderCheckPoint(3, 'Luftfilter wechseln', true)}
-                        ${renderCheckPoint(4, 'Ölabscheiderpatrone wechseln', true)}
-                        ${renderCheckPoint(5, 'Ansaugfilter wechseln', true)}
-                        ${renderCheckPoint(6, 'Kompressor reinigen', true)}
-                        ${renderCheckPoint(7, 'Sichtkontrolle auf Fälligkeiten', true)}
-                        ${renderCheckPoint(8, 'Druckbehälter kontrollieren und Wasser ablassen', true)}
-                    </div>
-                    ${renderPhotoSection()}
-                    ${renderRemarksSection()}
-                    ${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-ecbDarkGreen to-ecbGreen hover:opacity-95 text-white rounded-2xl font-extrabold shadow-xl shadow-ecbGreen/20 transition text-base flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Protokoll speichern, PDF erstellen &amp; abschließen
-                    </button>
-                </form>
-            `;
-            activePhotos = [];
-            document.getElementById('active-maintenance-form').addEventListener('submit', (e) => submitProtocol(e, 'Kompressor Jahreswartung'));
-            document.getElementById('photo-upload-input').addEventListener('change', handlePhotoCapture);
-            switchTab('form');
-        }
-
-        function renderCheckPoint(index, title, allowFaultOption = true) {
-            return `
-                <div class="p-5 bg-slate-50/70 rounded-2xl border border-slate-200/80 space-y-3 hover:bg-slate-50 transition" data-title="${title}">
-                    <div class="font-bold text-slate-900 text-sm flex items-center justify-between">
-                        <span>${index}. ${title}</span>
-                        <span class="text-xs text-red-500 font-semibold">* Pflichtfeld</span>
-                    </div>
-                    <div class="flex flex-wrap gap-6 pt-1">
-                        <label class="flex items-center space-x-2.5 text-sm cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm hover:border-ecbGreen transition flex-grow sm:flex-grow-0">
-                            <input type="radio" name="point_${index}" value="erledigt" checked class="text-ecbGreen focus:ring-ecbGreen w-4 h-4">
-                            <span class="text-slate-800 font-bold">Erledigt (OK)</span>
-                        </label>
-                        ${allowFaultOption ? `
-                        <label class="flex items-center space-x-2.5 text-sm cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm hover:border-red-500 transition flex-grow sm:flex-grow-0">
-                            <input type="radio" name="point_${index}" value="nicht in Ordnung" class="text-red-500 focus:ring-red-500 w-4 h-4">
-                            <span class="text-red-600 font-bold">Nicht in Ordnung</span>
-                        </label>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderPhotoSection() {
-            return `
-                <div class="space-y-3 pt-2">
-                    <label class="block text-sm font-bold text-slate-800">
-                        <i class="fa-solid fa-camera mr-1.5 text-ecbGreen"></i> Fotodokumentation:
-                    </label>
-                    <div class="flex flex-wrap items-center gap-3">
-                        <label class="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-sm cursor-pointer transition shadow-md flex items-center gap-2">
-                            <i class="fa-solid fa-camera-retro"></i> Foto aufnehmen / hochladen
-                            <input type="file" id="photo-upload-input" accept="image/*" capture="environment" class="hidden">
-                        </label>
-                        <span id="photo-counter" class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-2 rounded-xl border border-slate-200">0 Fotos hinzugefügt</span>
-                    </div>
-                    <div id="photo-preview-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3"></div>
-                </div>
-            `;
-        }
-
-        function renderRemarksSection() {
-            return `
-                <div class="space-y-2 pt-2">
-                    <label class="block text-sm font-bold text-slate-800">Bemerkungen / Mängelfeststellung / Notizen:</label>
-                    <textarea id="remarks-input" rows="3" class="w-full border border-slate-300 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none shadow-sm font-medium" placeholder="Optionale Notizen oder Details zu den Arbeiten..."></textarea>
-                </div>
-            `;
-        }
-
-        function renderSignatureSection() {
-            return `
-                <div class="space-y-3 pt-2">
-                    <div class="flex justify-between items-center">
-                        <label class="block text-sm font-bold text-slate-800">Digitale Unterschrift des Technikers: <span class="text-red-500">*</span></label>
-                        <button type="button" id="clear-sig-btn" class="text-xs text-red-600 hover:text-red-800 font-bold bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition cursor-pointer">
-                            <i class="fa-solid fa-rotate-left mr-1"></i> Unterschrift zurücksetzen
-                        </button>
-                    </div>
-                    <div class="border-2 border-dashed border-slate-300 rounded-2xl overflow-hidden bg-white shadow-inner relative">
-                        <canvas id="signature-canvas" class="signature-canvas w-full h-44 cursor-crosshair block"></canvas>
-                        <div class="absolute bottom-2 right-3 text-[10px] text-slate-400 font-semibold pointer-events-none">Hier unterschreiben</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function handlePhotoCapture(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                activePhotos.push(e.target.result);
-                updatePhotoPreview();
-            }
-            reader.readAsDataURL(file);
-        }
-
-        function updatePhotoPreview() {
-            const grid = document.getElementById('photo-preview-grid');
-            const counter = document.getElementById('photo-counter');
-            if (!grid || !counter) return;
-            counter.innerText = `${activePhotos.length} Foto(s) hinzugefügt`;
-            grid.innerHTML = '';
-            activePhotos.forEach((photo, index) => {
-                let div = document.createElement('div');
-                div.className = "relative rounded-2xl overflow-hidden border-2 border-slate-200 h-28 bg-slate-50 group shadow-sm";
-                div.innerHTML = `
-                    <img src="${photo}" class="w-full h-full object-cover">
-                    <button type="button" onclick="removePhoto(${index})" class="absolute top-2 right-2 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs shadow-md hover:bg-red-700 transition cursor-pointer">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                `;
-                grid.appendChild(div);
+        function setupMaintenanceCards() {
+            const cards = document.querySelectorAll('.maintenance-card');
+            cards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const action = this.getAttribute('data-action');
+                    if (action === 'washer') openForm('Waschmaschine', 'Waschmaschinen (Milnor)', 'Alle 2 Wochen', [
+                        'Schmieren der Maschine', 'Reinigen der Maschine', 'Maschine auf Mängelfreiheit prüfen', 'Wassertank gereinigt'
+                    ]);
+                    else if (action === 'dryer') openForm('Trockner', 'Trockner', 'Alle 4 Wochen', [
+                        'Gründliche Reinigung des Trockners', 'Trockner ohne Mängel geprüft'
+                    ]);
+                    else if (action === 'comp-routine') openForm('Kompressor 2-Wochen', 'Kompressor Wartung', 'Alle 2 Wochen', [
+                        'Ölstand prüfen und nachfüllen', 'Ansaugfilter prüfen, gegebenenfalls wechseln', 'Kompressor reinigen', 'Keilriemen prüfen', 'Lufttrockner reinigen', 'Ölabscheidebehälter kontrollieren, gegebenenfalls leeren'
+                    ], true);
+                    else if (action === 'comp-annual') openForm('Kompressor Jahreswartung', 'Kompressor Jahreswartung', 'Alle 3.000 Std. / 180 Tage', [
+                        'Ölwechsel', 'Ölfilter wechseln', 'Luftfilter wechseln', 'Ölabscheiderpatrone wechseln', 'Ansaugfilter wechseln', 'Kompressor reinigen', 'Sichtkontrolle auf Fälligkeiten', 'Druckbehälter kontrollieren und Wasser ablassen'
+                    ], true);
+                });
             });
         }
 
-        window.removePhoto = function(index) {
-            activePhotos.splice(index, 1);
-            updatePhotoPreview();
+        function openForm(categoryKey, title, interval, points, needsRuntime = false) {
+            const container = document.getElementById('dynamic-form-content');
+            let pointsHtml = '';
+            points.forEach((pt, idx) => {
+                const num = idx + 1;
+                pointsHtml += `
+                    <div class="p-5 bg-slate-50/70 rounded-2xl border border-slate-200/80 space-y-3" data-title="${pt}">
+                        <div class="font-bold text-slate-900 text-sm flex items-center justify-between">
+                            <span>${num}. ${pt}</span>
+                            <span class="text-xs text-red-500">* Pflichtfeld</span>
+                        </div>
+                        <div class="flex flex-wrap gap-6 pt-1">
+                            <label class="flex items-center space-x-2.5 text-sm cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
+                                <input type="radio" name="point_${num}" value="erledigt" checked class="text-ecbGreen w-4 h-4">
+                                <span class="text-slate-800 font-bold">Erledigt (OK)</span>
+                            </label>
+                            <label class="flex items-center space-x-2.5 text-sm cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
+                                <input type="radio" name="point_${num}" value="nicht in Ordnung" class="text-red-500 w-4 h-4">
+                                <span class="text-red-600 font-bold">Nicht in Ordnung</span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+            });
+
+            let machineOptions = '';
+            if (categoryKey === 'Waschmaschine') {
+                machineOptions = `<option value="Waschmaschine 1 (Milnor)">Waschmaschine 1 - Milnor</option><option value="Waschmaschine 2 (Milnor)">Waschmaschine 2 - Milnor</option><option value="Waschmaschine 3 (Milnor)">Waschmaschine 3 - Milnor</option><option value="Waschmaschine 4 (Milnor)">Waschmaschine 4 - Milnor</option>`;
+            } else if (categoryKey === 'Trockner') {
+                machineOptions = `<option value="Trockner 1">Trockner 1</option><option value="Trockner 2">Trockner 2</option><option value="Trockner 3">Trockner 3</option><option value="Trockner 4">Trockner 4</option>`;
+            } else {
+                machineOptions = `<option value="${title}">${title}</option>`;
+            }
+
+            container.innerHTML = `
+                <div class="border-b border-slate-200 pb-6 mb-8">
+                    <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">${categoryKey}</span>
+                    <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungsprotokoll: ${title}</h2>
+                    <p class="text-sm text-slate-500 mt-0.5">Intervall: ${interval}</p>
+                </div>
+                <form id="maintenance-form" class="space-y-8">
+                    <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200 space-y-4">
+                        <div class="font-bold text-sm text-ecbDarkGreen">Mitarbeiter-Authentifizierung</div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-800 mb-1.5">Name des Technikers: *</label>
+                            <input type="text" id="tech-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-white" placeholder="Vor- und Nachname...">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-800 mb-2">Anlage / Maschine auswählen:</label>
+                        <select id="machine-select" class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-white">${machineOptions}</select>
+                    </div>
+
+                    ${needsRuntime ? `
+                    <div class="p-6 bg-sky-50 rounded-2xl border border-sky-100 space-y-2">
+                        <label class="block text-sm font-bold text-sky-900">Laufleistung / Betriebsstunden: *</label>
+                        <input type="number" id="runtime-input" required class="w-full border border-sky-300 rounded-xl p-3.5 text-sm bg-white" placeholder="z. B. 4850 Std.">
+                    </div>
+                    ` : ''}
+
+                    <div class="space-y-4">
+                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Prüfpunkte</h3>
+                        ${pointsHtml}
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="block text-sm font-bold text-slate-800">Fotodokumentation:</label>
+                        <label class="inline-flex px-5 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm cursor-pointer shadow-md hover:bg-slate-800 transition items-center gap-2">
+                            <i class="fa-solid fa-camera"></i> Foto aufnehmen / hochladen
+                            <input type="file" id="photo-input" accept="image/*" capture="environment" class="hidden">
+                        </label>
+                        <span id="photo-count-lbl" class="text-xs text-slate-500 ml-3">0 Fotos</span>
+                        <div id="photo-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2"></div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-slate-800">Bemerkungen:</label>
+                        <textarea id="remarks-input" rows="3" class="w-full border border-slate-300 rounded-2xl p-4 text-sm" placeholder="Notizen..."></textarea>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-sm font-bold text-slate-800">Digitale Unterschrift: *</label>
+                            <button type="button" id="clear-sig" class="text-xs text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 cursor-pointer">Zurücksetzen</button>
+                        </div>
+                        <div class="border-2 border-dashed border-slate-300 rounded-2xl overflow-hidden bg-white">
+                            <canvas id="sig-canvas" class="signature-canvas w-full h-44 block"></canvas>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-4 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-2xl font-extrabold shadow-xl transition cursor-pointer">Protokoll speichern &amp; PDF erstellen</button>
+                </form>
+            `;
+
+            activePhotos = [];
+            document.getElementById('photo-input').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    activePhotos.push(evt.target.result);
+                    updatePhotoGrid();
+                };
+                reader.readAsDataURL(file);
+            });
+
+            document.getElementById('maintenance-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitProtocol(categoryKey, points.length);
+            });
+
+            switchTab('form');
+            setTimeout(initSigPad, 100);
         }
 
-        function initSignaturePad() {
-            const canvas = document.getElementById('signature-canvas');
+        function updatePhotoGrid() {
+            const grid = document.getElementById('photo-grid');
+            document.getElementById('photo-count-lbl').innerText = `${activePhotos.length} Fotos`;
+            grid.innerHTML = '';
+            activePhotos.forEach((ph, i) => {
+                grid.innerHTML += `<div class="relative rounded-xl overflow-hidden h-24 border border-slate-200"><img src="${ph}" class="w-full h-full object-cover"></div>`;
+            });
+        }
+
+        function initSigPad() {
+            const canvas = document.getElementById('sig-canvas');
             if (!canvas) return;
-
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width > 0 ? rect.width : canvas.parentElement.clientWidth;
+            canvas.width = canvas.parentElement.clientWidth;
             canvas.height = 176;
-
             const ctx = canvas.getContext('2d');
             ctx.strokeStyle = '#0f172a';
             ctx.lineWidth = 3;
             ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
 
-            let isDrawing = false;
-
-            const clearBtn = document.getElementById('clear-sig-btn');
-            if (clearBtn) {
-                clearBtn.onclick = () => {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    if (signaturePadInstance) signaturePadInstance.hasSigned = false;
-                };
-            }
-
-            function getCoordinates(e) {
+            let drawing = false;
+            function pos(e) {
                 const r = canvas.getBoundingClientRect();
-                const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-                const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
-                return {
-                    x: clientX - r.left,
-                    y: clientY - r.top
-                };
+                const x = (e.clientX !== undefined ? e.clientX : e.touches[0].clientX) - r.left;
+                const y = (e.clientY !== undefined ? e.clientY : e.touches[0].clientY) - r.top;
+                return {x, y};
             }
 
-            function startPosition(e) {
-                isDrawing = true;
-                const pos = getCoordinates(e);
-                ctx.beginPath();
-                ctx.moveTo(pos.x, pos.y);
-                if (e.cancelable) e.preventDefault();
-            }
+            canvas.onmousedown = (e) => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+            canvas.onmousemove = (e) => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); signaturePadInstance.hasSigned = true; };
+            canvas.onmouseup = () => drawing = false;
+            canvas.onmouseleave = () => drawing = false;
 
-            function drawPosition(e) {
-                if (!isDrawing) return;
-                const pos = getCoordinates(e);
-                ctx.lineTo(pos.x, pos.y);
-                ctx.stroke();
-                if (signaturePadInstance) signaturePadInstance.hasSigned = true;
-                if (e.cancelable) e.preventDefault();
-            }
+            canvas.ontouchstart = (e) => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); };
+            canvas.ontouchmove = (e) => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); signaturePadInstance.hasSigned = true; e.preventDefault(); };
+            canvas.ontouchend = () => drawing = false;
 
-            function endPosition(e) {
-                if (!isDrawing) return;
-                isDrawing = false;
-                ctx.beginPath();
-                if (e && e.cancelable) e.preventDefault();
-            }
-
-            canvas.onmousedown = startPosition;
-            canvas.onmousemove = drawPosition;
-            canvas.onmouseup = endPosition;
-            canvas.onmouseleave = endPosition;
-
-            canvas.ontouchstart = startPosition;
-            canvas.ontouchmove = drawPosition;
-            canvas.ontouchend = endPosition;
-
-            signaturePadInstance = {
-                canvas: canvas,
-                ctx: ctx,
-                hasSigned: false
+            document.getElementById('clear-sig').onclick = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (signaturePadInstance) signaturePadInstance.hasSigned = false;
             };
+
+            signaturePadInstance = { canvas, ctx, hasSigned: false };
         }
 
-        function submitProtocol(event, categoryKey) {
-            event.preventDefault();
+        function submitProtocol(categoryKey, pointsCount) {
+            const techName = document.getElementById('tech-name').value.trim();
+            if (!techName) { showAlert('Fehler', 'Bitte Namen des Technikers angeben.', false); return; }
+            if (!signaturePadInstance || !signaturePadInstance.hasSigned) { showAlert('Fehler', 'Bitte unterschreiben.', false); return; }
 
-            const employeeName = document.getElementById('employee-name').value.trim();
-            if (!employeeName) {
-                showModal('Fehler', 'Bitte tragen Sie den Namen des zuständigen Technikers ein (Pflichtfeld).', false);
-                return;
-            }
-
-            if (!signaturePadInstance || !signaturePadInstance.hasSigned) {
-                showModal('Fehler', 'Bitte leisten Sie im Unterschriftenfeld eine gültige Unterschrift.', false);
-                return;
-            }
-
-            const machineSelect = document.getElementById('machine-select');
-            const machineName = machineSelect ? machineSelect.value : categoryKey;
+            const machine = document.getElementById('machine-select').value;
             const remarks = document.getElementById('remarks-input').value;
-            const runtimeHours = document.getElementById('runtime-hours') ? document.getElementById('runtime-hours').value : null;
+            const runtime = document.getElementById('runtime-input') ? document.getElementById('runtime-input').value : null;
 
-            const radios = document.querySelectorAll('input[type="radio"]:checked');
             let pointsData = [];
-            radios.forEach((r, idx) => {
-                const pointNum = idx + 1;
-                const parentDiv = r.closest('[data-title]');
-                const titleText = parentDiv ? parentDiv.getAttribute('data-title') : `Prüfpunkt ${pointNum}`;
-                pointsData.push({
-                    pointNumber: pointNum,
-                    title: titleText,
-                    status: r.value
-                });
-            });
-
-            const signatureData = signaturePadInstance.canvas.toDataURL();
-            const timestamp = new Date().toLocaleString('de-DE');
+            for(let i=1; i<=pointsCount; i++) {
+                const checked = document.querySelector(`input[name="point_${i}"]:checked`);
+                const title = document.querySelector(`[data-title]`).getAttribute('data-title');
+                pointsData.push({ pointNumber: i, title: title || `Prüfpunkt ${i}`, status: checked ? checked.value : 'erledigt' });
+            }
 
             const protocol = {
                 id: 'ECB-' + Math.floor(100000 + Math.random() * 900000),
                 category: categoryKey,
-                machine: machineName,
-                employee: employeeName,
-                runtime: runtimeHours,
-                date: timestamp,
+                machine: machine,
+                employee: techName,
+                runtime: runtime,
+                date: new Date().toLocaleString('de-DE'),
                 points: pointsData,
                 remarks: remarks,
                 photos: [...activePhotos],
-                signature: signatureData
+                signature: signaturePadInstance.canvas.toDataURL()
             };
 
             protocols.unshift(protocol);
             localStorage.setItem('ecb_protocols', JSON.stringify(protocols));
-
-            generatePDF(protocol);
-
-            activePhotos = [];
-            updateProtocolCount();
-            showModal('Protokoll erfolgreich', `Das Wartungsprotokoll für ${machineName} wurde gespeichert und das PDF-Dokument automatisch heruntergeladen!`, true);
+            updateCounts();
+            showAlert('Erfolg', 'Wartungsprotokoll erfolgreich gespeichert!', true);
             switchTab('history');
         }
 
-        // --- DGUV V3 MANAGEMENT LOGIC ---
-        function openDguvModal() {
-            const m = document.getElementById('modal-dguv');
-            if (m) m.classList.remove('hidden');
-        }
+        function setupModals() {
+            const openDguv = document.getElementById('open-dguv-btn');
+            const closeDguv = document.getElementById('close-dguv-modal');
+            const modalDguv = document.getElementById('modal-dguv');
 
-        function closeDguvModal() {
-            const m = document.getElementById('modal-dguv');
-            if (m) m.classList.add('hidden');
-        }
+            if (openDguv) openDguv.onclick = () => modalDguv.classList.remove('hidden');
+            if (closeDguv) closeDguv.onclick = () => modalDguv.classList.add('hidden');
 
-        function saveDguvDevice(event) {
-            event.preventDefault();
-            const name = document.getElementById('dguv-dev-name').value.trim();
-            const location = document.getElementById('dguv-dev-location').value.trim();
-            const dueDate = document.getElementById('dguv-dev-duedate').value;
-
-            if (!name || !location || !dueDate) return;
-
-            const newDev = {
-                id: 'DGUV-' + Math.floor(1000 + Math.random() * 9000),
-                name: name,
-                location: location,
-                dueDate: dueDate,
-                status: 'Offen',
-                uploadDate: null,
-                fileName: null,
-                fileData: null
+            document.getElementById('dguv-form').onsubmit = (e) => {
+                e.preventDefault();
+                const name = document.getElementById('dguv-name').value;
+                const loc = document.getElementById('dguv-location').value;
+                const date = document.getElementById('dguv-date').value;
+                dguvDevices.unshift({ id: 'DGUV-'+Math.floor(1000+Math.random()*9000), name, location: loc, dueDate: date, status: 'Offen' });
+                localStorage.setItem('ecb_dguv_devices', JSON.stringify(dguvDevices));
+                modalDguv.classList.add('hidden');
+                updateCounts();
+                renderDguvDevices();
+                showAlert('Erfolg', 'DGUV V3 Gerät gespeichert!', true);
             };
 
-            dguvDevices.unshift(newDev);
-            localStorage.setItem('ecb_dguv_devices', JSON.stringify(dguvDevices));
-            closeDguvModal();
-            const form = document.getElementById('dguv-form');
-            if (form) form.reset();
-            updateDguvCount();
-            renderDguvDevices();
-            showModal('Erfolgreich', 'Das Gerät wurde erfasst und der Prüftermin hinterlegt.', true);
-        }
-
-        window.handleProtocolUpload = function(event, deviceId) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const dev = dguvDevices.find(d => d.id === deviceId);
-                if (dev) {
-                    dev.status = 'Erledigt';
-                    dev.uploadDate = new Date().toLocaleString('de-DE');
-                    dev.fileName = file.name;
-                    dev.fileData = e.target.result;
-                    localStorage.setItem('ecb_dguv_devices', JSON.stringify(dguvDevices));
-                    renderDguvDevices();
-                    showModal('Protokoll zugeordnet', `Das Messprotokoll wurde für Gerät "${dev.name}" hochgeladen und der Status auf „Erledigt“ gesetzt.`, true);
+            document.getElementById('close-msg-btn').onclick = () => document.getElementById('modal-msg').classList.add('hidden');
+            document.getElementById('clear-history-btn').onclick = () => {
+                if(confirm('Historie wirklich löschen?')) {
+                    protocols = [];
+                    localStorage.removeItem('ecb_protocols');
+                    updateCounts();
+                    renderHistory();
                 }
             };
-            reader.readAsDataURL(file);
         }
 
-        window.deleteDguvDevice = function(index) {
-            dguvDevices.splice(index, 1);
-            localStorage.setItem('ecb_dguv_devices', JSON.stringify(dguvDevices));
-            updateDguvCount();
-            renderDguvDevices();
-        }
-
-        function updateDguvCount() {
-            const el = document.getElementById('dguv-count');
-            if (el) el.innerText = dguvDevices.length;
-        }
-
-        function renderDguvDevices() {
-            const container = document.getElementById('dguv-devices-container');
-            if (!container) return;
-
-            if (dguvDevices.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full bg-white rounded-3xl p-16 text-center border border-slate-200/80 text-slate-500 shadow-sm">
-                        <div class="w-16 h-16 rounded-2xl bg-sky-50 flex items-center justify-center text-3xl mx-auto mb-4 text-sky-600">
-                            <i class="fa-solid fa-plug-circle-xmark"></i>
-                        </div>
-                        <p class="text-lg font-bold text-slate-800">Keine DGUV V3 Geräte erfasst</p>
-                        <p class="text-sm text-slate-500 mt-1 max-w-md mx-auto">Klicken Sie auf „Neues Gerät erfassen“, um elektrische Betriebsmittel und Prüftermine zu hinterlegen.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            let html = '';
-            dguvDevices.forEach((dev, idx) => {
-                const isDone = dev.status === 'Erledigt';
-                html += `
-                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 flex flex-col justify-between space-y-4 hover:shadow-md transition">
-                        <div>
-                            <div class="flex justify-between items-start gap-2">
-                                <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${isDone ? 'bg-emerald-50 text-ecbGreen' : 'bg-amber-50 text-amber-600'}">${dev.status}</span>
-                                <button type="button" onclick="deleteDguvDevice(${idx})" class="text-slate-400 hover:text-red-600 transition text-sm cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
-                            </div>
-                            <h3 class="text-xl font-extrabold text-slate-900 mt-3">${dev.name}</h3>
-                            <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-sky-600 mr-1"></i> Standort: <strong class="text-slate-700">${dev.location}</strong></p>
-                            <p class="text-xs text-slate-500 mt-1"><i class="fa-regular fa-calendar-days text-sky-600 mr-1"></i> Fälligkeitstermin: <strong class="text-slate-700">${dev.dueDate}</strong></p>
-                        </div>
-                        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-2">
-                            <div class="text-xs font-bold text-slate-700">Messprotokoll Upload:</div>
-                            ${isDone ? `
-                                <div class="text-xs text-emerald-700 bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 flex items-center justify-between">
-                                    <span class="truncate"><i class="fa-solid fa-file-pdf mr-1"></i> ${dev.fileName}</span>
-                                    <a href="${dev.fileData}" download="${dev.fileName}" class="font-bold underline ml-2">Ansehen</a>
-                                </div>
-                                <div class="text-[10px] text-slate-400">Hochgeladen am: ${dev.uploadDate}</div>
-                            ` : `
-                                <label class="w-full py-2.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl font-bold text-xs text-slate-700 transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                                    <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Messprotokoll hochladen
-                                    <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.id}')" class="hidden">
-                                </label>
-                            `}
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
-        // --- PDF GENERATION ---
-        function generatePDF(p) {
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('p', 'mm', 'a4');
-                const primaryColor = [63, 98, 18];
-                const ecbGreen = [101, 163, 13];
-                const darkTextColor = [15, 23, 42];
-                const lightGrayBg = [241, 245, 249];
-
-                doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-                doc.rect(0, 0, 210, 38, 'F');
-
-                doc.setFillColor(ecbGreen[0], ecbGreen[1], ecbGreen[2]);
-                doc.roundedRect(15, 6, 26, 26, 4, 4, 'F');
-                doc.setFillColor(255, 255, 255);
-                doc.circle(28, 20, 1.5, 'F');
-                doc.circle(23, 23, 1.2, 'F');
-                doc.circle(33, 22, 1.2, 'F');
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(16);
-                doc.text('ecb', 18, 20);
-
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(18);
-                doc.text('ECB REINIGUNGSSYSTEME', 48, 17);
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(10);
-                doc.text('Digitales Wartungs- und Instandhaltungsprotokoll', 48, 25);
-
-                doc.setFillColor(lightGrayBg[0], lightGrayBg[1], lightGrayBg[2]);
-                doc.roundedRect(15, 44, 180, 28, 3, 3, 'F');
-                doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(11);
-                doc.text(`Anlage / Maschine: ${p.machine}`, 20, 52);
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(9);
-                doc.text(`Kategorie: ${p.category}`, 20, 59);
-                doc.text(`Protokoll-ID: ${p.id}`, 120, 59);
-                doc.text(`Techniker: ${p.employee}`, 20, 65);
-                doc.text(`Zeitstempel: ${p.date}`, 120, 65);
-                if (p.runtime) {
-                    doc.text(`Laufleistung: ${p.runtime} Betriebsstunden`, 120, 52);
-                }
-
-                let startY = 78;
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(12);
-                doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-                doc.text('Wartungs- und Prüfpunkte', 15, startY);
-                startY += 4;
-                doc.setDrawColor(200, 200, 200);
-                doc.line(15, startY, 195, startY);
-                startY += 7;
-
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(10);
-                p.points.forEach((pt) => {
-                    const isOk = pt.status === 'erledigt';
-                    doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
-                    doc.text(`${pt.pointNumber}. ${pt.title}:`, 20, startY);
-                    if (isOk) {
-                        doc.setTextColor(46, 125, 50);
-                        doc.setFont('helvetica', 'bold');
-                        doc.text('ERLEDIGT (OK)', 140, startY);
-                    } else {
-                        doc.setTextColor(211, 47, 47);
-                        doc.setFont('helvetica', 'bold');
-                        doc.text('NICHT IN ORDNUNG', 140, startY);
-                    }
-                    doc.setFont('helvetica', 'normal');
-                    startY += 7;
-                });
-
-                startY += 4;
-                if (startY > 230) { doc.addPage(); startY = 20; }
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(12);
-                doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-                doc.text('Bemerkungen & Mängelfeststellung', 15, startY);
-                startY += 4;
-                doc.line(15, startY, 195, startY);
-                startY += 7;
-
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(10);
-                doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
-                const remarksText = p.remarks || 'Keine Bemerkungen angegeben.';
-                const splitRemarks = doc.splitTextToSize(remarksText, 175);
-                doc.text(splitRemarks, 20, startY);
-                startY += (splitRemarks.length * 6) + 6;
-
-                if (startY > 210) { doc.addPage(); startY = 20; }
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(12);
-                doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-                doc.text('Digitale Unterschrift des Technikers', 15, startY);
-                startY += 4;
-                doc.line(15, startY, 195, startY);
-                startY += 7;
-
-                if (p.signature) {
-                    doc.addImage(p.signature, 'PNG', 15, startY, 65, 26);
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(9);
-                    doc.setTextColor(100, 100, 100);
-                    doc.text(`Rechtsverbindlich unterzeichnet von: ${p.employee}`, 85, startY + 15);
-                    startY += 34;
-                }
-
-                if (p.photos && p.photos.length > 0) {
-                    if (startY > 180) { doc.addPage(); startY = 20; }
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(12);
-                    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-                    doc.text(`Fotodokumentation (${p.photos.length} Fotos)`, 15, startY);
-                    startY += 4;
-                    doc.line(15, startY, 195, startY);
-                    startY += 7;
-
-                    let xPos = 15;
-                    let yPos = startY;
-                    p.photos.forEach((ph) => {
-                        try {
-                            doc.addImage(ph, 'JPEG', xPos, yPos, 45, 35);
-                            xPos += 50;
-                            if (xPos > 150) {
-                                xPos = 15;
-                                yPos += 40;
-                            }
-                        } catch(e) {}
-                    });
-                }
-
-                const pageCount = doc.internal.getNumberOfPages();
-                for(let i = 1; i <= pageCount; i++) {
-                    doc.setPage(i);
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(8);
-                    doc.setTextColor(150, 150, 150);
-                    doc.text(`ECB Reinigungssysteme - Digitales Wartungssystem - Protokoll-ID: ${p.id} - Seite ${i} von ${pageCount}`, 15, 290);
-                }
-
-                doc.save(`ECB_Wartungsprotokoll_${p.id}.pdf`);
-            } catch(err) {
-                console.error("PDF Generation Error:", err);
-            }
-        }
-
-        window.downloadProtocolPDF = function(index) {
-            generatePDF(protocols[index]);
-        }
-
-        function updateProtocolCount() {
-            const el = document.getElementById('protocol-count');
-            if (el) el.innerText = protocols.length;
+        function showAlert(title, text, success) {
+            document.getElementById('msg-title').innerText = title;
+            document.getElementById('msg-text').innerText = text;
+            const icon = document.getElementById('msg-icon');
+            icon.className = success ? "w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto" : "w-16 h-16 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl mx-auto";
+            icon.innerHTML = success ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-triangle-exclamation"></i>';
+            document.getElementById('modal-msg').classList.remove('hidden');
         }
 
         function renderHistory() {
-            const container = document.getElementById('protocols-container');
-            if (!container) return;
-
-            if (protocols.length === 0) {
-                container.innerHTML = `
-                    <div class="bg-white rounded-3xl p-16 text-center border border-slate-200/80 text-slate-500 shadow-sm">
-                        <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl mx-auto mb-4 text-slate-400">
-                            <i class="fa-solid fa-folder-open"></i>
-                        </div>
-                        <p class="text-lg font-bold text-slate-800">Keine Protokolle vorhanden</p>
-                        <p class="text-sm text-slate-500 mt-1 max-w-md mx-auto">Wählen Sie im Dashboard eine Anlage aus, um eine Wartung durchzuführen.</p>
-                    </div>
-                `;
+            const c = document.getElementById('protocols-container');
+            if(protocols.length === 0) {
+                c.innerHTML = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500">Keine Protokolle vorhanden.</div>';
                 return;
             }
-
-            let html = '';
+            let h = '';
             protocols.forEach((p, idx) => {
-                let pointsHtml = (p.points || []).map(pt => `
-                    <div class="text-xs flex justify-between py-1.5 border-b border-slate-100 items-center">
-                        <span class="text-slate-700 font-medium">${pt.pointNumber}. ${pt.title}</span>
-                        <span class="font-bold px-2 py-0.5 rounded-md ${pt.status === 'erledigt' ? 'bg-emerald-50 text-ecbGreen' : 'bg-red-50 text-red-600'}">${pt.status.toUpperCase()}</span>
-                    </div>
-                `).join('');
-
-                let photosHtml = (p.photos || []).map(ph => `<img src="${ph}" class="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-sm">`).join('');
-
-                html += `
-                    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6 hover:shadow-md transition">
-                        <div class="flex flex-wrap justify-between items-start gap-4 border-b border-slate-100 pb-5">
+                h += `
+                    <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-4 shadow-sm">
+                        <div class="flex justify-between items-start">
                             <div>
-                                <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">${p.category}</span>
-                                <h3 class="text-xl font-extrabold text-slate-900 mt-2">${p.machine}</h3>
-                                <p class="text-xs text-slate-500 mt-1 flex flex-wrap gap-3">
-                                    <span><i class="fa-regular fa-clock text-ecbGreen mr-1"></i> ${p.date}</span>
-                                    <span><i class="fa-solid fa-user text-slate-400 mr-1"></i> Techniker: <strong class="text-slate-700">${p.employee}</strong></span>
-                                    ${p.runtime ? `<span><i class="fa-solid fa-gauge text-sky-600 mr-1"></i> Laufleistung: <strong class="text-sky-700">${p.runtime} Std.</strong></span>` : ''}
-                                    <span>ID: ${p.id}</span>
-                                </p>
+                                <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold">${p.category}</span>
+                                <h3 class="text-xl font-bold text-slate-900 mt-2">${p.machine}</h3>
+                                <p class="text-xs text-slate-500 mt-1">${p.date} | Techniker: <strong>${p.employee}</strong></p>
                             </div>
-                            <div class="flex flex-wrap items-center gap-2">
-                                <button type="button" onclick="downloadProtocolPDF(${idx})" class="px-4 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm cursor-pointer">
-                                    <i class="fa-solid fa-file-pdf"></i> PDF herunterladen
-                                </button>
-                                <button type="button" onclick="emailProtocol(${idx})" class="px-4 py-2.5 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm cursor-pointer">
-                                    <i class="fa-solid fa-envelope"></i> E-Mail
-                                </button>
-                                <button type="button" onclick="deleteProtocol(${idx})" class="px-3.5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-xs font-bold transition cursor-pointer">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </div>
+                            <button type="button" onclick="deleteProt(${idx})" class="text-red-500 hover:text-red-700 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <h4 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-list-check text-ecbGreen"></i> Detaillierter Prüfpunkt-Status
-                                </h4>
-                                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-1">
-                                    ${pointsHtml}
-                                </div>
-                            </div>
-                            <div>
-                                <h4 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-comment-dots text-ecbGreen"></i> Bemerkungen &amp; Fotos
-                                </h4>
-                                <p class="text-xs text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-3 leading-relaxed">${p.remarks || 'Keine Bemerkungen angegeben.'}</p>
-                                <div class="flex flex-wrap gap-2">
-                                    ${photosHtml || '<span class="text-xs text-slate-400 italic">Keine Fotos angehängt</span>'}
-                                </div>
-                            </div>
-                        </div>
-                        ${p.signature ? `
-                            <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
-                                <span class="text-xs font-bold text-slate-500">Digitale Signatur (${p.employee}):</span>
-                                <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
-                                    <img src="${p.signature}" class="h-12 object-contain">
-                                </div>
-                            </div>
-                        ` : ''}
                     </div>
                 `;
             });
-            container.innerHTML = html;
+            c.innerHTML = h;
         }
 
-        window.deleteProtocol = function(index) {
-            protocols.splice(index, 1);
+        window.deleteProt = function(idx) {
+            protocols.splice(idx, 1);
             localStorage.setItem('ecb_protocols', JSON.stringify(protocols));
-            updateProtocolCount();
+            updateCounts();
             renderHistory();
         }
 
-        function clearHistory() {
-            if (!confirm('Möchten Sie wirklich die gesamte Historie unwiderruflich löschen?')) return;
-            protocols = [];
-            localStorage.removeItem('ecb_protocols');
-            updateProtocolCount();
-            renderHistory();
+        function renderDguvDevices() {
+            const c = document.getElementById('dguv-devices-container');
+            if(dguvDevices.length === 0) {
+                c.innerHTML = '<div class="col-span-full bg-white rounded-3xl p-12 text-center text-slate-500">Keine DGUV V3 Geräte erfasst.</div>';
+                return;
+            }
+            let h = '';
+            dguvDevices.forEach((d, idx) => {
+                h += `
+                    <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-3">
+                        <div class="flex justify-between">
+                            <span class="px-3 py-1 bg-sky-50 text-sky-600 rounded-full text-xs font-bold">${d.status}</span>
+                            <button type="button" onclick="deleteDguv(${idx})" class="text-red-500 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900">${d.name}</h3>
+                        <p class="text-xs text-slate-500">Standort: ${d.location} | Fällig: ${d.dueDate}</p>
+                    </div>
+                `;
+            });
+            c.innerHTML = h;
         }
 
-        window.emailProtocol = function(index) {
-            const p = protocols[index];
-            const subject = encodeURIComponent(`Wartungsprotokoll: ${p.machine} (${p.id})`);
-            let pointsText = (p.points || []).map(pt => `- ${pt.title}: ${pt.status.toUpperCase()}`).join('\n');
-            const body = encodeURIComponent(
-                `ECB Reinigungssysteme - Digitales Wartungssystem\n\n` +
-                `Anlage: ${p.machine}\n` +
-                `Kategorie: ${p.category}\n` +
-                `Techniker: ${p.employee}\n` +
-                `Zeitstempel: ${p.date}\n` +
-                (p.runtime ? `Laufleistung: ${p.runtime} Std.\n` : '') +
-                `Protokoll-ID: ${p.id}\n\n` +
-                `Detaillierte Prüfpunkte:\n${pointsText}\n\n` +
-                `Bemerkungen:\n${p.remarks || 'Keine'}\n\n` +
-                `Dieses Protokoll wurde im digitalen Wartungssystem erfasst, mit Zeitstempel versehen und rechtsverbindlich unterzeichnet.`
-            );
-            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        window.deleteDguv = function(idx) {
+            dguvDevices.splice(idx, 1);
+            localStorage.setItem('ecb_dguv_devices', JSON.stringify(dguvDevices));
+            updateCounts();
+            renderDguvDevices();
         }
     </script>
 </body>
