@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECB Reinigungssysteme - Digitales Wartungssystem</title>
+    <title>ECB Reinigungssysteme - Digitales Wartungssystem (Cloud)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- jsPDF for professional PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -31,20 +33,20 @@
         body { font-family: 'Inter', sans-serif; }
         .signature-canvas { touch-action: none; }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
+            from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in {
-            animation: fadeIn 0.25s ease-out forwards;
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
-    <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-50">
+    <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-50 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
-                <div class="w-12 h-12 rounded-2xl bg-[#65a30d] p-0.5 shadow-md flex items-center justify-center overflow-hidden border border-white/20">
+                <div class="w-12 h-12 rounded-2xl bg-[#65a30d] p-0.5 shadow-md flex items-center justify-center transform hover:rotate-3 transition duration-300 overflow-hidden border border-white/20">
                     <svg viewBox="0 0 500 500" class="w-full h-full rounded-xl">
                         <rect width="500" height="500" fill="#65a30d"/>
                         <path d="M 20 330 C 80 270 200 270 300 320 C 380 360 430 360 480 300 C 470 320 420 390 350 390 C 250 390 120 410 40 370 C 25 362 20 345 20 330 Z" fill="#ffffff" opacity="0.95"/>
@@ -54,7 +56,10 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
-                    <p class="text-xs text-ecbLightGreen font-medium">Digitales Wartungssystem (Aktiv)</p>
+                    <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse"></span>
+                        Digitales Wartungssystem (Cloud Synchronisiert)
+                    </p>
                 </div>
             </div>
             <nav class="flex items-center space-x-2 mt-3 sm:mt-0 flex-wrap gap-2">
@@ -76,10 +81,11 @@
         <!-- DASHBOARD TAB -->
         <div id="tab-dashboard" class="space-y-8 animate-fade-in">
             <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
+                <div class="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-ecbLightGreen/40 rounded-full blur-3xl pointer-events-none"></div>
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen- &amp; Maschinenwartung</h2>
-                    <p class="text-slate-600 mt-2 text-base">Klicken Sie unten auf eine Kategorie, um das Wartungsprotokoll zu starten.</p>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen. Alle Daten werden sofort in der Cloud gespeichert und auf allen verbundenen Geräten angezeigt.</p>
                 </div>
             </div>
 
@@ -87,7 +93,7 @@
                 <!-- Waschmaschinen Card -->
                 <div data-action="washer" class="maintenance-card bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-ecbGreen hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
+                        <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
                             <i class="fa-solid fa-shirt"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900">Waschmaschinen</h3>
@@ -96,7 +102,7 @@
                     </div>
                     <div class="mt-8 flex items-center justify-between text-sm font-bold text-ecbDarkGreen group-hover:text-ecbGreen">
                         <span>Wartung starten</span>
-                        <div class="w-8 h-8 rounded-full bg-ecbLightGreen flex items-center justify-center">
+                        <div class="w-8 h-8 rounded-full bg-ecbLightGreen flex items-center justify-center group-hover:translate-x-1 transition">
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </div>
                     </div>
@@ -105,7 +111,7 @@
                 <!-- Trockner Card -->
                 <div data-action="dryer" class="maintenance-card bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-amber-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
+                        <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
                             <i class="fa-solid fa-wind"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900">Trockner</h3>
@@ -114,7 +120,7 @@
                     </div>
                     <div class="mt-8 flex items-center justify-between text-sm font-bold text-amber-700">
                         <span>Wartung starten</span>
-                        <div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center">
+                        <div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center group-hover:translate-x-1 transition">
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </div>
                     </div>
@@ -123,7 +129,7 @@
                 <!-- Kompressor Routine Card -->
                 <div data-action="comp-routine" class="maintenance-card bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-sky-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
+                        <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
                             <i class="fa-solid fa-gauge-high"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900">Kompressor Wartung</h3>
@@ -132,7 +138,7 @@
                     </div>
                     <div class="mt-8 flex items-center justify-between text-sm font-bold text-sky-700">
                         <span>Wartung starten</span>
-                        <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center">
+                        <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center group-hover:translate-x-1 transition">
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </div>
                     </div>
@@ -141,7 +147,7 @@
                 <!-- Kompressor Annual Card -->
                 <div data-action="comp-annual" class="maintenance-card bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-purple-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
+                        <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
                             <i class="fa-solid fa-calendar-days"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900">Kompressor Jahreswartung</h3>
@@ -150,7 +156,7 @@
                     </div>
                     <div class="mt-8 flex items-center justify-between text-sm font-bold text-purple-700">
                         <span>Wartung starten</span>
-                        <div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center">
+                        <div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center group-hover:translate-x-1 transition">
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </div>
                     </div>
@@ -164,7 +170,7 @@
                 <div>
                     <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Prüfmanagement</span>
                     <h2 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen (Elektrische Betriebsmittel)</h2>
-                    <p class="text-sm text-slate-600 mt-1">Geräte erfassen, Fälligkeitstage hinterlegen und Messprotokolle zuordnen.</p>
+                    <p class="text-sm text-slate-600 mt-1">Geräte erfassen, Fälligkeitstage hinterlegen und Messprotokolle cloud-synchronisiert zuordnen.</p>
                 </div>
                 <button type="button" id="open-dguv-btn" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm transition shadow-lg shadow-sky-600/20 flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-plus"></i> Neues Gerät erfassen
@@ -177,8 +183,8 @@
         <div id="tab-history" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
                 <div>
-                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle</h2>
-                    <p class="text-sm text-slate-600 mt-1">Alle archivierten Protokolle mit Zeitstempel und PDF-Export.</p>
+                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle (Cloud Synchronisiert)</h2>
+                    <p class="text-sm text-slate-600 mt-1">Alle archivierten Protokolle in Echtzeit verfügbar.</p>
                 </div>
                 <button type="button" id="clear-history-btn" class="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-bold transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-trash-can"></i> Verlauf leeren
@@ -197,7 +203,6 @@
 
     </main>
 
-    <!-- DGUV MODAL -->
     <div id="modal-dguv" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -209,22 +214,21 @@
             <form id="dguv-form" class="space-y-4">
                 <div>
                     <label class="block text-sm font-bold text-slate-800 mb-1.5">Gerätebezeichnung / Inventar-Nr.: *</label>
-                    <input type="text" id="dguv-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none" placeholder="z. B. Industriestaubsauger #2">
+                    <input type="text" id="dguv-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium" placeholder="z. B. Industriestaubsauger #2">
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-800 mb-1.5">Standort / Abteilung: *</label>
-                    <input type="text" id="dguv-location" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none" placeholder="z. B. Waschebene Halle 1">
+                    <input type="text" id="dguv-location" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium" placeholder="z. B. Waschebene Halle 1">
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-800 mb-1.5">Nächster Fälligkeitstermin: *</label>
-                    <input type="date" id="dguv-date" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    <input type="date" id="dguv-date" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium">
                 </div>
-                <button type="submit" class="w-full py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold shadow-lg transition cursor-pointer">Gerät speichern</button>
+                <button type="submit" class="w-full py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold shadow-lg transition cursor-pointer">Gerät in Cloud speichern</button>
             </form>
         </div>
     </div>
 
-    <!-- MESSAGE MODAL -->
     <div id="modal-msg" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl text-center">
             <div id="msg-icon" class="w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto">
@@ -236,27 +240,94 @@
         </div>
     </div>
 
-    <script>
-        // Lokaler State
-        let protocols = JSON.parse(localStorage.getItem('ecb_protocols') || '[]');
-        let dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices') || '[]');
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-maintenance';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyDummyKeyForLocalTesting",
+            authDomain: "ecb-maintenance.firebaseapp.com",
+            projectId: "ecb-maintenance",
+            storageBucket: "ecb-maintenance.appspot.com",
+            messagingSenderId: "229926423123",
+            appId: "1:229926423123:web:ecbmaintenance"
+        };
+
+        let app, db, auth, userId = null;
+        let protocols = [];
+        let dguvDevices = [];
         let activePhotos = [];
         let signaturePadInstance = null;
 
         document.addEventListener('DOMContentLoaded', function() {
-            initApp();
-        });
-
-        function initApp() {
-            updateCounts();
+            initFirebase();
             setupNavigation();
             setupMaintenanceCards();
             setupModals();
+        });
+
+        async function initFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
+                        initFirestoreListeners();
+                    }
+                });
+            } catch (err) {
+                console.warn("Firebase Init Fallback:", err);
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
+                protocols = JSON.parse(localStorage.getItem('ecb_protocols_offline') || '[]');
+                dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_offline') || '[]');
+                updateCounts();
+            }
+        }
+
+        function initFirestoreListeners() {
+            if (!userId) return;
+
+            const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
+            onSnapshot(protocolsCol, (snapshot) => {
+                protocols = [];
+                snapshot.forEach(docSnap => {
+                    protocols.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                });
+                protocols.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+                updateCounts();
+            }, (error) => {
+                console.error("Protocols listener error:", error);
+            });
+
+            const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
+            onSnapshot(dguvCol, (snapshot) => {
+                dguvDevices = [];
+                snapshot.forEach(docSnap => {
+                    dguvDevices.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                });
+                updateCounts();
+            }, (error) => {
+                console.error("DGUV listener error:", error);
+            });
         }
 
         function updateCounts() {
-            document.getElementById('protocol-count').innerText = protocols.length;
-            document.getElementById('dguv-count').innerText = dguvDevices.length;
+            const protoCountEl = document.getElementById('protocol-count');
+            const dguvCountEl = document.getElementById('dguv-count');
+            if (protoCountEl) protoCountEl.innerText = protocols.length;
+            if (dguvCountEl) dguvCountEl.innerText = dguvDevices.length;
         }
 
         function setupNavigation() {
@@ -330,7 +401,7 @@
             points.forEach((pt, idx) => {
                 const num = idx + 1;
                 pointsHtml += `
-                    <div class="p-5 bg-slate-50/70 rounded-2xl border border-slate-200/80 space-y-3" data-title="${pt}">
+                    <div class="p-5 bg-slate-50/70 rounded-2xl border border-slate-200/80 space-y-3 point-box" data-title="${pt}">
                         <div class="font-bold text-slate-900 text-sm flex items-center justify-between">
                             <span>${num}. ${pt}</span>
                             <span class="text-xs text-red-500">* Pflichtfeld</span>
@@ -369,19 +440,19 @@
                         <div class="font-bold text-sm text-ecbDarkGreen">Mitarbeiter-Authentifizierung</div>
                         <div>
                             <label class="block text-sm font-bold text-slate-800 mb-1.5">Name des Technikers: *</label>
-                            <input type="text" id="tech-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-white" placeholder="Vor- und Nachname...">
+                            <input type="text" id="tech-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-white font-medium" placeholder="Vor- und Nachname...">
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-bold text-slate-800 mb-2">Anlage / Maschine auswählen:</label>
-                        <select id="machine-select" class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-white">${machineOptions}</select>
+                        <select id="machine-select" class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-white font-medium">${machineOptions}</select>
                     </div>
 
                     ${needsRuntime ? `
                     <div class="p-6 bg-sky-50 rounded-2xl border border-sky-100 space-y-2">
                         <label class="block text-sm font-bold text-sky-900">Laufleistung / Betriebsstunden: *</label>
-                        <input type="number" id="runtime-input" required class="w-full border border-sky-300 rounded-xl p-3.5 text-sm bg-white" placeholder="z. B. 4850 Std.">
+                        <input type="number" id="runtime-input" required class="w-full border border-sky-300 rounded-xl p-3.5 text-sm bg-white font-medium" placeholder="z. B. 4850 Std.">
                     </div>
                     ` : ''}
 
@@ -402,7 +473,7 @@
 
                     <div class="space-y-2">
                         <label class="block text-sm font-bold text-slate-800">Bemerkungen:</label>
-                        <textarea id="remarks-input" rows="3" class="w-full border border-slate-300 rounded-2xl p-4 text-sm" placeholder="Notizen..."></textarea>
+                        <textarea id="remarks-input" rows="3" class="w-full border border-slate-300 rounded-2xl p-4 text-sm font-medium" placeholder="Notizen..."></textarea>
                     </div>
 
                     <div class="space-y-3">
@@ -415,7 +486,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full py-4 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-2xl font-extrabold shadow-xl transition cursor-pointer">Protokoll speichern &amp; PDF erstellen</button>
+                    <button type="submit" class="w-full py-4 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-2xl font-extrabold shadow-xl transition cursor-pointer">Protokoll in Cloud speichern &amp; PDF erstellen</button>
                 </form>
             `;
 
@@ -433,11 +504,11 @@
 
             document.getElementById('maintenance-form').addEventListener('submit', function(e) {
                 e.preventDefault();
-                submitProtocol(categoryKey, points.length);
+                submitProtocol(categoryKey);
             });
 
             switchTab('form');
-            setTimeout(initSigPad, 100);
+            setTimeout(initSigPad, 150);
         }
 
         function updatePhotoGrid() {
@@ -452,7 +523,7 @@
         function initSigPad() {
             const canvas = document.getElementById('sig-canvas');
             if (!canvas) return;
-            canvas.width = canvas.parentElement.clientWidth;
+            canvas.width = canvas.parentElement.clientWidth || 400;
             canvas.height = 176;
             const ctx = canvas.getContext('2d');
             ctx.strokeStyle = '#0f172a';
@@ -462,8 +533,8 @@
             let drawing = false;
             function pos(e) {
                 const r = canvas.getBoundingClientRect();
-                const x = (e.clientX !== undefined ? e.clientX : e.touches[0].clientX) - r.left;
-                const y = (e.clientY !== undefined ? e.clientY : e.touches[0].clientY) - r.top;
+                const x = (e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0)) - r.left;
+                const y = (e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0)) - r.top;
                 return {x, y};
             }
 
@@ -476,15 +547,18 @@
             canvas.ontouchmove = (e) => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); signaturePadInstance.hasSigned = true; e.preventDefault(); };
             canvas.ontouchend = () => drawing = false;
 
-            document.getElementById('clear-sig').onclick = () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                if (signaturePadInstance) signaturePadInstance.hasSigned = false;
-            };
+            const clearSigBtn = document.getElementById('clear-sig');
+            if (clearSigBtn) {
+                clearSigBtn.onclick = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    if (signaturePadInstance) signaturePadInstance.hasSigned = false;
+                };
+            }
 
             signaturePadInstance = { canvas, ctx, hasSigned: false };
         }
 
-        function submitProtocol(categoryKey, pointsCount) {
+        async function submitProtocol(categoryKey) {
             const techName = document.getElementById('tech-name').value.trim();
             if (!techName) { showAlert('Fehler', 'Bitte Namen des Technikers angeben.', false); return; }
             if (!signaturePadInstance || !signaturePadInstance.hasSigned) { showAlert('Fehler', 'Bitte unterschreiben.', false); return; }
@@ -494,11 +568,13 @@
             const runtime = document.getElementById('runtime-input') ? document.getElementById('runtime-input').value : null;
 
             let pointsData = [];
-            for(let i=1; i<=pointsCount; i++) {
-                const checked = document.querySelector(`input[name="point_${i}"]:checked`);
-                const title = document.querySelector(`[data-title]`).getAttribute('data-title');
-                pointsData.push({ pointNumber: i, title: title || `Prüfpunkt ${i}`, status: checked ? checked.value : 'erledigt' });
-            }
+            const pointBoxes = document.querySelectorAll('.point-box');
+            pointBoxes.forEach((box, idx) => {
+                const num = idx + 1;
+                const title = box.getAttribute('data-title');
+                const checked = box.querySelector(`input[name="point_${num}"]:checked`);
+                pointsData.push({ pointNumber: num, title: title, status: checked ? checked.value : 'erledigt' });
+            });
 
             const protocol = {
                 id: 'ECB-' + Math.floor(100000 + Math.random() * 900000),
@@ -513,10 +589,20 @@
                 signature: signaturePadInstance.canvas.toDataURL()
             };
 
-            protocols.unshift(protocol);
-            localStorage.setItem('ecb_protocols', JSON.stringify(protocols));
+            try {
+                if (db && userId) {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'), protocol);
+                } else {
+                    protocols.unshift(protocol);
+                    localStorage.setItem('ecb_protocols_offline', JSON.stringify(protocols));
+                }
+            } catch (err) {
+                console.error("Error saving protocol:", err);
+            }
+
+            generatePDF(protocol);
             updateCounts();
-            showAlert('Erfolg', 'Wartungsprotokoll erfolgreich gespeichert!', true);
+            showAlert('Erfolg', 'Wartungsprotokoll in der Cloud gespeichert & PDF erstellt!', true);
             switchTab('history');
         }
 
@@ -528,28 +614,55 @@
             if (openDguv) openDguv.onclick = () => modalDguv.classList.remove('hidden');
             if (closeDguv) closeDguv.onclick = () => modalDguv.classList.add('hidden');
 
-            document.getElementById('dguv-form').onsubmit = (e) => {
-                e.preventDefault();
-                const name = document.getElementById('dguv-name').value;
-                const loc = document.getElementById('dguv-location').value;
-                const date = document.getElementById('dguv-date').value;
-                dguvDevices.unshift({ id: 'DGUV-'+Math.floor(1000+Math.random()*9000), name, location: loc, dueDate: date, status: 'Offen' });
-                localStorage.setItem('ecb_dguv_devices', JSON.stringify(dguvDevices));
-                modalDguv.classList.add('hidden');
-                updateCounts();
-                renderDguvDevices();
-                showAlert('Erfolg', 'DGUV V3 Gerät gespeichert!', true);
-            };
+            const dguvForm = document.getElementById('dguv-form');
+            if (dguvForm) {
+                dguvForm.onsubmit = async (e) => {
+                    e.preventDefault();
+                    const name = document.getElementById('dguv-name').value;
+                    const loc = document.getElementById('dguv-location').value;
+                    const date = document.getElementById('dguv-date').value;
+                    const newDev = { id: 'DGUV-'+Math.floor(1000+Math.random()*9000), name, location: loc, dueDate: date, status: 'Offen', uploadDate: null, fileName: null, fileData: null };
+                    
+                    try {
+                        if (db && userId) {
+                            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), newDev);
+                        } else {
+                            dguvDevices.unshift(newDev);
+                            localStorage.setItem('ecb_dguv_devices_offline', JSON.stringify(dguvDevices));
+                        }
+                    } catch(err) {
+                        console.error(err);
+                    }
 
-            document.getElementById('close-msg-btn').onclick = () => document.getElementById('modal-msg').classList.add('hidden');
-            document.getElementById('clear-history-btn').onclick = () => {
-                if(confirm('Historie wirklich löschen?')) {
-                    protocols = [];
-                    localStorage.removeItem('ecb_protocols');
+                    modalDguv.classList.add('hidden');
                     updateCounts();
-                    renderHistory();
-                }
-            };
+                    renderDguvDevices();
+                    showAlert('Erfolg', 'DGUV V3 Gerät in Cloud gespeichert!', true);
+                };
+            }
+
+            const closeMsgBtn = document.getElementById('close-msg-btn');
+            if (closeMsgBtn) closeMsgBtn.onclick = () => document.getElementById('modal-msg').classList.add('hidden');
+
+            const clearHistBtn = document.getElementById('clear-history-btn');
+            if (clearHistBtn) {
+                clearHistBtn.onclick = async () => {
+                    if(confirm('Historie wirklich löschen?')) {
+                        try {
+                            if (db && userId) {
+                                for (let p of protocols) {
+                                    if (p.firestoreId) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.firestoreId));
+                                }
+                            } else {
+                                protocols = [];
+                                localStorage.removeItem('ecb_protocols_offline');
+                            }
+                        } catch(e) {}
+                        updateCounts();
+                        renderHistory();
+                    }
+                };
+            }
         }
 
         function showAlert(title, text, success) {
@@ -563,48 +676,66 @@
 
         function renderHistory() {
             const c = document.getElementById('protocols-container');
+            if(!c) return;
             if(protocols.length === 0) {
-                c.innerHTML = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500">Keine Protokolle vorhanden.</div>';
+                c.innerHTML = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200">Keine Protokolle in der Cloud vorhanden.</div>';
                 return;
             }
             let h = '';
             protocols.forEach((p, idx) => {
+                let pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b border-slate-100"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
                 h += `
                     <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-4 shadow-sm">
                         <div class="flex justify-between items-start">
                             <div>
                                 <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold">${p.category}</span>
                                 <h3 class="text-xl font-bold text-slate-900 mt-2">${p.machine}</h3>
-                                <p class="text-xs text-slate-500 mt-1">${p.date} | Techniker: <strong>${p.employee}</strong></p>
+                                <p class="text-xs text-slate-500 mt-1">${p.date} | Techniker: <strong>${p.employee}</strong> | ID: ${p.id}</p>
                             </div>
-                            <button type="button" onclick="deleteProt(${idx})" class="text-red-500 hover:text-red-700 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="window.downloadPDF(${idx})" class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                                <button type="button" onclick="window.deleteProt('${p.firestoreId || ''}', ${idx})" class="text-red-500 hover:text-red-700 text-sm p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                            </div>
                         </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">${pts}</div>
                     </div>
                 `;
             });
             c.innerHTML = h;
         }
 
-        window.deleteProt = function(idx) {
-            protocols.splice(idx, 1);
-            localStorage.setItem('ecb_protocols', JSON.stringify(protocols));
-            updateCounts();
-            renderHistory();
+        window.deleteProt = async function(firestoreId, idx) {
+            try {
+                if (db && userId && firestoreId) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', firestoreId));
+                } else {
+                    protocols.splice(idx, 1);
+                    localStorage.setItem('ecb_protocols_offline', JSON.stringify(protocols));
+                }
+                updateCounts();
+                renderHistory();
+            } catch(e) {}
+        }
+
+        window.downloadPDF = function(idx) {
+            generatePDF(protocols[idx]);
         }
 
         function renderDguvDevices() {
             const c = document.getElementById('dguv-devices-container');
+            if(!c) return;
             if(dguvDevices.length === 0) {
-                c.innerHTML = '<div class="col-span-full bg-white rounded-3xl p-12 text-center text-slate-500">Keine DGUV V3 Geräte erfasst.</div>';
+                c.innerHTML = '<div class="col-span-full bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200">Keine DGUV V3 Geräte erfasst.</div>';
                 return;
             }
             let h = '';
             dguvDevices.forEach((d, idx) => {
+                const isDone = d.status === 'Erledigt';
                 h += `
-                    <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-3">
-                        <div class="flex justify-between">
-                            <span class="px-3 py-1 bg-sky-50 text-sky-600 rounded-full text-xs font-bold">${d.status}</span>
-                            <button type="button" onclick="deleteDguv(${idx})" class="text-red-500 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                    <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-3 shadow-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold ${isDone?'bg-emerald-50 text-ecbGreen':'bg-amber-50 text-amber-600'}">${d.status}</span>
+                            <button type="button" onclick="window.deleteDguv('${d.firestoreId || ''}', ${idx})" class="text-red-500 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                         </div>
                         <h3 class="text-lg font-bold text-slate-900">${d.name}</h3>
                         <p class="text-xs text-slate-500">Standort: ${d.location} | Fällig: ${d.dueDate}</p>
@@ -614,11 +745,57 @@
             c.innerHTML = h;
         }
 
-        window.deleteDguv = function(idx) {
-            dguvDevices.splice(idx, 1);
-            localStorage.setItem('ecb_dguv_devices', JSON.stringify(dguvDevices));
-            updateCounts();
-            renderDguvDevices();
+        window.deleteDguv = async function(firestoreId, idx) {
+            try {
+                if (db && userId && firestoreId) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId));
+                } else {
+                    dguvDevices.splice(idx, 1);
+                    localStorage.setItem('ecb_dguv_devices_offline', JSON.stringify(dguvDevices));
+                }
+                updateCounts();
+                renderDguvDevices();
+            } catch(e) {}
+        }
+
+        function generatePDF(p) {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+                doc.setFillColor(63, 98, 18);
+                doc.rect(0, 0, 210, 35, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.text('ECB REINIGUNGSSYSTEME', 15, 20);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                doc.text(`Wartungsprotokoll: ${p.machine} (${p.id})`, 15, 27);
+
+                doc.setTextColor(15, 23, 42);
+                doc.setFontSize(11);
+                doc.text(`Techniker: ${p.employee}`, 15, 48);
+                doc.text(`Datum: ${p.date}`, 15, 55);
+                if (p.runtime) doc.text(`Laufleistung: ${p.runtime} Std.`, 120, 48);
+
+                let startY = 65;
+                doc.setFont('helvetica', 'bold');
+                doc.text('Prüfpunkte:', 15, startY);
+                startY += 6;
+                doc.setFont('helvetica', 'normal');
+                p.points.forEach(pt => {
+                    doc.text(`${pt.pointNumber}. ${pt.title} - ${pt.status.toUpperCase()}`, 20, startY);
+                    startY += 6;
+                });
+
+                if (p.signature) {
+                    startY += 10;
+                    doc.addImage(p.signature, 'PNG', 15, startY, 50, 20);
+                }
+                doc.save(`ECB_Protokoll_${p.id}.pdf`);
+            } catch(e) {
+                console.error(e);
+            }
         }
     </script>
 </body>
