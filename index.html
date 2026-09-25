@@ -60,8 +60,8 @@
                         ECB Reinigungssysteme
                     </h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                        <span id="cloud-status-text">Cloud Synchronisiert</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                        <span id="cloud-status-text">Cloud Live Synchronisiert</span>
                     </p>
                 </div>
             </div>
@@ -88,7 +88,7 @@
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen-, Maschinen- &amp; DGUV-Wartung</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen oder elektrische Betriebsmittel (DGUV V3) zu verwalten. Alle Daten werden in Echtzeit in der Google Cloud gespeichert und geräteübergreifend synchronisiert.</p>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen. Alle Daten werden in Echtzeit in der Google Cloud gespeichert und geräteübergreifend synchronisiert.</p>
                 </div>
             </div>
 
@@ -298,7 +298,7 @@
                     if (user) {
                         userId = user.uid;
                         document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                        document.getElementById('cloud-status-text').innerText = "Cloud Synchronisiert";
+                        document.getElementById('cloud-status-text').innerText = "Cloud Live Synchronisiert";
                         initFirestoreListeners();
                     }
                 });
