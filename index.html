@@ -66,13 +66,13 @@
                 </div>
             </div>
             <nav class="flex items-center space-x-2 mt-3 sm:mt-0 flex-wrap gap-2">
-                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer">
+                <button type="button" onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-layer-group"></i> Dashboard
                 </button>
-                <button onclick="switchTab('dguv')" id="nav-dguv" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
+                <button type="button" onclick="switchTab('dguv')" id="nav-dguv" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-plug-circle-check"></i> DGUV V3 <span id="dguv-count" class="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
                 </button>
-                <button onclick="switchTab('history')" id="nav-history" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
+                <button type="button" onclick="switchTab('history')" id="nav-history" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-clock-rotate-left"></i> Protokolle <span id="protocol-count" class="bg-ecbGreen text-white text-xs px-2 py-0.5 rounded-full">0</span>
                 </button>
             </nav>
@@ -176,7 +176,7 @@
                     <h2 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen (Elektrische Betriebsmittel)</h2>
                     <p class="text-sm text-slate-600 mt-1">Erfassen Sie alle Geräte, hinterlegen Sie Fälligkeitstage und laden Sie Messprotokolle hoch, um den Status automatisch auf „Erledigt“ zu setzen (Cloud-synchronisiert).</p>
                 </div>
-                <button onclick="openDguvModal()" class="px-5 py-3 bg-gradient-to-r from-sky-600 to-sky-700 hover:opacity-95 text-white rounded-2xl font-bold text-sm transition shadow-lg shadow-sky-600/20 flex items-center gap-2 cursor-pointer">
+                <button type="button" onclick="openDguvModal()" class="px-5 py-3 bg-gradient-to-r from-sky-600 to-sky-700 hover:opacity-95 text-white rounded-2xl font-bold text-sm transition shadow-lg shadow-sky-600/20 flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-plus"></i> Neues Gerät erfassen
                 </button>
             </div>
@@ -190,7 +190,7 @@
                     <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle (Cloud Historie)</h2>
                     <p class="text-sm text-slate-600 mt-1">Hier finden Sie alle archivierten Protokolle mit Zeitstempel, Einzelpunkt-Prüfung, PDF-Export und E-Mail-Versand.</p>
                 </div>
-                <button onclick="clearHistory()" class="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-bold transition flex items-center gap-2 cursor-pointer">
+                <button type="button" onclick="clearHistory()" class="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-bold transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-trash-can"></i> Gesamte Historie leeren
                 </button>
             </div>
@@ -199,7 +199,7 @@
 
         <!-- FORM VIEW -->
         <div id="form-view" class="hidden space-y-6 animate-fade-in">
-            <button onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 transition shadow-sm flex items-center gap-2 cursor-pointer">
+            <button type="button" onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 transition shadow-sm flex items-center gap-2 cursor-pointer">
                 <i class="fa-solid fa-arrow-left"></i> Zurück zur Übersicht
             </button>
             <div id="dynamic-form-content" class="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200/80"></div>
@@ -212,7 +212,7 @@
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
                 <h3 class="text-xl font-extrabold text-slate-900">Neues Gerät für DGUV V3 erfassen</h3>
-                <button onclick="closeDguvModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
+                <button type="button" onclick="closeDguvModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -245,7 +245,7 @@
             <h3 id="modal-title" class="text-xl font-extrabold text-slate-900">Meldung</h3>
             <p id="modal-text" class="text-sm text-slate-600 leading-relaxed"></p>
             <div class="pt-2">
-                <button onclick="closeModal()" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-2xl font-bold shadow-lg shadow-ecbGreen/20 transition cursor-pointer">Verstanden</button>
+                <button type="button" onclick="closeModal()" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-2xl font-bold shadow-lg shadow-ecbGreen/20 transition cursor-pointer">Verstanden</button>
             </div>
         </div>
     </div>
@@ -332,20 +332,20 @@
             document.getElementById('tab-history').classList.add('hidden');
             document.getElementById('form-view').classList.add('hidden');
 
-            document.getElementById('nav-dashboard').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2";
-            document.getElementById('nav-dguv').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2";
-            document.getElementById('nav-history').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2";
+            document.getElementById('nav-dashboard').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
+            document.getElementById('nav-dguv').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
+            document.getElementById('nav-history').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
 
             if (tabId === 'dashboard') {
                 document.getElementById('tab-dashboard').classList.remove('hidden');
-                document.getElementById('nav-dashboard').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2";
+                document.getElementById('nav-dashboard').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
             } else if (tabId === 'dguv') {
                 document.getElementById('tab-dguv').classList.remove('hidden');
-                document.getElementById('nav-dguv').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2";
+                document.getElementById('nav-dguv').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
                 renderDguvDevices();
             } else if (tabId === 'history') {
                 document.getElementById('tab-history').classList.remove('hidden');
-                document.getElementById('nav-history').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2";
+                document.getElementById('nav-history').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
                 renderHistory();
             } else if (tabId === 'form') {
                 document.getElementById('form-view').classList.remove('hidden');
@@ -661,7 +661,7 @@
             `;
         }
 
-        function handlePhotoCapture(event) {
+        window.handlePhotoCapture = function(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -976,7 +976,7 @@
                         <div>
                             <div class="flex justify-between items-start gap-2">
                                 <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${isDone ? 'bg-emerald-50 text-ecbGreen' : 'bg-amber-50 text-amber-600'}">${dev.status}</span>
-                                <button onclick="deleteDguvDevice('${dev.firestoreId || ''}', ${idx})" class="text-slate-400 hover:text-red-600 transition text-sm cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
+                                <button type="button" onclick="deleteDguvDevice('${dev.firestoreId || ''}', ${idx})" class="text-slate-400 hover:text-red-600 transition text-sm cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
                             <h3 class="text-xl font-extrabold text-slate-900 mt-3">${dev.name}</h3>
                             <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-sky-600 mr-1"></i> Standort: <strong class="text-slate-700">${dev.location}</strong></p>
@@ -1108,7 +1108,4 @@
                 startY += 7;
 
                 doc.setFont('helvetica', 'normal');
-                doc.setFontSize(10);
-                doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
-                const remarksText = p.remarks || 'Keine Bemerkungen oder Sondernotizen angegeben.';
-                const sp
+                doc.setF
