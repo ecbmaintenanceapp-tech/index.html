@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECB Reinigungssysteme - Digitales Wartungssystem (Cloud)</title>
+    <title>ECB Reinigungssysteme - Digitales Wartungssystem</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -61,18 +61,18 @@
                     </h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
                         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse"></span>
-                        Digitales Wartungssystem (Projekt: ecb-maintenance)
+                        Digitales Wartungssystem (Cloud)
                     </p>
                 </div>
             </div>
             <nav class="flex items-center space-x-2 mt-3 sm:mt-0 flex-wrap gap-2">
-                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-layer-group"></i> Dashboard
                 </button>
-                <button onclick="switchTab('dguv')" id="nav-dguv" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2">
+                <button onclick="switchTab('dguv')" id="nav-dguv" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-plug-circle-check"></i> DGUV V3 <span id="dguv-count" class="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
                 </button>
-                <button onclick="switchTab('history')" id="nav-history" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2">
+                <button onclick="switchTab('history')" id="nav-history" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-clock-rotate-left"></i> Protokolle <span id="protocol-count" class="bg-ecbGreen text-white text-xs px-2 py-0.5 rounded-full">0</span>
                 </button>
             </nav>
@@ -255,7 +255,6 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Project ecb-maintenance connection configuration
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-maintenance';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyDummyKeyForLocalTesting",
@@ -303,7 +302,6 @@
         function initFirestoreListeners() {
             if (!userId) return;
 
-            // Public / shared collaboration path per rules for project ecb-maintenance
             const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
             onSnapshot(protocolsCol, (snapshot) => {
                 protocols = [];
@@ -831,7 +829,6 @@
                 signature: signatureData
             };
 
-            // Save to Firestore if available, else local storage fallback
             try {
                 if (db && userId) {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'), protocol);
@@ -1112,4 +1109,6 @@
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(10);
-       
+                doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+                const remarksText = p.remarks || 'Keine Bemerkungen oder Sondernotizen angegeben.';
+                const sp
