@@ -43,11 +43,9 @@
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
-    <!-- HEADER -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-50 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
-                <!-- EXAKT REPRODUZIERTES ORIGINAL-LOGO MIT GESCHWUNGENEN WELLEN -->
                 <div class="w-12 h-12 rounded-2xl bg-[#65a30d] p-0.5 shadow-md flex items-center justify-center transform hover:rotate-3 transition duration-300 overflow-hidden border border-white/20">
                     <svg viewBox="0 0 500 500" class="w-full h-full rounded-xl">
                         <rect width="500" height="500" fill="#65a30d"/>
@@ -60,7 +58,7 @@
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
                         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                        Digitales Wartungssystem (Cloud Aktiv)
+                        Digitales Wartungssystem (Aktiv)
                     </p>
                 </div>
             </div>
@@ -78,7 +76,6 @@
         </div>
     </header>
 
-    <!-- MAIN CONTAINER -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
 
         <!-- DASHBOARD TAB -->
@@ -94,7 +91,6 @@
 
             <!-- CARDS GRID -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Waschmaschinen -->
                 <div id="card-washer" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-ecbGreen hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
@@ -112,7 +108,6 @@
                     </div>
                 </div>
 
-                <!-- Trockner -->
                 <div id="card-dryer" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-amber-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
@@ -130,7 +125,6 @@
                     </div>
                 </div>
 
-                <!-- Kompressor Routine -->
                 <div id="card-comp-routine" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-sky-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
@@ -148,7 +142,6 @@
                     </div>
                 </div>
 
-                <!-- Kompressor Jahreswartung -->
                 <div id="card-comp-annual" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-purple-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
@@ -250,154 +243,122 @@
         </div>
     </div>
 
-    <!-- FIREBASE AND APPLICATION SCRIPT -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        let db = null;
-        let auth = null;
-        let userId = null;
+    <script>
         let protocols = JSON.parse(localStorage.getItem('ecb_protocols') || '[]');
         let dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices') || '[]');
         let activePhotos = [];
         let signaturePadInstance = null;
 
-        window.addEventListener('DOMContentLoaded', () => {
-            initFirebase();
+        document.addEventListener('DOMContentLoaded', () => {
             initEventListeners();
             updateUI();
         });
 
-        async function initFirebase() {
-            try {
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-maintenance';
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-                    apiKey: "AIzaSyDummyKeyForLocalTesting",
-                    authDomain: "ecb-maintenance.firebaseapp.com",
-                    projectId: "ecb-maintenance",
-                    storageBucket: "ecb-maintenance.appspot.com",
-                    messagingSenderId: "229926423123",
-                    appId: "1:229926423123:web:ecbmaintenance"
-                };
-
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                        initFirestoreListeners(appId);
-                    }
-                });
-            } catch(e) {
-                console.warn("Cloud offline fallback active", e);
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
-            }
-        }
-
-        function initFirestoreListeners(appId) {
-            if (!db || !userId) return;
-            try {
-                const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
-                onSnapshot(protocolsCol, (snapshot) => {
-                    protocols = [];
-                    snapshot.forEach(docSnap => {
-                        protocols.push({ firestoreId: docSnap.id, ...docSnap.data() });
-                    });
-                    protocols.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-                    updateUI();
-                }, (err) => console.log(err));
-
-                const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
-                onSnapshot(dguvCol, (snapshot) => {
-                    dguvDevices = [];
-                    snapshot.forEach(docSnap => {
-                        dguvDevices.push({ firestoreId: docSnap.id, ...docSnap.data() });
-                    });
-                    updateUI();
-                }, (err) => console.log(err));
-            } catch(e) {
-                console.log(e);
-            }
-        }
-
         function initEventListeners() {
-            // Navigation
-            document.getElementById('nav-dashboard-btn').addEventListener('click', () => switchTab('dashboard'));
-            document.getElementById('nav-dguv-btn').addEventListener('click', () => switchTab('dguv'));
-            document.getElementById('nav-history-btn').addEventListener('click', () => switchTab('history'));
-            document.getElementById('back-to-dash-btn').addEventListener('click', () => switchTab('dashboard'));
+            // Navigation Buttons
+            const navDash = document.getElementById('nav-dashboard-btn');
+            if (navDash) navDash.addEventListener('click', () => switchTab('dashboard'));
 
-            // Dashboard cards
-            document.getElementById('card-washer').addEventListener('click', openWashingMachineMenu);
-            document.getElementById('card-dryer').addEventListener('click', openDryerMenu);
-            document.getElementById('card-comp-routine').addEventListener('click', openCompressorRoutine);
-            document.getElementById('card-comp-annual').addEventListener('click', openCompressorAnnual);
+            const navDguv = document.getElementById('nav-dguv-btn');
+            if (navDguv) navDguv.addEventListener('click', () => switchTab('dguv'));
 
-            // Modals
-            document.getElementById('open-dguv-modal-btn').addEventListener('click', openDguvModal);
-            document.getElementById('close-dguv-modal-btn').addEventListener('click', closeDguvModal);
-            document.getElementById('close-msg-modal-btn').addEventListener('click', closeModal);
-            document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
+            const navHist = document.getElementById('nav-history-btn');
+            if (navHist) navHist.addEventListener('click', () => switchTab('history'));
+
+            const backDash = document.getElementById('back-to-dash-btn');
+            if (backDash) backDash.addEventListener('click', () => switchTab('dashboard'));
+
+            // Dashboard Cards
+            const cardWasher = document.getElementById('card-washer');
+            if (cardWasher) cardWasher.addEventListener('click', openWashingMachineMenu);
+
+            const cardDryer = document.getElementById('card-dryer');
+            if (cardDryer) cardDryer.addEventListener('click', openDryerMenu);
+
+            const cardCompRoutine = document.getElementById('card-comp-routine');
+            if (cardCompRoutine) cardCompRoutine.addEventListener('click', openCompressorRoutine);
+
+            const cardCompAnnual = document.getElementById('card-comp-annual');
+            if (cardCompAnnual) cardCompAnnual.addEventListener('click', openCompressorAnnual);
+
+            // Modals & Actions
+            const openDguvBtn = document.getElementById('open-dguv-modal-btn');
+            if (openDguvBtn) openDguvBtn.addEventListener('click', openDguvModal);
+
+            const closeDguvBtn = document.getElementById('close-dguv-modal-btn');
+            if (closeDguvBtn) closeDguvBtn.addEventListener('click', closeDguvModal);
+
+            const closeMsgBtn = document.getElementById('close-msg-modal-btn');
+            if (closeMsgBtn) closeMsgBtn.addEventListener('click', closeModal);
+
+            const clearHistBtn = document.getElementById('clear-history-btn');
+            if (clearHistBtn) clearHistBtn.addEventListener('click', clearHistory);
 
             // Forms
-            document.getElementById('dguv-form').addEventListener('submit', saveDguvDevice);
+            const dguvForm = document.getElementById('dguv-form');
+            if (dguvForm) dguvForm.addEventListener('submit', saveDguvDevice);
         }
 
         function switchTab(tabId) {
-            document.getElementById('tab-dashboard').classList.add('hidden');
-            document.getElementById('tab-dguv').classList.add('hidden');
-            document.getElementById('tab-history').classList.add('hidden');
-            document.getElementById('form-view').classList.add('hidden');
+            const tabDash = document.getElementById('tab-dashboard');
+            const tabDguv = document.getElementById('tab-dguv');
+            const tabHist = document.getElementById('tab-history');
+            const formView = document.getElementById('form-view');
 
-            document.getElementById('nav-dashboard-btn').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
-            document.getElementById('nav-dguv-btn').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
-            document.getElementById('nav-history-btn').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
+            if (tabDash) tabDash.classList.add('hidden');
+            if (tabDguv) tabDguv.classList.add('hidden');
+            if (tabHist) tabHist.classList.add('hidden');
+            if (formView) formView.classList.add('hidden');
+
+            const navDash = document.getElementById('nav-dashboard-btn');
+            const navDguv = document.getElementById('nav-dguv-btn');
+            const navHist = document.getElementById('nav-history-btn');
+
+            if (navDash) navDash.className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
+            if (navDguv) navDguv.className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
+            if (navHist) navHist.className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
 
             if (tabId === 'dashboard') {
-                document.getElementById('tab-dashboard').classList.remove('hidden');
-                document.getElementById('nav-dashboard-btn').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
+                if (tabDash) tabDash.classList.remove('hidden');
+                if (navDash) navDash.className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
             } else if (tabId === 'dguv') {
-                document.getElementById('tab-dguv').classList.remove('hidden');
-                document.getElementById('nav-dguv-btn').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
+                if (tabDguv) tabDguv.classList.remove('hidden');
+                if (navDguv) navDguv.className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
                 renderDguvDevices();
             } else if (tabId === 'history') {
-                document.getElementById('tab-history').classList.remove('hidden');
-                document.getElementById('nav-history-btn').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
+                if (tabHist) tabHist.classList.remove('hidden');
+                if (navHist) navHist.className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
                 renderHistory();
             } else if (tabId === 'form') {
-                document.getElementById('form-view').classList.remove('hidden');
+                if (formView) formView.classList.remove('hidden');
                 setTimeout(() => { initSignaturePad(); }, 150);
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function showModal(title, text, isSuccess = true) {
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-text').innerText = text;
+            const mTitle = document.getElementById('modal-title');
+            const mText = document.getElementById('modal-text');
             const iconDiv = document.getElementById('modal-icon');
-            if (isSuccess) {
-                iconDiv.className = "w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner";
-                iconDiv.innerHTML = '<i class="fa-solid fa-check"></i>';
-            } else {
-                iconDiv.className = "w-16 h-16 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl mx-auto shadow-inner";
-                iconDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            const modalMsg = document.getElementById('modal-message');
+
+            if (mTitle) mTitle.innerText = title;
+            if (mText) mText.innerText = text;
+            if (iconDiv) {
+                if (isSuccess) {
+                    iconDiv.className = "w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner";
+                    iconDiv.innerHTML = '<i class="fa-solid fa-check"></i>';
+                } else {
+                    iconDiv.className = "w-16 h-16 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl mx-auto shadow-inner";
+                    iconDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                }
             }
-            document.getElementById('modal-message').classList.remove('hidden');
+            if (modalMsg) modalMsg.classList.remove('hidden');
         }
 
         function closeModal() {
-            document.getElementById('modal-message').classList.add('hidden');
+            const modalMsg = document.getElementById('modal-message');
+            if (modalMsg) modalMsg.classList.add('hidden');
         }
 
         function updateUI() {
@@ -426,6 +387,7 @@
 
         function openWashingMachineMenu() {
             const container = document.getElementById('dynamic-form-content');
+            if (!container) return;
             container.innerHTML = `
                 <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
                     <div>
@@ -471,6 +433,7 @@
 
         function openDryerMenu() {
             const container = document.getElementById('dynamic-form-content');
+            if (!container) return;
             container.innerHTML = `
                 <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
                     <div>
@@ -514,6 +477,7 @@
 
         function openCompressorRoutine() {
             const container = document.getElementById('dynamic-form-content');
+            if (!container) return;
             container.innerHTML = `
                 <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
                     <div>
@@ -557,6 +521,7 @@
 
         function openCompressorAnnual() {
             const container = document.getElementById('dynamic-form-content');
+            if (!container) return;
             container.innerHTML = `
                 <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
                     <div>
@@ -776,7 +741,7 @@
             };
         }
 
-        async function submitProtocol(event, categoryKey) {
+        function submitProtocol(event, categoryKey) {
             event.preventDefault();
 
             const employeeName = document.getElementById('employee-name').value.trim();
@@ -824,12 +789,6 @@
                 signature: signatureData
             };
 
-            try {
-                if (db && userId) {
-                    await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols'), protocol);
-                }
-            } catch(e) {}
-
             protocols.unshift(protocol);
             localStorage.setItem('ecb_protocols', JSON.stringify(protocols));
 
@@ -843,14 +802,16 @@
 
         // --- DGUV V3 MANAGEMENT LOGIC ---
         function openDguvModal() {
-            document.getElementById('modal-dguv').classList.remove('hidden');
+            const m = document.getElementById('modal-dguv');
+            if (m) m.classList.remove('hidden');
         }
 
         function closeDguvModal() {
-            document.getElementById('modal-dguv').classList.add('hidden');
+            const m = document.getElementById('modal-dguv');
+            if (m) m.classList.add('hidden');
         }
 
-        async function saveDguvDevice(event) {
+        function saveDguvDevice(event) {
             event.preventDefault();
             const name = document.getElementById('dguv-dev-name').value.trim();
             const location = document.getElementById('dguv-dev-location').value.trim();
@@ -869,64 +830,37 @@
                 fileData: null
             };
 
-            try {
-                if (db && userId) {
-                    await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices'), newDev);
-                }
-            } catch(e) {}
-
             dguvDevices.unshift(newDev);
             localStorage.setItem('ecb_dguv_devices', JSON.stringify(dguvDevices));
             closeDguvModal();
-            document.getElementById('dguv-form').reset();
+            const form = document.getElementById('dguv-form');
+            if (form) form.reset();
             updateDguvCount();
             renderDguvDevices();
             showModal('Erfolgreich', 'Das Gerät wurde erfasst und der Prüftermin hinterlegt.', true);
         }
 
-        window.handleProtocolUpload = async function(event, firestoreId, localId) {
+        window.handleProtocolUpload = function(event, deviceId) {
             const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = async function(e) {
-                const uploadDate = new Date().toLocaleString('de-DE');
-                const fileName = file.name;
-                const fileData = e.target.result;
-
-                try {
-                    if (db && userId && firestoreId) {
-                        const devRef = doc(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices', firestoreId);
-                        await updateDoc(devRef, {
-                            status: 'Erledigt',
-                            uploadDate: uploadDate,
-                            fileName: fileName,
-                            fileData: fileData
-                        });
-                    }
-                } catch(err) {}
-
-                const dev = dguvDevices.find(d => d.id === localId || d.firestoreId === firestoreId);
+            reader.onload = function(e) {
+                const dev = dguvDevices.find(d => d.id === deviceId);
                 if (dev) {
                     dev.status = 'Erledigt';
-                    dev.uploadDate = uploadDate;
-                    dev.fileName = fileName;
-                    dev.fileData = fileData;
+                    dev.uploadDate = new Date().toLocaleString('de-DE');
+                    dev.fileName = file.name;
+                    dev.fileData = e.target.result;
                     localStorage.setItem('ecb_dguv_devices', JSON.stringify(dguvDevices));
+                    renderDguvDevices();
+                    showModal('Protokoll zugeordnet', `Das Messprotokoll wurde für Gerät "${dev.name}" hochgeladen und der Status auf „Erledigt“ gesetzt.`, true);
                 }
-                renderDguvDevices();
-                showModal('Protokoll zugeordnet', `Das Messprotokoll wurde hochgeladen und der Status auf „Erledigt“ gesetzt.`, true);
             };
             reader.readAsDataURL(file);
         }
 
-        window.deleteDguvDevice = async function(firestoreId, index) {
-            try {
-                if (db && userId && firestoreId) {
-                    await deleteDoc(doc(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices', firestoreId));
-                }
-            } catch(e) {}
-
+        window.deleteDguvDevice = function(index) {
             dguvDevices.splice(index, 1);
             localStorage.setItem('ecb_dguv_devices', JSON.stringify(dguvDevices));
             updateDguvCount();
@@ -963,7 +897,7 @@
                         <div>
                             <div class="flex justify-between items-start gap-2">
                                 <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${isDone ? 'bg-emerald-50 text-ecbGreen' : 'bg-amber-50 text-amber-600'}">${dev.status}</span>
-                                <button type="button" onclick="deleteDguvDevice('${dev.firestoreId || ''}', ${idx})" class="text-slate-400 hover:text-red-600 transition text-sm cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
+                                <button type="button" onclick="deleteDguvDevice(${idx})" class="text-slate-400 hover:text-red-600 transition text-sm cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
                             <h3 class="text-xl font-extrabold text-slate-900 mt-3">${dev.name}</h3>
                             <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-sky-600 mr-1"></i> Standort: <strong class="text-slate-700">${dev.location}</strong></p>
@@ -980,7 +914,7 @@
                             ` : `
                                 <label class="w-full py-2.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl font-bold text-xs text-slate-700 transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                                     <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Messprotokoll hochladen
-                                    <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.firestoreId || ''}', '${dev.id}')" class="hidden">
+                                    <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.id}')" class="hidden">
                                 </label>
                             `}
                         </div>
@@ -1084,4 +1018,84 @@
                 startY += (splitRemarks.length * 6) + 6;
 
                 if (startY > 210) { doc.addPage(); startY = 20; }
-                doc.setFont('helvetica', 'b
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                doc.text('Digitale Unterschrift des Technikers', 15, startY);
+                startY += 4;
+                doc.line(15, startY, 195, startY);
+                startY += 7;
+
+                if (p.signature) {
+                    doc.addImage(p.signature, 'PNG', 15, startY, 65, 26);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(9);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text(`Rechtsverbindlich unterzeichnet von: ${p.employee}`, 85, startY + 15);
+                    startY += 34;
+                }
+
+                if (p.photos && p.photos.length > 0) {
+                    if (startY > 180) { doc.addPage(); startY = 20; }
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(12);
+                    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                    doc.text(`Fotodokumentation (${p.photos.length} Fotos)`, 15, startY);
+                    startY += 4;
+                    doc.line(15, startY, 195, startY);
+                    startY += 7;
+
+                    let xPos = 15;
+                    let yPos = startY;
+                    p.photos.forEach((ph) => {
+                        try {
+                            doc.addImage(ph, 'JPEG', xPos, yPos, 45, 35);
+                            xPos += 50;
+                            if (xPos > 150) {
+                                xPos = 15;
+                                yPos += 40;
+                            }
+                        } catch(e) {}
+                    });
+                }
+
+                const pageCount = doc.internal.getNumberOfPages();
+                for(let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.setTextColor(150, 150, 150);
+                    doc.text(`ECB Reinigungssysteme - Digitales Wartungssystem - Protokoll-ID: ${p.id} - Seite ${i} von ${pageCount}`, 15, 290);
+                }
+
+                doc.save(`ECB_Wartungsprotokoll_${p.id}.pdf`);
+            } catch(err) {
+                console.error("PDF Generation Error:", err);
+            }
+        }
+
+        window.downloadProtocolPDF = function(index) {
+            generatePDF(protocols[index]);
+        }
+
+        function updateProtocolCount() {
+            const el = document.getElementById('protocol-count');
+            if (el) el.innerText = protocols.length;
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('protocols-container');
+            if (!container) return;
+
+            if (protocols.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-3xl p-16 text-center border border-slate-200/80 text-slate-500 shadow-sm">
+                        <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl mx-auto mb-4 text-slate-400">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </div>
+                        <p class="text-lg font-bold text-slate-800">Keine Protokolle vorhanden</p>
+                        <p class="text-sm text-slate-500 mt-1 max-w-md mx-auto">Wählen Sie im Dashboard eine Anlage aus, um eine Wartung durchzuführen.</p>
+                    </div>
+                `;
+                return;
+    
