@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECB Reinigungssysteme - Digitales Wartungssystem (Cloud)</title>
+    <title>ECB Reinigungssysteme - Digitales Wartungssystem (Cloud Synchronisiert)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -268,7 +268,6 @@
     <!-- FIREBASE & APP LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -280,28 +279,21 @@
             appId: "1:229926423123:web:a309c14c708fc88c62d4a6"
         };
 
-        let app, db, auth, userId = null;
+        let app, db;
         let protocols = [];
         let dguvDevices = [];
         let activePhotos = [];
         let signaturePadInstance = null;
 
-        window.addEventListener('DOMContentLoaded', async () => {
+        window.addEventListener('DOMContentLoaded', () => {
             try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
-                auth = getAuth(app);
 
-                await signInAnonymously(auth);
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                        document.getElementById('cloud-status-text').innerText = "Cloud Live Synchronisiert";
-                        initFirestoreListeners();
-                    }
-                });
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Cloud Live Synchronisiert";
+                
+                initFirestoreListeners();
             } catch (err) {
                 console.warn("Firebase Init Error:", err);
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
@@ -739,9 +731,6 @@
                 console.warn("Cloud save error:", err);
             }
 
-            protocols.unshift(protocol);
-            localStorage.setItem('ecb_protocols_offline', JSON.stringify(protocols));
-
             generatePDF(protocol);
             updateUI();
             showModal('Erfolg', 'Wartungsprotokoll in der Cloud gespeichert & PDF erstellt!', true);
@@ -773,15 +762,12 @@
                 console.warn("Cloud save error:", err);
             }
 
-            dguvDevices.unshift(newDev);
-            localStorage.setItem('ecb_dguv_devices_offline', JSON.stringify(dguvDevices));
-
             closeDguvModal();
             updateUI();
             showModal('Erfolg', 'DGUV V3 Gerät in der Cloud gespeichert!', true);
         }
 
-        window.handleProtocolUpload = async function(event, firestoreId, localId) {
+        window.handleProtocolUpload = async function(event, firestoreId) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -796,15 +782,6 @@
                         await updateDoc(doc(db, 'ecb_dguv_devices', firestoreId), {
                             status: 'Erledigt', uploadDate, fileName, fileData
                         });
-                    } else {
-                        const dev = dguvDevices.find(d => d.id === localId);
-                        if (dev) {
-                            dev.status = 'Erledigt';
-                            dev.uploadDate = uploadDate;
-                            dev.fileName = fileName;
-                            dev.fileData = fileData;
-                            localStorage.setItem('ecb_dguv_devices_offline', JSON.stringify(dguvDevices));
-                        }
                     }
                     updateUI();
                     showModal('Erfolg', 'Messprotokoll in der Cloud aktualisiert!', true);
@@ -815,32 +792,27 @@
             reader.readAsDataURL(file);
         }
 
-        window.deleteDguvDevice = async function(firestoreId, index) {
+        window.deleteDguvDevice = async function(firestoreId) {
             try {
                 if (db && firestoreId) {
                     await deleteDoc(doc(db, 'ecb_dguv_devices', firestoreId));
                 }
             } catch(e) {}
-            dguvDevices.splice(index, 1);
-            localStorage.setItem('ecb_dguv_devices_offline', JSON.stringify(dguvDevices));
             updateUI();
         }
 
-        window.deleteProtocol = async function(firestoreId, index) {
+        window.deleteProtocol = async function(firestoreId) {
             try {
                 if (db && firestoreId) {
                     await deleteDoc(doc(db, 'ecb_protocols', firestoreId));
                 }
             } catch(e) {}
-            protocols.splice(index, 1);
-            localStorage.setItem('ecb_protocols_offline', JSON.stringify(protocols));
             updateUI();
         }
 
         window.clearHistory = function() {
             if (confirm('Historie wirklich löschen?')) {
                 protocols = [];
-                localStorage.removeItem('ecb_protocols_offline');
                 updateUI();
             }
         }
@@ -875,7 +847,7 @@
                             </div>
                             <div class="flex gap-2">
                                 <button onclick="downloadProtocolPDF(${idx})" class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-                                <button onclick="deleteProtocol('${p.firestoreId || ''}', ${idx})" class="text-red-500 hover:text-red-700 text-sm p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="deleteProtocol('${p.firestoreId || ''}')" class="text-red-500 hover:text-red-700 text-sm p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
                         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">${pts}</div>
@@ -894,13 +866,13 @@
                     return;
                 }
                 let html = '';
-                dguvDevices.forEach((dev, idx) => {
+                dguvDevices.forEach((dev) => {
                     const isDone = dev.status === 'Erledigt';
                     html += `
                         <div class="bg-slate-50/70 rounded-2xl p-5 border border-slate-200 flex flex-col justify-between space-y-3">
                             <div class="flex justify-between items-center">
                                 <span class="px-3 py-1 rounded-full text-xs font-bold ${isDone?'bg-emerald-50 text-ecbGreen':'bg-amber-50 text-amber-600'}">${dev.status}</span>
-                                <button onclick="deleteDguvDevice('${dev.firestoreId || ''}', ${idx})" class="text-red-500 text-xs cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="deleteDguvDevice('${dev.firestoreId || ''}')" class="text-red-500 text-xs cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                             <div>
                                 <h4 class="font-bold text-slate-900 text-base">${dev.name}</h4>
@@ -915,7 +887,7 @@
                                 ` : `
                                     <label class="w-full py-2 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl font-bold text-xs text-slate-700 transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                                         <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Messprotokoll hochladen
-                                        <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.firestoreId || ''}', '${dev.id}')" class="hidden">
+                                        <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.firestoreId || ''}')" class="hidden">
                                     </label>
                                 `}
                             </div>
