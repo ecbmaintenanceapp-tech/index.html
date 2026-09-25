@@ -43,8 +43,94 @@
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
+    <!-- LOGIN SCREEN OVERLAY -->
+    <div id="login-screen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 space-y-6 animate-fade-in">
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 rounded-2xl bg-[#65a30d] p-1 mx-auto shadow-md flex items-center justify-center overflow-hidden">
+                    <svg viewBox="0 0 500 500" class="w-full h-full rounded-xl">
+                        <rect width="500" height="500" fill="#65a30d"/>
+                        <path d="M 20 330 C 80 270 200 270 300 320 C 380 360 430 360 480 300 C 470 320 420 390 350 390 C 250 390 120 410 40 370 C 25 362 20 345 20 330 Z" fill="#ffffff" opacity="0.95"/>
+                        <path d="M 110 390 C 180 370 270 340 380 395 C 420 415 450 400 465 385 C 445 405 390 425 320 425 C 220 425 150 420 110 390 Z" fill="#ffffff" opacity="0.85"/>
+                        <text x="155" y="210" font-family="Inter, sans-serif" font-weight="700" font-style="italic" font-size="145" fill="#ffffff">ecb</text>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-extrabold text-slate-900">ECB Wartungssystem</h2>
+                <p class="text-xs text-slate-500">Bitte melden Sie sich mit Ihren Zugangsdaten an.</p>
+            </div>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Benutzername:</label>
+                    <input type="text" id="login-user" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Benutzername eingeben">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Passwort:</label>
+                    <input type="password" id="login-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Passwort eingeben">
+                </div>
+                <div id="login-error" class="text-xs text-red-600 font-bold hidden">Falscher Benutzername, falsches Passwort oder Benutzer wurde deaktiviert!</div>
+                <button type="submit" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-xl font-bold text-sm shadow-lg shadow-ecbGreen/20 transition cursor-pointer">Anmelden</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- REGISTER MODAL (ADMIN ONLY) -->
+    <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+                <h3 class="text-xl font-extrabold text-slate-900">Cloud-Benutzerverwaltung (Admin)</h3>
+                <button onclick="closeRegisterModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <!-- Neuen Nutzer anlegen -->
+            <form onsubmit="handleRegister(event)" class="space-y-4 pb-6 border-b border-slate-100">
+                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-user-plus mr-1 text-ecbGreen"></i> Neuen Benutzer anlegen</h4>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Mitarbeiter-Vollname (Erscheint automatisch in Protokollen):</label>
+                    <input type="text" id="reg-fullname" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Vor- und Nachname eingeben">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Benutzername:</label>
+                    <input type="text" id="reg-user" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Benutzername wählen">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Passwort:</label>
+                    <input type="password" id="reg-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Passwort wählen">
+                </div>
+                <div id="reg-error" class="text-xs text-red-600 font-bold hidden">Benutzer existiert bereits!</div>
+                <button type="submit" class="w-full py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Benutzer in Cloud anlegen</button>
+            </form>
+
+            <!-- Benutzerliste & Verwaltung -->
+            <div class="space-y-3">
+                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-users-gear mr-1 text-sky-600"></i> Existierende Benutzer verwalten</h4>
+                <div id="admin-user-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGE PASSWORD MODAL -->
+    <div id="modal-password" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+                <h3 class="text-xl font-extrabold text-slate-900">Passwort ändern</h3>
+                <button onclick="closePasswordModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form onsubmit="handleChangePassword(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Neues Passwort:</label>
+                    <input type="password" id="new-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Neues Passwort eingeben">
+                </div>
+                <button type="submit" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-xl font-bold text-sm shadow-lg transition cursor-pointer">Passwort aktualisieren</button>
+            </form>
+        </div>
+    </div>
+
     <!-- HEADER -->
-    <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-50 backdrop-blur-md bg-opacity-95">
+    <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
                 <div class="w-12 h-12 rounded-2xl bg-[#65a30d] p-0.5 shadow-md flex items-center justify-center transform hover:rotate-3 transition duration-300 overflow-hidden border border-white/20">
@@ -75,6 +161,12 @@
                 <button onclick="switchTab('history')" id="nav-history" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-clock-rotate-left"></i> Protokolle <span id="protocol-count" class="bg-ecbGreen text-white text-xs px-2 py-0.5 rounded-full">0</span>
                 </button>
+                <button onclick="openPasswordModal()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-white/20 hover:bg-white/30 transition flex items-center gap-1 cursor-pointer" title="Passwort ändern">
+                    <i class="fa-solid fa-key"></i>
+                </button>
+                <button onclick="handleLogout()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-red-600/80 hover:bg-red-600 transition flex items-center gap-1 cursor-pointer" title="Abmelden">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
             </nav>
         </div>
     </header>
@@ -85,10 +177,18 @@
         <div id="tab-dashboard" class="space-y-8 animate-fade-in">
             <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
                 <div class="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-ecbLightGreen/40 rounded-full blur-3xl pointer-events-none"></div>
-                <div class="relative z-10 max-w-2xl">
-                    <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
-                    <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen-, Maschinen- &amp; DGUV-Wartung</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen. Alle Daten werden in Echtzeit in der Google Cloud gespeichert und geräteübergreifend synchronisiert.</p>
+                <div class="relative z-10 max-w-2xl flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
+                        <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen-, Maschinen- &amp; DGUV-Wartung</h2>
+                        <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen. Alle Daten werden in Echtzeit in der Google Cloud gespeichert und geräteübergreifend synchronisiert.</p>
+                    </div>
+                </div>
+                <!-- ADMIN BUTTON ON DASHBOARD -->
+                <div id="dashboard-admin-btn-container" class="mt-6 hidden">
+                    <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-users-gear"></i> Cloud-Benutzer verwalten (Admin)
+                    </button>
                 </div>
             </div>
 
@@ -205,9 +305,12 @@
                     <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle (Cloud Historie)</h2>
                     <p class="text-sm text-slate-600 mt-1">Alle archivierten Protokolle mit Zeitstempel, PDF-Export und E-Mail-Versand (live synchronisiert).</p>
                 </div>
-                <button onclick="clearHistory()" class="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-bold transition flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-trash-can"></i> Verlauf leeren
-                </button>
+                <!-- CLEAR HISTORY BUTTON (ADMIN ONLY) -->
+                <div id="history-admin-clear-container" class="hidden">
+                    <button onclick="clearHistory()" class="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-bold transition flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-trash-can"></i> Verlauf leeren (Admin)
+                    </button>
+                </div>
             </div>
             <div id="protocols-container" class="space-y-4"></div>
         </div>
@@ -282,10 +385,48 @@
         let app, db;
         let protocols = [];
         let dguvDevices = [];
+        let cloudUsers = [{ fullname: 'ECB Wartung', user: 'ECB_Wartung', pass: 'ECB1688!', active: true, firestoreId: 'admin_default' }];
         let activePhotos = [];
         let signaturePadInstance = null;
 
+        // INACTIVITY AUTO-LOGOUT (5 MINUTES)
+        let inactivityTimer = null;
+        const INACTIVITY_LIMIT = 5 * 60 * 1000;
+
+        function resetInactivityTimer() {
+            if (localStorage.getItem('ecb_logged_in') !== 'true') return;
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                handleLogoutDueToInactivity();
+            }, INACTIVITY_LIMIT);
+        }
+
+        function handleLogoutDueToInactivity() {
+            localStorage.removeItem('ecb_logged_in');
+            localStorage.removeItem('ecb_current_user');
+            localStorage.removeItem('ecb_current_fullname');
+            document.getElementById('login-screen').classList.remove('hidden');
+            showModal('Inaktivität', 'Sie wurden nach 5 Minuten Inaktivität automatisch abgemeldet.', false);
+        }
+
+        ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll'].forEach(evt => {
+            window.addEventListener(evt, resetInactivityTimer, true);
+        });
+
         window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('ecb_logged_in') === 'true') {
+                document.getElementById('login-screen').classList.add('hidden');
+                const currentUser = localStorage.getItem('ecb_current_user');
+                if (currentUser === 'ECB_Wartung') {
+                    document.getElementById('dashboard-admin-btn-container').classList.remove('hidden');
+                    document.getElementById('history-admin-clear-container').classList.remove('hidden');
+                } else {
+                    document.getElementById('dashboard-admin-btn-container').classList.add('hidden');
+                    document.getElementById('history-admin-clear-container').classList.add('hidden');
+                }
+                resetInactivityTimer();
+            }
+
             try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
@@ -304,10 +445,187 @@
             }
         });
 
+        window.handleLogin = function(event) {
+            event.preventDefault();
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+
+            const found = cloudUsers.find(u => u.user === user && u.pass === pass);
+            if (found) {
+                if (found.active === false) {
+                    showModal('Zugriff verwehrt', 'Ihr Benutzerkonto wurde vom Administrator deaktiviert.', false);
+                    return;
+                }
+                localStorage.setItem('ecb_logged_in', 'true');
+                localStorage.setItem('ecb_current_user', user);
+                localStorage.setItem('ecb_current_fullname', found.fullname || user);
+
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('login-user').value = '';
+                document.getElementById('login-pass').value = '';
+                document.getElementById('login-error').classList.add('hidden');
+
+                if (user === 'ECB_Wartung') {
+                    document.getElementById('dashboard-admin-btn-container').classList.remove('hidden');
+                    document.getElementById('history-admin-clear-container').classList.remove('hidden');
+                } else {
+                    document.getElementById('dashboard-admin-btn-container').classList.add('hidden');
+                    document.getElementById('history-admin-clear-container').classList.add('hidden');
+                }
+                resetInactivityTimer();
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        }
+
+        window.openRegisterModal = function() {
+            renderAdminUserList();
+            document.getElementById('modal-register').classList.remove('hidden');
+        }
+
+        window.closeRegisterModal = function() {
+            document.getElementById('modal-register').classList.add('hidden');
+        }
+
+        window.openPasswordModal = function() {
+            document.getElementById('new-pass').value = '';
+            document.getElementById('modal-password').classList.remove('hidden');
+        }
+
+        window.closePasswordModal = function() {
+            document.getElementById('modal-password').classList.add('hidden');
+        }
+
+        window.handleChangePassword = async function(event) {
+            event.preventDefault();
+            const newPass = document.getElementById('new-pass').value.trim();
+            const currentUser = localStorage.getItem('ecb_current_user');
+            if (!currentUser || !newPass) return;
+
+            const userObj = cloudUsers.find(u => u.user === currentUser);
+            if (userObj) {
+                userObj.pass = newPass;
+                try {
+                    if (db && userObj.firestoreId && userObj.firestoreId !== 'admin_default') {
+                        await updateDoc(doc(db, 'ecb_users', userObj.firestoreId), { pass: newPass });
+                    }
+                } catch(e) {}
+            }
+            closePasswordModal();
+            showModal('Erfolg', 'Ihr Passwort wurde erfolgreich geändert!', true);
+        }
+
+        window.handleRegister = async function(event) {
+            event.preventDefault();
+            const fullname = document.getElementById('reg-fullname').value.trim();
+            const newUser = document.getElementById('reg-user').value.trim();
+            const newPass = document.getElementById('reg-pass').value.trim();
+
+            if (cloudUsers.some(u => u.user === newUser)) {
+                document.getElementById('reg-error').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('reg-error').classList.add('hidden');
+
+            const userObj = { fullname, user: newUser, pass: newPass, active: true };
+            cloudUsers.push(userObj);
+
+            try {
+                if (db) {
+                    await addDoc(collection(db, 'ecb_users'), userObj);
+                }
+            } catch(e) {}
+
+            document.getElementById('reg-fullname').value = '';
+            document.getElementById('reg-user').value = '';
+            document.getElementById('reg-pass').value = '';
+            renderAdminUserList();
+            showModal('Erfolg', `Benutzer "${newUser}" (${fullname}) erfolgreich angelegt!`, true);
+        }
+
+        window.toggleUserActive = async function(firestoreId, currentState) {
+            const userObj = cloudUsers.find(u => u.firestoreId === firestoreId);
+            if (!userObj || userObj.user === 'ECB_Wartung') return;
+
+            userObj.active = !currentState;
+            try {
+                if (db && firestoreId) {
+                    await updateDoc(doc(db, 'ecb_users', firestoreId), { active: userObj.active });
+                }
+            } catch(e) {}
+            renderAdminUserList();
+        }
+
+        window.deleteUserRecord = async function(firestoreId) {
+            const userObj = cloudUsers.find(u => u.firestoreId === firestoreId);
+            if (!userObj || userObj.user === 'ECB_Wartung') return;
+
+            if (!confirm(`Benutzer "${userObj.user}" wirklich löschen?`)) return;
+
+            try {
+                if (db && firestoreId) {
+                    await deleteDoc(doc(db, 'ecb_users', firestoreId));
+                }
+                cloudUsers = cloudUsers.filter(u => u.firestoreId !== firestoreId);
+            } catch(e) {}
+            renderAdminUserList();
+        }
+
+        function renderAdminUserList() {
+            const container = document.getElementById('admin-user-list');
+            if (!container) return;
+            let html = '';
+            cloudUsers.forEach(u => {
+                const isAdmin = u.user === 'ECB_Wartung';
+                html += `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <div>
+                            <strong class="text-sm text-slate-800">${u.fullname || u.user}</strong> <span class="text-xs text-slate-400">(${u.user})</span>
+                            <div class="text-[11px] ${u.active !== false ? 'text-emerald-600 font-bold' : 'text-red-500 font-bold'}">${u.active !== false ? 'Aktiv' : 'Deaktiviert'}</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${!isAdmin ? `
+                                <button type="button" onclick="toggleUserActive('${u.firestoreId || ''}', ${u.active !== false})" class="px-2.5 py-1.5 rounded-lg text-xs font-bold ${u.active !== false ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'} cursor-pointer">
+                                    ${u.active !== false ? 'Deaktivieren' : 'Aktivieren'}
+                                </button>
+                                <button type="button" onclick="deleteUserRecord('${u.firestoreId || ''}')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            ` : `<span class="text-xs text-slate-400 font-semibold italic">Haupt-Admin</span>`}
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        window.handleLogout = function() {
+            localStorage.removeItem('ecb_logged_in');
+            localStorage.removeItem('ecb_current_user');
+            localStorage.removeItem('ecb_current_fullname');
+            document.getElementById('login-screen').classList.remove('hidden');
+        }
+
         function initFirestoreListeners() {
             if (!db) return;
 
             try {
+                const usersCol = collection(db, 'ecb_users');
+                onSnapshot(usersCol, (snapshot) => {
+                    snapshot.forEach(docSnap => {
+                        const data = docSnap.data();
+                        const existing = cloudUsers.find(u => u.user === data.user);
+                        if (!existing) {
+                            cloudUsers.push({ firestoreId: docSnap.id, ...data });
+                        } else {
+                            existing.firestoreId = docSnap.id;
+                            existing.pass = data.pass;
+                            existing.fullname = data.fullname;
+                            existing.active = data.active !== false;
+                        }
+                    });
+                }, (err) => {});
+
                 const protocolsCol = collection(db, 'ecb_protocols');
                 onSnapshot(protocolsCol, (snapshot) => {
                     protocols = [];
@@ -316,7 +634,7 @@
                     });
                     protocols.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
                     updateUI();
-                }, (err) => console.log("Protocols sync notice:", err));
+                }, (err) => {});
 
                 const dguvCol = collection(db, 'ecb_dguv_devices');
                 onSnapshot(dguvCol, (snapshot) => {
@@ -325,10 +643,8 @@
                         dguvDevices.push({ firestoreId: docSnap.id, ...docSnap.data() });
                     });
                     updateUI();
-                }, (err) => console.log("DGUV sync notice:", err));
-            } catch(e) {
-                console.log("Firestore listener exception:", e);
-            }
+                }, (err) => {});
+            } catch(e) {}
         }
 
         window.switchTab = function(tabId) {
@@ -385,14 +701,15 @@
         }
 
         function renderCommonHeaderFields() {
+            const currentFullName = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
             return `
                 <div class="p-6 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-4 mb-8 shadow-sm">
                     <div class="flex items-center gap-2 text-ecbDarkGreen font-bold text-sm border-b border-slate-200 pb-3">
                         <i class="fa-solid fa-user-shield text-base"></i> Mitarbeiter-Authentifizierung &amp; Zeitstempel
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-800 mb-1.5">Name des zuständigen Technikers (Pflichtfeld): <span class="text-red-500">*</span></label>
-                        <input type="text" id="employee-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-white shadow-sm font-medium" placeholder="Vor- und Nachname eintragen...">
+                        <label class="block text-sm font-bold text-slate-800 mb-1.5">Name des zuständigen Technikers (Automatisch ausgefüllt): <span class="text-red-500">*</span></label>
+                        <input type="text" id="employee-name" required value="${currentFullName}" readonly class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-slate-100 text-slate-700 shadow-sm font-bold cursor-not-allowed">
                     </div>
                     <div class="text-xs text-slate-500 flex items-center gap-1.5">
                         <i class="fa-regular fa-clock text-ecbGreen"></i> Ein rechtssicherer Zeitstempel wird beim Absenden automatisch generiert.
@@ -810,10 +1127,25 @@
             updateUI();
         }
 
-        window.clearHistory = function() {
-            if (confirm('Historie wirklich löschen?')) {
+        window.clearHistory = async function() {
+            const currentUser = localStorage.getItem('ecb_current_user');
+            if (currentUser !== 'ECB_Wartung') {
+                showModal('Zugriff verwehrt', 'Nur der Administrator kann den Verlauf leeren.', false);
+                return;
+            }
+            if (confirm('Gesamte Historie wirklich löschen?')) {
+                try {
+                    if (db) {
+                        for (let p of protocols) {
+                            if (p.firestoreId) {
+                                await deleteDoc(doc(db, 'ecb_protocols', p.firestoreId));
+                            }
+                        }
+                    }
+                } catch(e) {}
                 protocols = [];
                 updateUI();
+                showModal('Erfolg', 'Verlauf erfolgreich geleert.', true);
             }
         }
 
@@ -830,6 +1162,13 @@
         function renderHistory() {
             const container = document.getElementById('protocols-container');
             if (!container) return;
+            const currentUser = localStorage.getItem('ecb_current_user');
+            if (currentUser === 'ECB_Wartung') {
+                document.getElementById('history-admin-clear-container').classList.remove('hidden');
+            } else {
+                document.getElementById('history-admin-clear-container').classList.add('hidden');
+            }
+
             if (protocols.length === 0) {
                 container.innerHTML = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200">Keine Protokolle vorhanden.</div>';
                 return;
@@ -857,35 +1196,134 @@
             container.innerHTML = html;
         }
 
-        function renderDguvDevices() {
-            const containers = [document.getElementById('dguv-devices-container'), document.getElementById('dashboard-dguv-container')];
-            containers.forEach(container => {
-                if (!container) return;
-                if (dguvDevices.length === 0) {
-                    container.innerHTML = '<div class="col-span-full bg-slate-50 rounded-2xl p-8 text-center text-slate-500 border border-slate-200 text-sm">Keine DGUV V3 Geräte erfasst.</div>';
-                    return;
+        window.downloadProtocolPDF = function(index) { generatePDF(protocols[index]); }
+
+        function generatePDF(p) {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+
+                // Header Background
+                doc.setFillColor(63, 98, 18); // ecbDarkGreen
+                doc.rect(0, 0, 210, 40, 'F');
+
+                // Draw Exact Logo matching user image
+                doc.setFillColor(101, 163, 13); // ecbGreen
+                doc.roundedRect(15, 7, 26, 26, 4, 4, 'F');
+                
+                doc.setFillColor(255, 255, 255, 0.95);
+                doc.path([
+                    {op: 'm', c: [17, 26]},
+                    {op: 'c', c: [22, 22, 28, 22, 34, 25]},
+                    {op: 'c', c: [38, 27, 40, 27, 43, 23]},
+                    {op: 'c', c: [42, 24, 39, 29, 34, 29]},
+                    {op: 'c', c: [28, 29, 20, 30, 17, 26]}
+                ]);
+                doc.fill();
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFont('helvetica', 'bolditalic');
+                doc.setFontSize(16);
+                doc.setTextColor(255, 255, 255);
+                doc.text('ecb', 18, 20);
+
+                // Header Text
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.text('ECB REINIGUNGSSYSTEME', 48, 18);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                doc.text(`Wartungsprotokoll: ${p.machine} (${p.id})`, 48, 26);
+
+                // Metadata Box
+                doc.setFillColor(241, 245, 249);
+                doc.roundedRect(15, 46, 180, 26, 3, 3, 'F');
+                
+                doc.setTextColor(15, 23, 42);
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(10);
+                doc.text(`Techniker: ${p.employee}`, 20, 54);
+                doc.text(`Datum: ${p.date}`, 20, 61);
+                if (p.runtime) doc.text(`Laufleistung: ${p.runtime} Std.`, 120, 54);
+                doc.text(`Kategorie: ${p.category}`, 120, 61);
+
+                let startY = 78;
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(11);
+                doc.setTextColor(63, 98, 18);
+                doc.text('Prüfpunkt-Auswertung:', 15, startY);
+                startY += 5;
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                p.points.forEach(pt => {
+                    const isOk = pt.status === 'erledigt';
+                    doc.setTextColor(15, 23, 42);
+                    doc.text(`${pt.pointNumber}. ${pt.title}`, 20, startY);
+                    doc.setFont('helvetica', 'bold');
+                    if (isOk) {
+                        doc.setTextColor(46, 125, 50);
+                        doc.text('ERLEDIGT (OK)', 150, startY);
+                    } else {
+                        doc.setTextColor(211, 47, 47);
+                        doc.text('NICHT IN ORDNUNG', 140, startY);
+                    }
+                    doc.setFont('helvetica', 'normal');
+                    startY += 7;
+                });
+
+                if (p.remarks) {
+                    startY += 5;
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(63, 98, 18);
+                    doc.text('Bemerkungen:', 15, startY);
+                    startY += 5;
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(15, 23, 42);
+                    const splitRemarks = doc.splitTextToSize(p.remarks, 175);
+                    doc.text(splitRemarks, 20, startY);
+                    startY += (splitRemarks.length * 6) + 4;
                 }
-                let html = '';
-                dguvDevices.forEach((dev) => {
+
+                if (p.signature) {
+                    if (startY > 220) { doc.addPage(); startY = 20; }
+                    startY += 6;
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(63, 98, 18);
+                    doc.text('Digitale Unterschrift des Technikers:', 15, startY);
+                    startY += 5;
+                    doc.addImage(p.signature, 'PNG', 15, startY, 55, 22);
+                }
+
+                doc.save(`ECB_Protokoll_${p.id}.pdf`);
+            } catch(e) { console.error(e); }
+        }
+
+        function renderDguvDevices() {
+            const container = document.getElementById('dguv-devices-container');
+            const dashContainer = document.getElementById('dashboard-dguv-container');
+            if (!container) return;
+
+            let html = '';
+            if (dguvDevices.length === 0) {
+                html = '<div class="col-span-full bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200">Keine DGUV V3 Geräte erfasst.</div>';
+            } else {
+                dguvDevices.forEach(dev => {
                     const isDone = dev.status === 'Erledigt';
                     html += `
-                        <div class="bg-slate-50/70 rounded-2xl p-5 border border-slate-200 flex flex-col justify-between space-y-3">
-                            <div class="flex justify-between items-center">
-                                <span class="px-3 py-1 rounded-full text-xs font-bold ${isDone?'bg-emerald-50 text-ecbGreen':'bg-amber-50 text-amber-600'}">${dev.status}</span>
-                                <button onclick="deleteDguvDevice('${dev.firestoreId || ''}')" class="text-red-500 text-xs cursor-pointer"><i class="fa-solid fa-trash"></i></button>
-                            </div>
+                        <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-4 shadow-sm flex flex-col justify-between">
                             <div>
-                                <h4 class="font-bold text-slate-900 text-base">${dev.name}</h4>
-                                <p class="text-xs text-slate-500 mt-0.5">Standort: ${dev.location} | Fällig: ${dev.dueDate}</p>
+                                <div class="flex justify-between items-start">
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold ${isDone ? 'bg-emerald-50 text-ecbGreen' : 'bg-amber-50 text-amber-600'}">${dev.status}</span>
+                                    <button onclick="deleteDguvDevice('${dev.firestoreId || ''}')" class="text-red-500 hover:text-red-700 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                                <h3 class="text-xl font-bold text-slate-900 mt-2">${dev.name}</h3>
+                                <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-sky-600 mr-1"></i> ${dev.location}</p>
+                                <p class="text-xs text-slate-500 mt-1"><i class="fa-regular fa-calendar-days text-sky-600 mr-1"></i> Fällig: ${dev.dueDate}</p>
                             </div>
-                            <div class="pt-1">
-                                ${isDone ? `
-                                    <div class="text-[11px] text-emerald-700 bg-emerald-50 p-2 rounded-xl border border-emerald-100 flex items-center justify-between">
-                                        <span class="truncate"><i class="fa-solid fa-file-pdf mr-1"></i> ${dev.fileName}</span>
-                                        <a href="${dev.fileData}" download="${dev.fileName}" class="font-bold underline ml-1">Ansehen</a>
-                                    </div>
-                                ` : `
-                                    <label class="w-full py-2 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl font-bold text-xs text-slate-700 transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                ${isDone ? `<span class="text-xs text-emerald-700 font-bold"><i class="fa-solid fa-file-pdf mr-1"></i> Protokoll hochgeladen</span>` : `
+                                    <label class="w-full py-2 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                                         <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Messprotokoll hochladen
                                         <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.firestoreId || ''}')" class="hidden">
                                     </label>
@@ -894,48 +1332,9 @@
                         </div>
                     `;
                 });
-                container.innerHTML = html;
-            });
-        }
-
-        window.downloadProtocolPDF = function(index) { generatePDF(protocols[index]); }
-
-        function generatePDF(p) {
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('p', 'mm', 'a4');
-                doc.setFillColor(63, 98, 18);
-                doc.rect(0, 0, 210, 35, 'F');
-                doc.setTextColor(255, 255, 255);
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(16);
-                doc.text('ECB REINIGUNGSSYSTEME', 15, 20);
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(10);
-                doc.text(`Wartungsprotokoll: ${p.machine} (${p.id})`, 15, 27);
-
-                doc.setTextColor(15, 23, 42);
-                doc.setFontSize(11);
-                doc.text(`Techniker: ${p.employee}`, 15, 48);
-                doc.text(`Datum: ${p.date}`, 15, 55);
-                if (p.runtime) doc.text(`Laufleistung: ${p.runtime} Std.`, 120, 48);
-
-                let startY = 65;
-                doc.setFont('helvetica', 'bold');
-                doc.text('Prüfpunkte:', 15, startY);
-                startY += 6;
-                doc.setFont('helvetica', 'normal');
-                p.points.forEach(pt => {
-                    doc.text(`${pt.pointNumber}. ${pt.title} - ${pt.status.toUpperCase()}`, 20, startY);
-                    startY += 6;
-                });
-
-                if (p.signature) {
-                    startY += 10;
-                    doc.addImage(p.signature, 'PNG', 15, startY, 50, 20);
-                }
-                doc.save(`ECB_Protokoll_${p.id}.pdf`);
-            } catch(e) { console.error(e); }
+            }
+            container.innerHTML = html;
+            if (dashContainer) dashContainer.innerHTML = html;
         }
     </script>
 </body>
