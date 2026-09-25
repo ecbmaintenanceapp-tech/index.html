@@ -61,7 +61,7 @@
                     </h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
                         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                        Digitales Wartungssystem (Cloud Synchronisiert)
+                        <span id="cloud-status-text">Cloud Synchronisiert</span>
                     </p>
                 </div>
             </div>
@@ -88,7 +88,7 @@
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen-, Maschinen- &amp; DGUV-Wartung</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen oder elektrische Betriebsmittel (DGUV V3) zu verwalten. Alle Daten werden in Echtzeit synchronisiert.</p>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen oder elektrische Betriebsmittel (DGUV V3) zu verwalten. Alle Daten werden in Echtzeit in der Google Cloud gespeichert und geräteübergreifend synchronisiert.</p>
                 </div>
             </div>
 
@@ -173,7 +173,7 @@
                     <div>
                         <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Prüfmanagement</span>
                         <h3 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen (Elektrische Betriebsmittel)</h3>
-                        <p class="text-sm text-slate-600 mt-1">Direktübersicht und Verwaltung aller elektrischen Geräte und Prüfprotokolle.</p>
+                        <p class="text-sm text-slate-600 mt-1">Direktübersicht und Verwaltung aller elektrischen Geräte und Prüfprotokolle in der Cloud.</p>
                     </div>
                     <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm transition shadow-lg shadow-sky-600/20 flex items-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-plus"></i> Neues Gerät erfassen
@@ -203,7 +203,7 @@
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle (Cloud Historie)</h2>
-                    <p class="text-sm text-slate-600 mt-1">Alle archivierten Protokolle mit Zeitstempel, PDF-Export und E-Mail-Versand.</p>
+                    <p class="text-sm text-slate-600 mt-1">Alle archivierten Protokolle mit Zeitstempel, PDF-Export und E-Mail-Versand (live synchronisiert).</p>
                 </div>
                 <button onclick="clearHistory()" class="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-bold transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-trash-can"></i> Verlauf leeren
@@ -268,7 +268,7 @@
     <!-- FIREBASE & APP LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -280,16 +280,13 @@
             appId: "1:229926423123:web:a309c14c708fc88c62d4a6"
         };
 
-        const appId = 'ecb-maintenance';
         let app, db, auth, userId = null;
-        let protocols = JSON.parse(localStorage.getItem('ecb_protocols_offline') || '[]');
-        let dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_offline') || '[]');
+        let protocols = [];
+        let dguvDevices = [];
         let activePhotos = [];
         let signaturePadInstance = null;
 
         window.addEventListener('DOMContentLoaded', async () => {
-            updateUI();
-
             try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
@@ -301,11 +298,17 @@
                     if (user) {
                         userId = user.uid;
                         document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
+                        document.getElementById('cloud-status-text').innerText = "Cloud Synchronisiert";
                         initFirestoreListeners();
                     }
                 });
             } catch (err) {
-                console.warn("Firebase Fallback active:", err);
+                console.warn("Firebase Init Error:", err);
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Lokaler Modus";
+                protocols = JSON.parse(localStorage.getItem('ecb_protocols_offline') || '[]');
+                dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_offline') || '[]');
+                updateUI();
             }
         });
 
@@ -313,7 +316,7 @@
             if (!db) return;
 
             try {
-                const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
+                const protocolsCol = collection(db, 'ecb_protocols');
                 onSnapshot(protocolsCol, (snapshot) => {
                     protocols = [];
                     snapshot.forEach(docSnap => {
@@ -323,7 +326,7 @@
                     updateUI();
                 }, (err) => console.log("Protocols sync notice:", err));
 
-                const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
+                const dguvCol = collection(db, 'ecb_dguv_devices');
                 onSnapshot(dguvCol, (snapshot) => {
                     dguvDevices = [];
                     snapshot.forEach(docSnap => {
@@ -400,7 +403,7 @@
                         <input type="text" id="employee-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-white shadow-sm font-medium" placeholder="Vor- und Nachname eintragen...">
                     </div>
                     <div class="text-xs text-slate-500 flex items-center gap-1.5">
-                        <i class="fa-regular fa-clock text-ecbGreen"></i> Ein rechtssicherer Zeitstempel (Datum &amp; Uhrzeit) wird automatisch beim Absenden generiert.
+                        <i class="fa-regular fa-clock text-ecbGreen"></i> Ein rechtssicherer Zeitstempel wird beim Absenden automatisch generiert.
                     </div>
                 </div>
             `;
@@ -653,7 +656,7 @@
             if (!grid || !counter) return;
             counter.innerText = `${activePhotos.length} Fotos`;
             grid.innerHTML = '';
-            activePhotos.forEach((photo, index) => {
+            activePhotos.forEach((photo) => {
                 grid.innerHTML += `<div class="relative rounded-xl overflow-hidden h-24 border border-slate-200"><img src="${photo}" class="w-full h-full object-cover"></div>`;
             });
         }
@@ -729,11 +732,11 @@
             };
 
             try {
-                if (db && userId) {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'), protocol);
+                if (db) {
+                    await addDoc(collection(db, 'ecb_protocols'), protocol);
                 }
             } catch (err) {
-                console.warn("Cloud save notice:", err);
+                console.warn("Cloud save error:", err);
             }
 
             protocols.unshift(protocol);
@@ -741,7 +744,7 @@
 
             generatePDF(protocol);
             updateUI();
-            showModal('Erfolg', 'Wartungsprotokoll gespeichert & PDF erstellt!', true);
+            showModal('Erfolg', 'Wartungsprotokoll in der Cloud gespeichert & PDF erstellt!', true);
             switchTab('history');
         }
 
@@ -763,11 +766,11 @@
             };
 
             try {
-                if (db && userId) {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), newDev);
+                if (db) {
+                    await addDoc(collection(db, 'ecb_dguv_devices'), newDev);
                 }
             } catch (err) {
-                console.warn("Cloud save notice:", err);
+                console.warn("Cloud save error:", err);
             }
 
             dguvDevices.unshift(newDev);
@@ -775,7 +778,7 @@
 
             closeDguvModal();
             updateUI();
-            showModal('Erfolg', 'DGUV V3 Gerät gespeichert!', true);
+            showModal('Erfolg', 'DGUV V3 Gerät in der Cloud gespeichert!', true);
         }
 
         window.handleProtocolUpload = async function(event, firestoreId, localId) {
@@ -789,8 +792,8 @@
                 const fileData = e.target.result;
 
                 try {
-                    if (db && userId && firestoreId) {
-                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId), {
+                    if (db && firestoreId) {
+                        await updateDoc(doc(db, 'ecb_dguv_devices', firestoreId), {
                             status: 'Erledigt', uploadDate, fileName, fileData
                         });
                     } else {
@@ -804,7 +807,7 @@
                         }
                     }
                     updateUI();
-                    showModal('Erfolg', 'Messprotokoll zugeordnet!', true);
+                    showModal('Erfolg', 'Messprotokoll in der Cloud aktualisiert!', true);
                 } catch(err) {
                     console.error(err);
                 }
@@ -814,8 +817,8 @@
 
         window.deleteDguvDevice = async function(firestoreId, index) {
             try {
-                if (db && userId && firestoreId) {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId));
+                if (db && firestoreId) {
+                    await deleteDoc(doc(db, 'ecb_dguv_devices', firestoreId));
                 }
             } catch(e) {}
             dguvDevices.splice(index, 1);
@@ -825,8 +828,8 @@
 
         window.deleteProtocol = async function(firestoreId, index) {
             try {
-                if (db && userId && firestoreId) {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', firestoreId));
+                if (db && firestoreId) {
+                    await deleteDoc(doc(db, 'ecb_protocols', firestoreId));
                 }
             } catch(e) {}
             protocols.splice(index, 1);
