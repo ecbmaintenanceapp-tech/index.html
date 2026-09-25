@@ -43,10 +43,10 @@
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
+    <!-- HEADER -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-50 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
-                <!-- EXAKT REPRODUZIERTES ORIGINAL-LOGO MIT GESCHWUNGENEN WELLEN -->
                 <div class="w-12 h-12 rounded-2xl bg-[#65a30d] p-0.5 shadow-md flex items-center justify-center transform hover:rotate-3 transition duration-300 overflow-hidden border border-white/20">
                     <svg viewBox="0 0 500 500" class="w-full h-full rounded-xl">
                         <rect width="500" height="500" fill="#65a30d"/>
@@ -56,12 +56,10 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-xl font-extrabold tracking-tight flex items-center gap-2">
-                        ECB Reinigungssysteme
-                    </h1>
+                    <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse"></span>
-                        Digitales Wartungssystem (Cloud)
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                        Digitales Wartungssystem
                     </p>
                 </div>
             </div>
@@ -79,6 +77,7 @@
         </div>
     </header>
 
+    <!-- MAIN CONTAINER -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
 
         <!-- DASHBOARD TAB -->
@@ -92,12 +91,12 @@
                 </div>
             </div>
 
-            <!-- CATEGORY CARDS GRID -->
+            <!-- CARDS GRID -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Waschmaschinen -->
                 <div id="card-washer" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-ecbGreen hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
+                        <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
                             <i class="fa-solid fa-shirt"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900">Waschmaschinen</h3>
@@ -115,7 +114,7 @@
                 <!-- Trockner -->
                 <div id="card-dryer" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-amber-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
+                        <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
                             <i class="fa-solid fa-wind"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900">Trockner</h3>
@@ -133,7 +132,7 @@
                 <!-- Kompressor Routine -->
                 <div id="card-comp-routine" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-sky-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
+                        <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
                             <i class="fa-solid fa-gauge-high"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900">Kompressor Wartung</h3>
@@ -151,7 +150,7 @@
                 <!-- Kompressor Jahreswartung -->
                 <div id="card-comp-annual" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-purple-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group">
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
+                        <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition duration-300 shadow-sm">
                             <i class="fa-solid fa-calendar-days"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900">Kompressor Jahreswartung</h3>
@@ -174,7 +173,7 @@
                 <div>
                     <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Prüfmanagement</span>
                     <h2 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen (Elektrische Betriebsmittel)</h2>
-                    <p class="text-sm text-slate-600 mt-1">Erfassen Sie alle Geräte, hinterlegen Sie Fälligkeitstage und laden Sie Messprotokolle hoch, um den Status automatisch auf „Erledigt“ zu setzen.</p>
+                    <p class="text-sm text-slate-600 mt-1">Geräte erfassen, Fälligkeitstage hinterlegen und Messprotokolle per Upload zuordnen.</p>
                 </div>
                 <button type="button" id="open-dguv-modal-btn" class="px-5 py-3 bg-gradient-to-r from-sky-600 to-sky-700 hover:opacity-95 text-white rounded-2xl font-bold text-sm transition shadow-lg shadow-sky-600/20 flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-plus"></i> Neues Gerät erfassen
@@ -188,7 +187,7 @@
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle</h2>
-                    <p class="text-sm text-slate-600 mt-1">Hier finden Sie alle archivierten Protokolle mit Zeitstempel, Einzelpunkt-Prüfung, PDF-Export und E-Mail-Versand.</p>
+                    <p class="text-sm text-slate-600 mt-1">Alle archivierten Protokolle mit Zeitstempel, PDF-Export und E-Mail-Versand.</p>
                 </div>
                 <button type="button" id="clear-history-btn" class="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-bold transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-trash-can"></i> Verlauf leeren
@@ -250,98 +249,39 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-maintenance';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyDummyKeyForLocalTesting",
-            authDomain: "ecb-maintenance.firebaseapp.com",
-            projectId: "ecb-maintenance",
-            storageBucket: "ecb-maintenance.appspot.com",
-            messagingSenderId: "229926423123",
-            appId: "1:229926423123:web:ecbmaintenance"
-        };
-
-        let app, db, auth, userId = null;
-        let protocols = [];
-        let dguvDevices = [];
+    <!-- APPLICATION SCRIPT -->
+    <script>
+        let protocols = JSON.parse(localStorage.getItem('ecb_protocols') || '[]');
+        let dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices') || '[]');
         let activePhotos = [];
         let signaturePadInstance = null;
 
-        window.addEventListener('DOMContentLoaded', async () => {
+        window.addEventListener('DOMContentLoaded', () => {
             initEventListeners();
-            try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        const dot = document.getElementById('cloud-status-dot');
-                        if (dot) dot.className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                        initFirestoreListeners();
-                    }
-                });
-            } catch (err) {
-                console.warn("Offline / Local Fallback active:", err);
-                const dot = document.getElementById('cloud-status-dot');
-                if (dot) dot.className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
-                protocols = JSON.parse(localStorage.getItem('ecb_protocols_offline') || '[]');
-                dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_offline') || '[]');
-                updateUI();
-            }
+            updateUI();
         });
 
         function initEventListeners() {
+            // Navigation
             document.getElementById('nav-dashboard-btn').addEventListener('click', () => switchTab('dashboard'));
             document.getElementById('nav-dguv-btn').addEventListener('click', () => switchTab('dguv'));
             document.getElementById('nav-history-btn').addEventListener('click', () => switchTab('history'));
             document.getElementById('back-to-dash-btn').addEventListener('click', () => switchTab('dashboard'));
 
+            // Dashboard cards
             document.getElementById('card-washer').addEventListener('click', openWashingMachineMenu);
             document.getElementById('card-dryer').addEventListener('click', openDryerMenu);
             document.getElementById('card-comp-routine').addEventListener('click', openCompressorRoutine);
             document.getElementById('card-comp-annual').addEventListener('click', openCompressorAnnual);
 
+            // Modals
             document.getElementById('open-dguv-modal-btn').addEventListener('click', openDguvModal);
             document.getElementById('close-dguv-modal-btn').addEventListener('click', closeDguvModal);
             document.getElementById('close-msg-modal-btn').addEventListener('click', closeModal);
             document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
 
+            // Forms
             document.getElementById('dguv-form').addEventListener('submit', saveDguvDevice);
-        }
-
-        function initFirestoreListeners() {
-            if (!userId) return;
-
-            const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
-            onSnapshot(protocolsCol, (snapshot) => {
-                protocols = [];
-                snapshot.forEach(docSnap => {
-                    protocols.push({ firestoreId: docSnap.id, ...docSnap.data() });
-                });
-                protocols.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-                updateUI();
-            }, (error) => console.error(error));
-
-            const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
-            onSnapshot(dguvCol, (snapshot) => {
-                dguvDevices = [];
-                snapshot.forEach(docSnap => {
-                    dguvDevices.push({ firestoreId: docSnap.id, ...docSnap.data() });
-                });
-                updateUI();
-            }, (error) => console.error(error));
         }
 
         function switchTab(tabId) {
@@ -367,7 +307,7 @@
                 renderHistory();
             } else if (tabId === 'form') {
                 document.getElementById('form-view').classList.remove('hidden');
-                setTimeout(() => { initSignaturePad(); }, 200);
+                setTimeout(() => { initSignaturePad(); }, 150);
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -617,7 +557,7 @@
             return `
                 <div class="space-y-3 pt-2">
                     <label class="block text-sm font-bold text-slate-800">
-                        <i class="fa-solid fa-camera mr-1.5 text-ecbGreen"></i> Fotodokumentation (beliebig viele Fotos):
+                        <i class="fa-solid fa-camera mr-1.5 text-ecbGreen"></i> Fotodokumentation:
                     </label>
                     <div class="flex flex-wrap items-center gap-3">
                         <label class="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-sm cursor-pointer transition shadow-md flex items-center gap-2">
@@ -766,7 +706,7 @@
             };
         }
 
-        async function submitProtocol(event, categoryKey) {
+        function submitProtocol(event, categoryKey) {
             event.preventDefault();
 
             const employeeName = document.getElementById('employee-name').value.trim();
@@ -814,25 +754,18 @@
                 signature: signatureData
             };
 
-            try {
-                if (db && userId) {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'), protocol);
-                } else {
-                    protocols.unshift(protocol);
-                    localStorage.setItem('ecb_protocols_offline', JSON.stringify(protocols));
-                }
-            } catch (err) {
-                console.error("Error saving protocol:", err);
-            }
+            protocols.unshift(protocol);
+            localStorage.setItem('ecb_protocols', JSON.stringify(protocols));
 
             generatePDF(protocol);
 
             activePhotos = [];
             updateProtocolCount();
-            showModal('Protokoll erfolgreich', `Das Wartungsprotokoll für ${machineName} wurde in der Cloud gespeichert und das PDF-Dokument automatisch heruntergeladen!`, true);
+            showModal('Protokoll erfolgreich', `Das Wartungsprotokoll für ${machineName} wurde gespeichert und das PDF-Dokument automatisch heruntergeladen!`, true);
             switchTab('history');
         }
 
+        // --- DGUV V3 MANAGEMENT LOGIC ---
         function openDguvModal() {
             document.getElementById('modal-dguv').classList.remove('hidden');
         }
@@ -841,7 +774,7 @@
             document.getElementById('modal-dguv').classList.add('hidden');
         }
 
-        async function saveDguvDevice(event) {
+        function saveDguvDevice(event) {
             event.preventDefault();
             const name = document.getElementById('dguv-dev-name').value.trim();
             const location = document.getElementById('dguv-dev-location').value.trim();
@@ -860,17 +793,8 @@
                 fileData: null
             };
 
-            try {
-                if (db && userId) {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), newDev);
-                } else {
-                    dguvDevices.unshift(newDev);
-                    localStorage.setItem('ecb_dguv_devices_offline', JSON.stringify(dguvDevices));
-                }
-            } catch (err) {
-                console.error("Error saving DGUV device:", err);
-            }
-
+            dguvDevices.unshift(newDev);
+            localStorage.setItem('ecb_dguv_devices', JSON.stringify(dguvDevices));
             closeDguvModal();
             document.getElementById('dguv-form').reset();
             updateDguvCount();
@@ -878,57 +802,31 @@
             showModal('Erfolgreich', 'Das Gerät wurde erfasst und der Prüftermin hinterlegt.', true);
         }
 
-        window.handleProtocolUpload = async function(event, firestoreId, localId) {
+        window.handleProtocolUpload = function(event, deviceId) {
             const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = async function(e) {
-                const uploadDate = new Date().toLocaleString('de-DE');
-                const fileName = file.name;
-                const fileData = e.target.result;
-
-                try {
-                    if (db && userId && firestoreId) {
-                        const devRef = doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId);
-                        await updateDoc(devRef, {
-                            status: 'Erledigt',
-                            uploadDate: uploadDate,
-                            fileName: fileName,
-                            fileData: fileData
-                        });
-                    } else {
-                        const dev = dguvDevices.find(d => d.id === localId);
-                        if (dev) {
-                            dev.status = 'Erledigt';
-                            dev.uploadDate = uploadDate;
-                            dev.fileName = fileName;
-                            dev.fileData = fileData;
-                            localStorage.setItem('ecb_dguv_devices_offline', JSON.stringify(dguvDevices));
-                        }
-                    }
+            reader.onload = function(e) {
+                const dev = dguvDevices.find(d => d.id === deviceId);
+                if (dev) {
+                    dev.status = 'Erledigt';
+                    dev.uploadDate = new Date().toLocaleString('de-DE');
+                    dev.fileName = file.name;
+                    dev.fileData = e.target.result;
+                    localStorage.setItem('ecb_dguv_devices', JSON.stringify(dguvDevices));
                     renderDguvDevices();
-                    showModal('Protokoll zugeordnet', `Das Messprotokoll wurde hochgeladen und der Status auf „Erledigt“ gesetzt.`, true);
-                } catch (err) {
-                    console.error("Error updating DGUV device:", err);
+                    showModal('Protokoll zugeordnet', `Das Messprotokoll wurde für Gerät "${dev.name}" hochgeladen und der Status auf „Erledigt“ gesetzt.`, true);
                 }
             };
             reader.readAsDataURL(file);
         }
 
-        window.deleteDguvDevice = async function(firestoreId, index) {
-            try {
-                if (db && userId && firestoreId) {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId));
-                } else {
-                    dguvDevices.splice(index, 1);
-                    localStorage.setItem('ecb_dguv_devices_offline', JSON.stringify(dguvDevices));
-                }
-                updateDguvCount();
-                renderDguvDevices();
-            } catch (err) {
-                console.error("Error deleting DGUV device:", err);
-            }
+        window.deleteDguvDevice = function(index) {
+            dguvDevices.splice(index, 1);
+            localStorage.setItem('ecb_dguv_devices', JSON.stringify(dguvDevices));
+            updateDguvCount();
+            renderDguvDevices();
         }
 
         function updateDguvCount() {
@@ -961,7 +859,7 @@
                         <div>
                             <div class="flex justify-between items-start gap-2">
                                 <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${isDone ? 'bg-emerald-50 text-ecbGreen' : 'bg-amber-50 text-amber-600'}">${dev.status}</span>
-                                <button type="button" onclick="deleteDguvDevice('${dev.firestoreId || ''}', ${idx})" class="text-slate-400 hover:text-red-600 transition text-sm cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
+                                <button type="button" onclick="deleteDguvDevice(${idx})" class="text-slate-400 hover:text-red-600 transition text-sm cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
                             <h3 class="text-xl font-extrabold text-slate-900 mt-3">${dev.name}</h3>
                             <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-sky-600 mr-1"></i> Standort: <strong class="text-slate-700">${dev.location}</strong></p>
@@ -978,7 +876,7 @@
                             ` : `
                                 <label class="w-full py-2.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl font-bold text-xs text-slate-700 transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                                     <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Messprotokoll hochladen
-                                    <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.firestoreId || ''}', '${dev.id}')" class="hidden">
+                                    <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.id}')" class="hidden">
                                 </label>
                             `}
                         </div>
@@ -988,6 +886,7 @@
             container.innerHTML = html;
         }
 
+        // --- PDF GENERATION ---
         function generatePDF(p) {
             try {
                 const { jsPDF } = window.jspdf;
@@ -1074,4 +973,109 @@
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(10);
-                doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColo
+                doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+                const remarksText = p.remarks || 'Keine Bemerkungen angegeben.';
+                const splitRemarks = doc.splitTextToSize(remarksText, 175);
+                doc.text(splitRemarks, 20, startY);
+                startY += (splitRemarks.length * 6) + 6;
+
+                if (startY > 210) { doc.addPage(); startY = 20; }
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                doc.text('Digitale Unterschrift des Technikers', 15, startY);
+                startY += 4;
+                doc.line(15, startY, 195, startY);
+                startY += 7;
+
+                if (p.signature) {
+                    doc.addImage(p.signature, 'PNG', 15, startY, 65, 26);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(9);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text(`Rechtsverbindlich unterzeichnet von: ${p.employee}`, 85, startY + 15);
+                    startY += 34;
+                }
+
+                if (p.photos && p.photos.length > 0) {
+                    if (startY > 180) { doc.addPage(); startY = 20; }
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(12);
+                    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                    doc.text(`Fotodokumentation (${p.photos.length} Fotos)`, 15, startY);
+                    startY += 4;
+                    doc.line(15, startY, 195, startY);
+                    startY += 7;
+
+                    let xPos = 15;
+                    let yPos = startY;
+                    p.photos.forEach((ph) => {
+                        try {
+                            doc.addImage(ph, 'JPEG', xPos, yPos, 45, 35);
+                            xPos += 50;
+                            if (xPos > 150) {
+                                xPos = 15;
+                                yPos += 40;
+                            }
+                        } catch(e) {}
+                    });
+                }
+
+                const pageCount = doc.internal.getNumberOfPages();
+                for(let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.setTextColor(150, 150, 150);
+                    doc.text(`ECB Reinigungssysteme - Digitales Wartungssystem - Protokoll-ID: ${p.id} - Seite ${i} von ${pageCount}`, 15, 290);
+                }
+
+                doc.save(`ECB_Wartungsprotokoll_${p.id}.pdf`);
+            } catch(err) {
+                console.error("PDF Generation Error:", err);
+            }
+        }
+
+        window.downloadProtocolPDF = function(index) {
+            generatePDF(protocols[index]);
+        }
+
+        function updateProtocolCount() {
+            const el = document.getElementById('protocol-count');
+            if (el) el.innerText = protocols.length;
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('protocols-container');
+            if (!container) return;
+
+            if (protocols.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-3xl p-16 text-center border border-slate-200/80 text-slate-500 shadow-sm">
+                        <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl mx-auto mb-4 text-slate-400">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </div>
+                        <p class="text-lg font-bold text-slate-800">Keine Protokolle vorhanden</p>
+                        <p class="text-sm text-slate-500 mt-1 max-w-md mx-auto">Wählen Sie im Dashboard eine Anlage aus, um eine Wartung durchzuführen.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            protocols.forEach((p, idx) => {
+                let pointsHtml = (p.points || []).map(pt => `
+                    <div class="text-xs flex justify-between py-1.5 border-b border-slate-100 items-center">
+                        <span class="text-slate-700 font-medium">${pt.pointNumber}. ${pt.title}</span>
+                        <span class="font-bold px-2 py-0.5 rounded-md ${pt.status === 'erledigt' ? 'bg-emerald-50 text-ecbGreen' : 'bg-red-50 text-red-600'}">${pt.status.toUpperCase()}</span>
+                    </div>
+                `).join('');
+
+                let photosHtml = (p.photos || []).map(ph => `<img src="${ph}" class="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-sm">`).join('');
+
+                html += `
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6 hover:shadow-md transition">
+                        <div class="flex flex-wrap justify-between items-start gap-4 border-b border-slate-100 pb-5">
+                            <div>
+                                <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">${p.category}</span>
+                                <h3 cla
