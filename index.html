@@ -321,8 +321,8 @@
         <div id="tab-history" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
                 <div>
-                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle (Ordnerstruktur)</h2>
-                    <p class="text-sm text-slate-600 mt-1">Navigieren Sie durch die Jahres- und Monatsordner, um die Historie aller Prüfungen chronologisch zu verfolgen.</p>
+                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle (Nach Prüfpunkten &amp; Ordnern)</h2>
+                    <p class="text-sm text-slate-600 mt-1">Wählen Sie einen Prüfpunkt, um alle zugehörigen Protokolle übersichtlich einzusehen.</p>
                 </div>
                 <!-- CLEAR HISTORY BUTTON (ADMIN ONLY) -->
                 <div id="history-admin-clear-container" class="hidden">
@@ -335,7 +335,7 @@
             <!-- FILTER / BREADCRUMB NAVIGATION -->
             <div id="history-navigator" class="flex flex-wrap items-center gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                 <button onclick="resetHistoryNavigator()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
-                    <i class="fa-solid fa-house"></i> Alle Jahre anzeigen
+                    <i class="fa-solid fa-house"></i> Alle Prüfpunkte
                 </button>
                 <div id="history-breadcrumb" class="text-xs font-bold text-ecbDarkGreen flex items-center gap-2"></div>
             </div>
@@ -421,10 +421,9 @@
         let activePhotos = [];
         let signaturePadInstance = null;
 
-        // HISTORY NAVIGATION STATE
-        let currentHistoryView = 'years'; // 'years', 'months', 'protocols'
-        let selectedYear = null;
-        let selectedMonth = null;
+        // HISTORY NAVIGATION STATE FOR POINTS
+        let currentHistoryView = 'points'; // 'points', 'protocols'
+        let selectedPointTitle = null;
 
         // INACTIVITY AUTO-LOGOUT (5 MINUTES)
         let inactivityTimer = null;
@@ -1091,8 +1090,6 @@
                 employee: employeeName,
                 runtime: runtimeHours,
                 date: now.toLocaleString('de-DE'),
-                year: String(now.getFullYear()),
-                month: String(now.getMonth() + 1).padStart(2, '0'),
                 points: pointsData,
                 remarks: remarks,
                 photos: [...activePhotos],
@@ -1271,32 +1268,18 @@
             if (el) el.innerText = dguvDevices.length;
         }
 
-        // --- HISTORY FOLDER NAVIGATION LOGIC ---
+        // --- HISTORY POINT NAVIGATION LOGIC ---
         window.resetHistoryNavigator = function() {
-            currentHistoryView = 'years';
-            selectedYear = null;
-            selectedMonth = null;
+            currentHistoryView = 'points';
+            selectedPointTitle = null;
             renderHistory();
         }
 
-        window.selectYearFolder = function(year) {
-            selectedYear = year;
-            currentHistoryView = 'months';
-            renderHistory();
-        }
-
-        window.selectMonthFolder = function(year, month) {
-            selectedYear = year;
-            selectedMonth = month;
+        window.selectPointFolder = function(pointTitle) {
+            selectedPointTitle = pointTitle;
             currentHistoryView = 'protocols';
             renderHistory();
         }
-
-        const monthNames = {
-            '01': 'Januar', '02': 'Februar', '03': 'März', '04': 'April',
-            '05': 'Mai', '06': 'Juni', '07': 'Juli', '08': 'August',
-            '09': 'September', '10': 'Oktober', '11': 'November', '12': 'Dezember'
-        };
 
         function renderHistory() {
             const container = document.getElementById('protocols-container');
@@ -1316,75 +1299,44 @@
                 return;
             }
 
-            // Breadcrumb render
             let bcHtml = '';
-            if (currentHistoryView === 'years') {
-                bcHtml = `<span><i class="fa-solid fa-folder-open text-ecbGreen mr-1"></i> Alle Jahre</span>`;
-            } else if (currentHistoryView === 'months') {
-                bcHtml = `<button onclick="resetHistoryNavigator()" class="hover:underline">Alle Jahre</button> <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i> <span class="text-slate-800"><i class="fa-solid fa-folder-open text-ecbGreen mr-1"></i> Jahr ${selectedYear}</span>`;
+            if (currentHistoryView === 'points') {
+                bcHtml = `<span><i class="fa-solid fa-folder-open text-ecbGreen mr-1"></i> Alle Prüfpunkte</span>`;
             } else if (currentHistoryView === 'protocols') {
-                bcHtml = `<button onclick="resetHistoryNavigator()" class="hover:underline">Alle Jahre</button> <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i> <button onclick="selectYearFolder('${selectedYear}')" class="hover:underline">Jahr ${selectedYear}</button> <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i> <span class="text-slate-800"><i class="fa-solid fa-folder-open text-ecbGreen mr-1"></i> ${monthNames[selectedMonth] || selectedMonth}</span>`;
+                bcHtml = `<button onclick="resetHistoryNavigator()" class="hover:underline">Alle Prüfpunkte</button> <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i> <span class="text-slate-800"><i class="fa-solid fa-folder-open text-ecbGreen mr-1"></i> ${selectedPointTitle}</span>`;
             }
             breadcrumb.innerHTML = bcHtml;
 
             let html = '';
 
-            if (currentHistoryView === 'years') {
-                // Group by Year
-                const years = {};
+            if (currentHistoryView === 'points') {
+                // Group protocols by unique point title
+                const pointMap = {};
                 protocols.forEach(p => {
-                    let y = p.year || (p.date ? p.date.substring(6, 10) : '2026');
-                    if (!years[y]) years[y] = 0;
-                    years[y]++;
-                });
-
-                html += `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">`;
-                Object.keys(years).sort().reverse().forEach(y => {
-                    html += `
-                        <div onclick="selectYearFolder('${y}')" class="bg-white rounded-3xl p-6 border border-slate-200 hover:border-ecbGreen hover:shadow-lg transition cursor-pointer flex items-center justify-between group">
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl group-hover:scale-105 transition">
-                                    <i class="fa-solid fa-folder"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-extrabold text-slate-900">Jahr ${y}</h3>
-                                    <p class="text-xs text-slate-500 mt-0.5">${years[y]} Protokoll(e) gespeichert</p>
-                                </div>
-                            </div>
-                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-ecbGreen group-hover:text-white transition">
-                                <i class="fa-solid fa-chevron-right text-xs"></i>
-                            </div>
-                        </div>
-                    `;
-                });
-                html += `</div>`;
-
-            } else if (currentHistoryView === 'months') {
-                // Group by Month for selected Year
-                const months = {};
-                protocols.forEach(p => {
-                    let y = p.year || (p.date ? p.date.substring(6, 10) : '2026');
-                    if (y === selectedYear) {
-                        let m = p.month || (p.date ? p.date.substring(3, 5) : '01');
-                        if (!months[m]) months[m] = 0;
-                        months[m]++;
+                    if (p.points && Array.isArray(p.points)) {
+                        p.points.forEach(pt => {
+                            if (!pointMap[pt.title]) {
+                                pointMap[pt.title] = 0;
+                            }
+                            pointMap[pt.title]++;
+                        });
                     }
                 });
 
                 html += `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">`;
-                Object.keys(months).sort().reverse().forEach(m => {
+                Object.keys(pointMap).sort().forEach(title => {
                     html += `
-                        <div onclick="selectMonthFolder('${selectedYear}', '${m}')" class="bg-white rounded-3xl p-6 border border-slate-200 hover:border-sky-500 hover:shadow-lg transition cursor-pointer flex items-center justify-between group">
+                        <div onclick="selectPointFolder('${title.replace(/'/g, "\\'")}')" class="bg-white rounded-3xl p-6 border border-slate-200 hover:border-ecbGreen hover:shadow-lg transition cursor-pointer flex items-center justify-between group">
                             <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl group-hover:scale-105 transition">
+                                <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl group-hover:scale-105 transition">
                                     <i class="fa-solid fa-folder"></i>
                                 </div>
-                                <div>
-                                    <h3 class="text-lg font-extrabold text-slate-900">${monthNames[m] || m} ${selectedYear}</h3>
-                                    <p class="text-xs text-slate-500 mt-0.5">${months[m]} Protokoll(e) gespeichert</p>
+                                <div class="pr-2">
+                                    <h3 class="text-base font-extrabold text-slate-900 leading-snug">${title}</h3>
+                                    <p class="text-xs text-slate-500 mt-1">${pointMap[title]} Eintrag/Einträge</p>
                                 </div>
                             </div>
-                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-sky-600 group-hover:text-white transition">
+                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-ecbGreen group-hover:text-white transition shrink-0">
                                 <i class="fa-solid fa-chevron-right text-xs"></i>
                             </div>
                         </div>
@@ -1393,19 +1345,17 @@
                 html += `</div>`;
 
             } else if (currentHistoryView === 'protocols') {
-                // List protocols for selected Year & Month
+                // Filter protocols that contain the selected point title
                 const filtered = protocols.filter(p => {
-                    let y = p.year || (p.date ? p.date.substring(6, 10) : '2026');
-                    let m = p.month || (p.date ? p.date.substring(3, 5) : '01');
-                    return y === selectedYear && m === selectedMonth;
+                    return p.points && p.points.some(pt => pt.title === selectedPointTitle);
                 });
 
                 if (filtered.length === 0) {
-                    html = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200">Keine Protokolle in diesem Monat gefunden.</div>';
+                    html = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200">Keine Protokolle für diesen Prüfpunkt gefunden.</div>';
                 } else {
                     filtered.forEach((p) => {
                         let originalIdx = protocols.findIndex(item => item.id === p.id);
-                        let pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b border-slate-100"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
+                        let pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b border-slate-100 ${pt.title === selectedPointTitle ? 'font-bold text-ecbDarkGreen bg-ecbLightGreen/30 px-2 rounded' : ''}"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
                         let photosHtml = (p.photos || []).map(ph => `<img src="${ph}" class="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-sm">`).join('');
                         html += `
                             <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-4 shadow-sm">
