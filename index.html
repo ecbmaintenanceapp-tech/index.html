@@ -82,8 +82,6 @@
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            
-            <!-- Neuen Nutzer anlegen -->
             <form onsubmit="handleRegister(event)" class="space-y-4 pb-6 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-user-plus mr-1 text-ecbGreen"></i> Neuen Benutzer anlegen</h4>
                 <div>
@@ -101,8 +99,6 @@
                 <div id="reg-error" class="text-xs text-red-600 font-bold hidden">Benutzer existiert bereits!</div>
                 <button type="submit" class="w-full py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Benutzer in Cloud anlegen</button>
             </form>
-
-            <!-- Benutzerliste & Verwaltung -->
             <div class="space-y-3">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-users-gear mr-1 text-sky-600"></i> Existierende Benutzer verwalten</h4>
                 <div id="admin-user-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
@@ -321,8 +317,8 @@
         <div id="tab-history" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
                 <div>
-                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle (Nach Prüfpunkten &amp; Ordnern)</h2>
-                    <p class="text-sm text-slate-600 mt-1">Wählen Sie einen Prüfpunkt, um alle zugehörigen Protokolle übersichtlich einzusehen.</p>
+                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle nach Maschinen</h2>
+                    <p class="text-sm text-slate-600 mt-1">Filtern Sie nach Jahr und Monat oder wählen Sie eine Maschine aus.</p>
                 </div>
                 <!-- CLEAR HISTORY BUTTON (ADMIN ONLY) -->
                 <div id="history-admin-clear-container" class="hidden">
@@ -332,15 +328,45 @@
                 </div>
             </div>
             
-            <!-- FILTER / BREADCRUMB NAVIGATION -->
-            <div id="history-navigator" class="flex flex-wrap items-center gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                <button onclick="resetHistoryNavigator()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
-                    <i class="fa-solid fa-house"></i> Alle Prüfpunkte
-                </button>
-                <div id="history-breadcrumb" class="text-xs font-bold text-ecbDarkGreen flex items-center gap-2"></div>
+            <!-- FILTER CONTROLS -->
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-4">
+                <div class="flex-grow sm:flex-grow-0">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Jahr filtern:</label>
+                    <select id="filter-year" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-slate-50">
+                        <option value="all">Alle Jahre</option>
+                    </select>
+                </div>
+                <div class="flex-grow sm:flex-grow-0">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Monat filtern:</label>
+                    <select id="filter-month" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-slate-50">
+                        <option value="all">Alle Monate</option>
+                        <option value="01">Januar</option>
+                        <option value="02">Februar</option>
+                        <option value="03">März</option>
+                        <option value="04">April</option>
+                        <option value="05">Mai</option>
+                        <option value="06">Juni</option>
+                        <option value="07">Juli</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Dezember</option>
+                    </select>
+                </div>
+                <div class="flex-grow sm:flex-grow-0">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Maschine / Kategorie:</label>
+                    <select id="filter-category" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-slate-50">
+                        <option value="all">Alle Maschinen</option>
+                        <option value="Waschmaschine">Waschmaschinen</option>
+                        <option value="Trockner">Trockner</option>
+                        <option value="Kompressor 2-Wochen">Kompressor Wartung (2-Wochen)</option>
+                        <option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option>
+                    </select>
+                </div>
             </div>
 
-            <!-- FOLDERS & PROTOCOLS CONTAINER -->
+            <!-- PROTOCOLS LIST CONTAINER -->
             <div id="protocols-container" class="space-y-4"></div>
         </div>
 
@@ -420,10 +446,6 @@
         let cloudUsers = [{ fullname: 'ECB Wartung', user: 'ECB_Wartung', pass: 'ECB1688!', active: true, firestoreId: 'admin_default' }];
         let activePhotos = [];
         let signaturePadInstance = null;
-
-        // HISTORY NAVIGATION STATE FOR POINTS
-        let currentHistoryView = 'points'; // 'points', 'protocols'
-        let selectedPointTitle = null;
 
         // INACTIVITY AUTO-LOGOUT (5 MINUTES)
         let inactivityTimer = null;
@@ -703,7 +725,8 @@
             } else if (tabId === 'history') {
                 document.getElementById('tab-history').classList.remove('hidden');
                 document.getElementById('nav-history').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
-                resetHistoryNavigator();
+                populateYearFilter();
+                renderHistory();
             } else if (tabId === 'form') {
                 document.getElementById('form-view').classList.remove('hidden');
                 setTimeout(() => initSignaturePad(), 200);
@@ -1090,6 +1113,7 @@
                 employee: employeeName,
                 runtime: runtimeHours,
                 date: now.toLocaleString('de-DE'),
+                timestamp: now.getTime(),
                 points: pointsData,
                 remarks: remarks,
                 photos: [...activePhotos],
@@ -1268,22 +1292,27 @@
             if (el) el.innerText = dguvDevices.length;
         }
 
-        // --- HISTORY POINT NAVIGATION LOGIC ---
-        window.resetHistoryNavigator = function() {
-            currentHistoryView = 'points';
-            selectedPointTitle = null;
-            renderHistory();
-        }
+        function populateYearFilter() {
+            const yearSelect = document.getElementById('filter-year');
+            if (!yearSelect) return;
+            
+            const years = new Set();
+            protocols.forEach(p => {
+                if (p.date) {
+                    const match = p.date.match(/\b(20\d{2})\b/);
+                    if (match) years.add(match[1]);
+                }
+            });
 
-        window.selectPointFolder = function(pointTitle) {
-            selectedPointTitle = pointTitle;
-            currentHistoryView = 'protocols';
-            renderHistory();
+            let html = '<option value="all">Alle Jahre</option>';
+            Array.from(years).sort().reverse().forEach(y => {
+                html += `<option value="${y}">${y}</option>`;
+            });
+            yearSelect.innerHTML = html;
         }
 
         function renderHistory() {
             const container = document.getElementById('protocols-container');
-            const breadcrumb = document.getElementById('history-breadcrumb');
             if (!container) return;
 
             const currentUser = localStorage.getItem('ecb_current_user');
@@ -1293,90 +1322,60 @@
                 document.getElementById('history-admin-clear-container').classList.add('hidden');
             }
 
-            if (protocols.length === 0) {
-                breadcrumb.innerHTML = '';
-                container.innerHTML = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200">Keine Protokolle vorhanden.</div>';
+            const filterYear = document.getElementById('filter-year') ? document.getElementById('filter-year').value : 'all';
+            const filterMonth = document.getElementById('filter-month') ? document.getElementById('filter-month').value : 'all';
+            const filterCategory = document.getElementById('filter-category') ? document.getElementById('filter-category').value : 'all';
+
+            const filtered = protocols.filter(p => {
+                let matches = true;
+                if (filterCategory !== 'all' && p.category !== filterCategory) {
+                    matches = false;
+                }
+                if (p.date) {
+                    if (filterYear !== 'all') {
+                        if (!p.date.includes(filterYear)) matches = false;
+                    }
+                    if (filterMonth !== 'all') {
+                        // date format usually DD.MM.YYYY
+                        const parts = p.date.split('.');
+                        if (parts.length >= 2) {
+                            const m = parts[1].padStart(2, '0');
+                            if (m !== filterMonth) matches = false;
+                        }
+                    }
+                }
+                return matches;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200">Keine Protokolle für die ausgewählten Filter gefunden.</div>';
                 return;
             }
 
-            let bcHtml = '';
-            if (currentHistoryView === 'points') {
-                bcHtml = `<span><i class="fa-solid fa-folder-open text-ecbGreen mr-1"></i> Alle Prüfpunkte</span>`;
-            } else if (currentHistoryView === 'protocols') {
-                bcHtml = `<button onclick="resetHistoryNavigator()" class="hover:underline">Alle Prüfpunkte</button> <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i> <span class="text-slate-800"><i class="fa-solid fa-folder-open text-ecbGreen mr-1"></i> ${selectedPointTitle}</span>`;
-            }
-            breadcrumb.innerHTML = bcHtml;
-
             let html = '';
-
-            if (currentHistoryView === 'points') {
-                // Group protocols by unique point title
-                const pointMap = {};
-                protocols.forEach(p => {
-                    if (p.points && Array.isArray(p.points)) {
-                        p.points.forEach(pt => {
-                            if (!pointMap[pt.title]) {
-                                pointMap[pt.title] = 0;
-                            }
-                            pointMap[pt.title]++;
-                        });
-                    }
-                });
-
-                html += `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">`;
-                Object.keys(pointMap).sort().forEach(title => {
-                    html += `
-                        <div onclick="selectPointFolder('${title.replace(/'/g, "\\'")}')" class="bg-white rounded-3xl p-6 border border-slate-200 hover:border-ecbGreen hover:shadow-lg transition cursor-pointer flex items-center justify-between group">
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl group-hover:scale-105 transition">
-                                    <i class="fa-solid fa-folder"></i>
-                                </div>
-                                <div class="pr-2">
-                                    <h3 class="text-base font-extrabold text-slate-900 leading-snug">${title}</h3>
-                                    <p class="text-xs text-slate-500 mt-1">${pointMap[title]} Eintrag/Einträge</p>
-                                </div>
+            filtered.forEach((p) => {
+                let originalIdx = protocols.findIndex(item => item.id === p.id);
+                let pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b border-slate-100"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
+                let photosHtml = (p.photos || []).map(ph => `<img src="${ph}" class="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-sm">`).join('');
+                html += `
+                    <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-4 shadow-sm">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold">${p.category}</span>
+                                <h3 class="text-xl font-bold text-slate-900 mt-2">${p.machine}</h3>
+                                <p class="text-xs text-slate-500 mt-1">${p.date} | Techniker: <strong>${p.employee}</strong> | ID: ${p.id}</p>
                             </div>
-                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-ecbGreen group-hover:text-white transition shrink-0">
-                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            <div class="flex gap-2">
+                                <button onclick="downloadProtocolPDF(${originalIdx})" class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                                <button onclick="deleteProtocol('${p.firestoreId || ''}')" class="text-red-500 hover:text-red-700 text-sm p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
-                    `;
-                });
-                html += `</div>`;
-
-            } else if (currentHistoryView === 'protocols') {
-                // Filter protocols that contain the selected point title
-                const filtered = protocols.filter(p => {
-                    return p.points && p.points.some(pt => pt.title === selectedPointTitle);
-                });
-
-                if (filtered.length === 0) {
-                    html = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200">Keine Protokolle für diesen Prüfpunkt gefunden.</div>';
-                } else {
-                    filtered.forEach((p) => {
-                        let originalIdx = protocols.findIndex(item => item.id === p.id);
-                        let pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b border-slate-100 ${pt.title === selectedPointTitle ? 'font-bold text-ecbDarkGreen bg-ecbLightGreen/30 px-2 rounded' : ''}"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
-                        let photosHtml = (p.photos || []).map(ph => `<img src="${ph}" class="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-sm">`).join('');
-                        html += `
-                            <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-4 shadow-sm">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold">${p.category}</span>
-                                        <h3 class="text-xl font-bold text-slate-900 mt-2">${p.machine}</h3>
-                                        <p class="text-xs text-slate-500 mt-1">${p.date} | Techniker: <strong>${p.employee}</strong> | ID: ${p.id}</p>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button onclick="downloadProtocolPDF(${originalIdx})" class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-                                        <button onclick="deleteProtocol('${p.firestoreId || ''}')" class="text-red-500 hover:text-red-700 text-sm p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
-                                    </div>
-                                </div>
-                                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">${pts}</div>
-                                ${photosHtml ? `<div class="flex flex-wrap gap-2 pt-2">${photosHtml}</div>` : ''}
-                            </div>
-                        `;
-                    });
-                }
-            }
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">${pts}</div>
+                        ${p.remarks ? `<div class="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl"><strong>Bemerkungen:</strong> ${p.remarks}</div>` : ''}
+                        ${photosHtml ? `<div class="flex flex-wrap gap-2 pt-2">${photosHtml}</div>` : ''}
+                    </div>
+                `;
+            });
 
             container.innerHTML = html;
         }
