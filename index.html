@@ -318,7 +318,7 @@
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle nach Maschinen</h2>
-                    <p class="text-sm text-slate-600 mt-1">Filtern Sie nach Jahr und Monat oder wählen Sie eine Maschine aus.</p>
+                    <p class="text-sm text-slate-600 mt-1">Änderungen in den Filtern aktualisieren die Ansicht automatisch.</p>
                 </div>
                 <!-- CLEAR HISTORY BUTTON (ADMIN ONLY) -->
                 <div id="history-admin-clear-container" class="hidden">
@@ -1336,7 +1336,6 @@
                         if (!p.date.includes(filterYear)) matches = false;
                     }
                     if (filterMonth !== 'all') {
-                        // date format usually DD.MM.YYYY
                         const parts = p.date.split('.');
                         if (parts.length >= 2) {
                             const m = parts[1].padStart(2, '0');
@@ -1387,12 +1386,10 @@
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('p', 'mm', 'a4');
 
-                // Header Background
-                doc.setFillColor(63, 98, 18); // ecbDarkGreen
+                doc.setFillColor(63, 98, 18);
                 doc.rect(0, 0, 210, 40, 'F');
 
-                // Draw Exact Vector Logo matching user image with waves
-                doc.setFillColor(101, 163, 13); // ecbGreen
+                doc.setFillColor(101, 163, 13);
                 doc.roundedRect(15, 7, 26, 26, 4, 4, 'F');
                 
                 doc.setFillColor(255, 255, 255, 0.95);
@@ -1411,7 +1408,6 @@
                 doc.setTextColor(255, 255, 255);
                 doc.text('ecb', 18, 20);
 
-                // Header Text
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(16);
                 doc.text('ECB REINIGUNGSSYSTEME', 48, 18);
@@ -1419,7 +1415,6 @@
                 doc.setFontSize(10);
                 doc.text(`Wartungsprotokoll: ${p.machine} (${p.id})`, 48, 26);
 
-                // Metadata Box
                 doc.setFillColor(241, 245, 249);
                 doc.roundedRect(15, 46, 180, 26, 3, 3, 'F');
                 
@@ -1469,7 +1464,6 @@
                     startY += (splitRemarks.length * 6) + 4;
                 }
 
-                // Photos embed in PDF
                 if (p.photos && p.photos.length > 0) {
                     if (startY > 200) { doc.addPage(); startY = 20; }
                     startY += 5;
