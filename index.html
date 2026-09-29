@@ -43,7 +43,6 @@
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
-    <!-- LOGIN SCREEN OVERLAY -->
     <div id="login-screen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 space-y-6 animate-fade-in">
             <div class="text-center space-y-2">
@@ -73,7 +72,6 @@
         </div>
     </div>
 
-    <!-- REGISTER MODAL (ADMIN ONLY) -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -106,7 +104,6 @@
         </div>
     </div>
 
-    <!-- CHANGE PASSWORD MODAL -->
     <div id="modal-password" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -125,7 +122,6 @@
         </div>
     </div>
 
-    <!-- DGUV DEVICE HISTORY MODAL -->
     <div id="modal-dguv-history" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-xl w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -144,7 +140,6 @@
         </div>
     </div>
 
-    <!-- HEADER -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
@@ -196,7 +191,7 @@
                     <div>
                         <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                         <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen-, Maschinen- &amp; DGUV-Wartung</h2>
-                        <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen. Nächste Prüftertermine und Überfälligkeiten werden automatisch berechnet.</p>
+                        <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen. Fälligkeitstermine &amp; Überfälligkeiten werden vollautomatisch anhand der Historie abgeglichen.</p>
                     </div>
                 </div>
                 <!-- ADMIN BUTTON ON DASHBOARD -->
@@ -322,7 +317,7 @@
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle nach Maschinen</h2>
-                    <p class="text-sm text-slate-600 mt-1">Änderungen in den Filtern aktualisieren die Ansicht automatisch.</p>
+                    <p class="text-sm text-slate-600 mt-1">Änderungen in den Dropdown-Filtern aktualisieren die Ansicht sofort automatisch.</p>
                 </div>
                 <!-- CLEAR HISTORY BUTTON (ADMIN ONLY) -->
                 <div id="history-admin-clear-container" class="hidden">
@@ -336,13 +331,13 @@
             <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-4">
                 <div class="flex-grow sm:flex-grow-0">
                     <label class="block text-xs font-bold text-slate-600 mb-1">Jahr filtern:</label>
-                    <select id="filter-year" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-slate-50">
+                    <select id="filter-year" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-slate-50 cursor-pointer">
                         <option value="all">Alle Jahre</option>
                     </select>
                 </div>
                 <div class="flex-grow sm:flex-grow-0">
                     <label class="block text-xs font-bold text-slate-600 mb-1">Monat filtern:</label>
-                    <select id="filter-month" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-slate-50">
+                    <select id="filter-month" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-slate-50 cursor-pointer">
                         <option value="all">Alle Monate</option>
                         <option value="01">Januar</option>
                         <option value="02">Februar</option>
@@ -360,7 +355,7 @@
                 </div>
                 <div class="flex-grow sm:flex-grow-0">
                     <label class="block text-xs font-bold text-slate-600 mb-1">Maschine / Kategorie:</label>
-                    <select id="filter-category" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-slate-50">
+                    <select id="filter-category" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-slate-50 cursor-pointer">
                         <option value="all">Alle Maschinen</option>
                         <option value="Waschmaschine">Waschmaschinen</option>
                         <option value="Trockner">Trockner</option>
@@ -795,7 +790,7 @@
 
                     dueEl.innerHTML = `<i class="fa-regular fa-calendar-days text-ecbGreen mr-1"></i> Nächster Termin: <strong>${formattedDate}</strong>`;
                     if (isOverdue) {
-                        badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-red-600 text-white rounded-full text-[10px] font-extrabold uppercase animate-pulse shadow-sm">Überfällig!</span>`;
+                        badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-red-600 text-white rounded-full text-[10px] font-extrabold uppercase animate-pulse shadow-sm">ÜBERFÄLLIG!</span>`;
                     } else {
                         badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-extrabold uppercase">Termin OK</span>`;
                     }
