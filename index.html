@@ -170,6 +170,9 @@
                 <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-layer-group"></i> Dashboard
                 </button>
+                <button onclick="switchTab('calendar')" id="nav-calendar" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-calendar-check"></i> Wartungskalender
+                </button>
                 <button onclick="switchTab('dguv')" id="nav-dguv" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-plug-circle-check"></i> DGUV V3 <span id="dguv-count" class="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
                 </button>
@@ -299,6 +302,32 @@
                     </button>
                 </div>
                 <div id="dashboard-dguv-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+        </div>
+
+        <!-- WARTUNGSKALENDER TAB -->
+        <div id="tab-calendar" class="hidden space-y-6 animate-fade-in">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
+                <div>
+                    <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Übersicht &amp; Planung</span>
+                    <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungskalender</h2>
+                    <p class="text-sm text-slate-600 mt-1">Hier sehen Sie alle anstehenden und durchgeführten Wartungen mit exaktem Fälligkeitsdatum und aktuellem Status.</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+                            <th class="py-3 px-4">Kategorie / Anlage</th>
+                            <th class="py-3 px-4">Letzte Wartung</th>
+                            <th class="py-3 px-4">Nächster Fälligkeitstermin</th>
+                            <th class="py-3 px-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendar-table-body" class="divide-y divide-slate-100 text-sm">
+                        <!-- Dynamisch gefüllt -->
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -712,11 +741,13 @@
 
         window.switchTab = function(tabId) {
             document.getElementById('tab-dashboard').classList.add('hidden');
+            document.getElementById('tab-calendar').classList.add('hidden');
             document.getElementById('tab-dguv').classList.add('hidden');
             document.getElementById('tab-history').classList.add('hidden');
             document.getElementById('form-view').classList.add('hidden');
 
             document.getElementById('nav-dashboard').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
+            document.getElementById('nav-calendar').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
             document.getElementById('nav-dguv').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
             document.getElementById('nav-history').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
 
@@ -724,6 +755,10 @@
                 document.getElementById('tab-dashboard').classList.remove('hidden');
                 document.getElementById('nav-dashboard').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
                 updateDashboardDueDates();
+            } else if (tabId === 'calendar') {
+                document.getElementById('tab-calendar').classList.remove('hidden');
+                document.getElementById('nav-calendar').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
+                renderMaintenanceCalendar();
             } else if (tabId === 'dguv') {
                 document.getElementById('tab-dguv').classList.remove('hidden');
                 document.getElementById('nav-dguv').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
@@ -764,11 +799,11 @@
             renderHistory();
             renderDguvDevices();
             updateDashboardDueDates();
+            renderMaintenanceCalendar();
         }
 
         function parseProtocolDate(dateStr) {
             if (!dateStr) return null;
-            // Check if format is DD.MM.YYYY HH:MM:SS or DD.MM.YYYY
             const parts = dateStr.split(',')[0].trim().split('.');
             if (parts.length === 3) {
                 const day = parseInt(parts[0], 10);
@@ -789,7 +824,7 @@
                 { key: 'Kompressor Jahreswartung', days: 180, name: 'Kompressor Jahreswartung' }
             ];
 
-            const now = new Date().getTime();
+            const now = new Date().setHours(0,0,0,0);
 
             categories.forEach(cat => {
                 const matching = protocols.filter(p => p.category === cat.key);
@@ -804,6 +839,7 @@
                     const latest = matching.reduce((prev, curr) => (curr.timestamp > prev.timestamp) ? curr : prev);
                     const lastDate = parseProtocolDate(latest.date) || new Date(latest.timestamp);
                     const nextDueDate = new Date(lastDate.getTime() + (cat.days * 24 * 60 * 60 * 1000));
+                    nextDueDate.setHours(0,0,0,0);
                     
                     const isOverdue = now > nextDueDate.getTime();
                     const formattedDate = nextDueDate.toLocaleDateString('de-DE');
@@ -816,6 +852,61 @@
                     }
                 }
             });
+        }
+
+        function renderMaintenanceCalendar() {
+            const tableBody = document.getElementById('calendar-table-body');
+            if (!tableBody) return;
+
+            const categories = [
+                { key: 'Waschmaschine', days: 14, name: 'Waschmaschinen' },
+                { key: 'Trockner', days: 14, name: 'Trockner' },
+                { key: 'Kompressor 2-Wochen', days: 14, name: 'Kompressor Wartung (2-Wochen)' },
+                { key: 'Kompressor Jahreswartung', days: 180, name: 'Kompressor Jahreswartung' }
+            ];
+
+            const now = new Date().setHours(0,0,0,0);
+            let html = '';
+
+            categories.forEach(cat => {
+                const matching = protocols.filter(p => p.category === cat.key);
+                if (matching.length === 0) {
+                    html += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-4 px-4 font-bold text-slate-800">${cat.name}</td>
+                            <td class="py-4 px-4 text-slate-500 italic">Keine Wartung erfasst</td>
+                            <td class="py-4 px-4 text-slate-500 font-semibold">Sofort fällig</td>
+                            <td class="py-4 px-4"><span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-extrabold uppercase">Offen (Kein Protokoll)</span></td>
+                        </tr>
+                    `;
+                } else {
+                    const latest = matching.reduce((prev, curr) => (curr.timestamp > prev.timestamp) ? curr : prev);
+                    const lastDateObj = parseProtocolDate(latest.date) || new Date(latest.timestamp);
+                    const lastDateStr = lastDateObj.toLocaleDateString('de-DE');
+                    
+                    const nextDueDate = new Date(lastDateObj.getTime() + (cat.days * 24 * 60 * 60 * 1000));
+                    nextDueDate.setHours(0,0,0,0);
+                    const nextDueDateStr = nextDueDate.toLocaleDateString('de-DE');
+
+                    const isOverdue = now > nextDueDate.getTime();
+
+                    html += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-4 px-4 font-bold text-slate-800">${cat.name}</td>
+                            <td class="py-4 px-4 text-slate-600 font-medium">${lastDateStr}</td>
+                            <td class="py-4 px-4 text-slate-800 font-bold">${nextDueDateStr}</td>
+                            <td class="py-4 px-4">
+                                ${isOverdue ? 
+                                    '<span class="px-2.5 py-1 bg-red-600 text-white rounded-full text-xs font-extrabold uppercase animate-pulse shadow-sm">Überfällig</span>' : 
+                                    '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-extrabold uppercase">Erledigt / Eingehalten</span>'
+                                }
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+
+            tableBody.innerHTML = html;
         }
 
         function renderCommonHeaderFields() {
