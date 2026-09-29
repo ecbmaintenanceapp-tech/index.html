@@ -1316,7 +1316,7 @@
 
             await generatePDF(protocol);
             updateUI();
-            showModal('Erfolg', 'Wartungsprotokoll in der Cloud gespeichert & PDF im offiziellen ECB-Layout erstellt!', true);
+            showModal('Erfolg', 'Wartungsprotokoll in der Cloud gespeichert & offizielles ECB-PDF erstellt!', true);
             switchTab('history');
         }
 
@@ -1610,47 +1610,46 @@
 
                 // Header Banner Background (ECB Dark Green)
                 doc.setFillColor(63, 98, 18);
-                doc.rect(0, 0, 210, 40, 'F');
+                doc.rect(0, 0, 210, 38, 'F');
 
                 doc.setFillColor(101, 163, 13);
-                doc.roundedRect(15, 7, 26, 26, 4, 4, 'F');
+                doc.roundedRect(15, 6, 26, 26, 4, 4, 'F');
                 
                 doc.setFont('helvetica', 'bold');
-                doc.setFont('helvetica', 'bolditalic');
                 doc.setFontSize(16);
                 doc.setTextColor(255, 255, 255);
-                doc.text('ecb', 18, 20);
+                doc.text('ecb', 18, 19);
 
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(16);
-                doc.text('E.C.B. REINIGUNGSSYSTEME GMBH', 48, 17);
+                doc.text('E.C.B. REINIGUNGSSYSTEME GMBH', 48, 16);
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(10);
-                doc.text('Wartungsprotokoll', 48, 25);
+                doc.text('Wartungsprotokoll', 48, 23);
 
                 doc.setFillColor(241, 245, 249);
-                doc.roundedRect(15, 46, 180, 28, 3, 3, 'F');
+                doc.roundedRect(15, 43, 180, 26, 3, 3, 'F');
                 
                 doc.setTextColor(15, 23, 42);
                 doc.setFont('helvetica', 'bold');
-                doc.setFontSize(11);
-                doc.text(`Wartungsprotokoll: ${p.machine} (${p.id})`, 20, 54);
+                doc.setFontSize(10);
+                doc.text(`Wartungsprotokoll: ${p.machine} (${p.id})`, 20, 50);
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(9);
-                doc.text(`Techniker: ${p.employee}`, 20, 61);
-                doc.text(`Datum: ${p.date}`, 120, 54);
-                doc.text(`Kategorie: ${p.category}`, 120, 61);
+                doc.text(`Techniker: ${p.employee}`, 20, 57);
+                doc.text(`Datum & Uhrzeit: ${p.date}`, 115, 50);
+                doc.text(`Kategorie: ${p.category}`, 115, 57);
 
-                let startY = 82;
+                let startY = 76;
                 doc.setFont('helvetica', 'bold');
-                doc.setFontSize(11);
+                doc.setFontSize(10);
                 doc.setTextColor(63, 98, 18);
                 doc.text('Prüfpunkt-Auswertung:', 15, startY);
-                startY += 6;
+                startY += 5;
 
                 doc.setFont('helvetica', 'normal');
-                doc.setFontSize(10);
+                doc.setFontSize(9);
                 p.points.forEach(pt => {
                     const isOk = pt.status === 'erledigt';
                     doc.setTextColor(15, 23, 42);
@@ -1664,7 +1663,7 @@
                         doc.text('NICHT IN ORDNUNG', 135, startY);
                     }
                     doc.setFont('helvetica', 'normal');
-                    startY += 7;
+                    startY += 6;
                 });
 
                 startY += 4;
@@ -1677,24 +1676,24 @@
                 const remarksText = p.remarks || 'Keine Bemerkungen.';
                 const splitRemarks = doc.splitTextToSize(remarksText, 175);
                 doc.text(splitRemarks, 20, startY);
-                startY += (splitRemarks.length * 6) + 6;
+                startY += (splitRemarks.length * 5) + 6;
 
                 if (p.photos && p.photos.length > 0) {
                     if (startY > 190) { doc.addPage(); startY = 20; }
                     doc.setFont('helvetica', 'bold');
                     doc.setTextColor(63, 98, 18);
                     doc.text(`Fotodokumentation (${p.photos.length} Fotos):`, 15, startY);
-                    startY += 6;
+                    startY += 5;
                     let xPos = 15;
                     let yPos = startY;
                     p.photos.forEach(ph => {
                         try {
                             doc.addImage(ph, 'JPEG', xPos, yPos, 40, 30);
                             xPos += 45;
-                            if (xPos > 150) { xPos = 15; yPos += 35; }
+                            if (xPos > 150) { xPos = 15; yPos += 34; }
                         } catch(e) {}
                     });
-                    startY = yPos + 38;
+                    startY = yPos + 36;
                 }
 
                 if (startY > 210) { doc.addPage(); startY = 20; }
@@ -1703,9 +1702,9 @@
                 doc.text('Digitale Unterschrift des Technikers:', 15, startY);
                 startY += 5;
                 if (p.signature) {
-                    doc.addImage(p.signature, 'PNG', 15, startY, 55, 22);
+                    doc.addImage(p.signature, 'PNG', 15, startY, 55, 20);
                 }
-                startY += 25;
+                startY += 23;
                 doc.setFont('helvetica', 'italic');
                 doc.setFontSize(8);
                 doc.setTextColor(100, 100, 100);
