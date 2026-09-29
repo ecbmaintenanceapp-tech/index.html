@@ -12,6 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- jsPDF for professional PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- pdf-lib for filling custom uploaded PDF templates -->
+    <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -73,15 +75,29 @@
         </div>
     </div>
 
-    <!-- ADMIN USER MANAGEMENT MODAL -->
+    <!-- ADMIN USER MANAGEMENT & TEMPLATE MODAL -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
-                <h3 class="text-xl font-extrabold text-slate-900">Cloud-Benutzerverwaltung (Admin)</h3>
+                <h3 class="text-xl font-extrabold text-slate-900">Admin-Verwaltung &amp; PDF-Vorlage</h3>
                 <button onclick="closeRegisterModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
+            
+            <!-- PDF TEMPLATE UPLOAD SECTION -->
+            <div class="p-5 bg-ecbLightGreen/60 rounded-2xl border border-ecbGreen/30 space-y-3">
+                <h4 class="font-bold text-ecbDarkGreen text-sm"><i class="fa-solid fa-file-pdf mr-1"></i> Eigene PDF-Vorlage (Optional)</h4>
+                <p class="text-xs text-slate-700">Laden Sie hier eine PDF-Vorlage hoch (Standardmäßig wird das offizielle ECB-Layout direkt erzeugt).</p>
+                <div class="flex items-center gap-3">
+                    <label class="px-4 py-2.5 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-upload"></i> Vorlage auswählen
+                        <input type="file" accept="application/pdf" onchange="handleTemplateUpload(event)" class="hidden">
+                    </label>
+                    <span id="template-status-text" class="text-xs text-slate-600 font-semibold">Keine Vorlage hinterlegt</span>
+                </div>
+            </div>
+
             <form onsubmit="handleRegister(event)" class="space-y-4 pb-6 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-user-plus mr-1 text-ecbGreen"></i> Neuen Mitarbeiter anlegen</h4>
                 <div>
@@ -205,7 +221,7 @@
                 <!-- ADMIN BUTTON ON DASHBOARD -->
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden">
                     <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-users-gear"></i> Cloud-Benutzer verwalten (Admin)
+                        <i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; PDF-Vorlage
                     </button>
                 </div>
             </div>
@@ -477,6 +493,7 @@
         let protocols = [];
         let dguvDevices = [];
         let cloudUsers = [{ fullname: 'ECB Wartung', user: 'ECB_Wartung', pass: 'ECB1688!', active: true, firestoreId: 'admin_default' }];
+        let customPdfTemplateBase64 = localStorage.getItem('ecb_custom_pdf_template') || null;
         let activePhotos = [];
         let signaturePadInstance = null;
 
@@ -516,6 +533,11 @@
                     document.getElementById('history-admin-clear-container').classList.add('hidden');
                 }
                 resetInactivityTimer();
+            }
+
+            if (customPdfTemplateBase64) {
+                const statusEl = document.getElementById('template-status-text');
+                if (statusEl) statusEl.innerText = "Vorlagen-PDF hinterlegt ✔";
             }
 
             try {
@@ -577,6 +599,20 @@
 
         window.closeRegisterModal = function() {
             document.getElementById('modal-register').classList.add('hidden');
+        }
+
+        window.handleTemplateUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                customPdfTemplateBase64 = e.target.result;
+                localStorage.setItem('ecb_custom_pdf_template', customPdfTemplateBase64);
+                const statusEl = document.getElementById('template-status-text');
+                if (statusEl) statusEl.innerText = `Vorlage hinterlegt: ${file.name} ✔`;
+                showModal('PDF-Vorlage', 'Ihre offizielle PDF-Vorlage wurde erfolgreich im System hinterlegt!', true);
+            };
+            reader.readAsDataURL(file);
         }
 
         window.openPasswordModal = function() {
@@ -1278,9 +1314,9 @@
                 console.warn("Cloud save error:", err);
             }
 
-            generatePDF(protocol);
+            await generatePDF(protocol);
             updateUI();
-            showModal('Erfolg', 'Wartungsprotokoll in der Cloud gespeichert & PDF erstellt!', true);
+            showModal('Erfolg', 'Wartungsprotokoll in der Cloud gespeichert & PDF im offiziellen ECB-Layout erstellt!', true);
             switchTab('history');
         }
 
@@ -1531,27 +1567,54 @@
 
         window.downloadProtocolPDF = function(index) { generatePDF(protocols[index]); }
 
-        function generatePDF(p) {
+        async function generatePDF(p) {
             try {
+                if (customPdfTemplateBase64) {
+                    const existingPdfBytes = await fetch(customPdfTemplateBase64).then(res => res.arrayBuffer());
+                    const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+                    const pages = pdfDoc.getPages();
+                    const firstPage = pages[0];
+                    const { width, height } = firstPage.getSize();
+
+                    firstPage.drawText(`Protokoll-ID: ${p.id}`, { x: 50, y: height - 50, size: 10, color: PDFLib.rgb(0,0,0) });
+                    firstPage.drawText(`Maschine: ${p.machine}`, { x: 50, y: height - 65, size: 10, color: PDFLib.rgb(0,0,0) });
+                    firstPage.drawText(`Techniker: ${p.employee}`, { x: 50, y: height - 80, size: 10, color: PDFLib.rgb(0,0,0) });
+                    firstPage.drawText(`Datum: ${p.date}`, { x: 50, y: height - 95, size: 10, color: PDFLib.rgb(0,0,0) });
+
+                    let textY = height - 125;
+                    p.points.forEach((pt) => {
+                        firstPage.drawText(`${pt.title}: ${pt.status.toUpperCase()}`, { x: 50, y: textY, size: 9, color: PDFLib.rgb(0,0,0) });
+                        textY -= 15;
+                    });
+
+                    if (p.signature) {
+                        try {
+                            const pngImageBytes = await fetch(p.signature).then(res => res.arrayBuffer());
+                            const pngImage = await pdfDoc.embedPng(pngImageBytes);
+                            firstPage.drawImage(pngImage, { x: 50, y: 50, width: 120, height: 45 });
+                        } catch(e) {}
+                    }
+
+                    const pdfBytes = await pdfDoc.save();
+                    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `ECB_Wartungsprotokoll_${p.id}.pdf`;
+                    link.click();
+                    return;
+                }
+
+                // Standard Professional jsPDF Generation matching exact ECB blanko layout
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('p', 'mm', 'a4');
 
+                // Header Banner Background (ECB Dark Green)
                 doc.setFillColor(63, 98, 18);
                 doc.rect(0, 0, 210, 40, 'F');
 
                 doc.setFillColor(101, 163, 13);
                 doc.roundedRect(15, 7, 26, 26, 4, 4, 'F');
                 
-                doc.setFillColor(255, 255, 255, 0.95);
-                doc.path([
-                    {op: 'm', c: [17, 26]},
-                    {op: 'c', c: [22, 22, 28, 22, 34, 25]},
-                    {op: 'c', c: [38, 27, 40, 27, 43, 23]},
-                    {op: 'c', c: [42, 24, 39, 29, 34, 29]},
-                    {op: 'c', c: [28, 29, 20, 30, 17, 26]}
-                ]);
-                doc.fill();
-
                 doc.setFont('helvetica', 'bold');
                 doc.setFont('helvetica', 'bolditalic');
                 doc.setFontSize(16);
@@ -1560,28 +1623,31 @@
 
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(16);
-                doc.text('ECB REINIGUNGSSYSTEME', 48, 18);
+                doc.text('E.C.B. REINIGUNGSSYSTEME GMBH', 48, 17);
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(10);
-                doc.text(`Wartungsprotokoll: ${p.machine} (${p.id})`, 48, 26);
+                doc.text('Wartungsprotokoll', 48, 25);
 
                 doc.setFillColor(241, 245, 249);
-                doc.roundedRect(15, 46, 180, 26, 3, 3, 'F');
+                doc.roundedRect(15, 46, 180, 28, 3, 3, 'F');
                 
                 doc.setTextColor(15, 23, 42);
                 doc.setFont('helvetica', 'bold');
-                doc.setFontSize(10);
-                doc.text(`Techniker: ${p.employee}`, 20, 54);
-                doc.text(`Datum: ${p.date}`, 20, 61);
-                if (p.runtime) doc.text(`Laufleistung: ${p.runtime} Std.`, 120, 54);
+                doc.setFontSize(11);
+                doc.text(`Wartungsprotokoll: ${p.machine} (${p.id})`, 20, 54);
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                doc.text(`Techniker: ${p.employee}`, 20, 61);
+                doc.text(`Datum: ${p.date}`, 120, 54);
                 doc.text(`Kategorie: ${p.category}`, 120, 61);
 
-                let startY = 78;
+                let startY = 82;
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(11);
                 doc.setTextColor(63, 98, 18);
                 doc.text('Prüfpunkt-Auswertung:', 15, startY);
-                startY += 5;
+                startY += 6;
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(10);
@@ -1592,31 +1658,29 @@
                     doc.setFont('helvetica', 'bold');
                     if (isOk) {
                         doc.setTextColor(46, 125, 50);
-                        doc.text('ERLEDIGT (OK)', 150, startY);
+                        doc.text('ERLEDIGT (OK)', 145, startY);
                     } else {
                         doc.setTextColor(211, 47, 47);
-                        doc.text('NICHT IN ORDNUNG', 140, startY);
+                        doc.text('NICHT IN ORDNUNG', 135, startY);
                     }
                     doc.setFont('helvetica', 'normal');
                     startY += 7;
                 });
 
-                if (p.remarks) {
-                    startY += 5;
-                    doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(63, 98, 18);
-                    doc.text('Bemerkungen:', 15, startY);
-                    startY += 5;
-                    doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(15, 23, 42);
-                    const splitRemarks = doc.splitTextToSize(p.remarks, 175);
-                    doc.text(splitRemarks, 20, startY);
-                    startY += (splitRemarks.length * 6) + 4;
-                }
+                startY += 4;
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(63, 98, 18);
+                doc.text('Bemerkungen:', 15, startY);
+                startY += 5;
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(15, 23, 42);
+                const remarksText = p.remarks || 'Keine Bemerkungen.';
+                const splitRemarks = doc.splitTextToSize(remarksText, 175);
+                doc.text(splitRemarks, 20, startY);
+                startY += (splitRemarks.length * 6) + 6;
 
                 if (p.photos && p.photos.length > 0) {
-                    if (startY > 200) { doc.addPage(); startY = 20; }
-                    startY += 5;
+                    if (startY > 190) { doc.addPage(); startY = 20; }
                     doc.setFont('helvetica', 'bold');
                     doc.setTextColor(63, 98, 18);
                     doc.text(`Fotodokumentation (${p.photos.length} Fotos):`, 15, startY);
@@ -1633,17 +1697,21 @@
                     startY = yPos + 38;
                 }
 
+                if (startY > 210) { doc.addPage(); startY = 20; }
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(63, 98, 18);
+                doc.text('Digitale Unterschrift des Technikers:', 15, startY);
+                startY += 5;
                 if (p.signature) {
-                    if (startY > 220) { doc.addPage(); startY = 20; }
-                    startY += 6;
-                    doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(63, 98, 18);
-                    doc.text('Digitale Unterschrift des Technikers:', 15, startY);
-                    startY += 5;
                     doc.addImage(p.signature, 'PNG', 15, startY, 55, 22);
                 }
+                startY += 25;
+                doc.setFont('helvetica', 'italic');
+                doc.setFontSize(8);
+                doc.setTextColor(100, 100, 100);
+                doc.text('Digital signiert via App', 15, startY);
 
-                doc.save(`ECB_Protokoll_${p.id}.pdf`);
+                doc.save(`ECB_Wartungsprotokoll_${p.id}.pdf`);
             } catch(e) { console.error(e); }
         }
 
