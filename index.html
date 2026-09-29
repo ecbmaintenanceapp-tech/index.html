@@ -43,6 +43,7 @@
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
+    <!-- LOGIN SCREEN -->
     <div id="login-screen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 space-y-6 animate-fade-in">
             <div class="text-center space-y-2">
@@ -72,6 +73,7 @@
         </div>
     </div>
 
+    <!-- ADMIN USER MANAGEMENT MODAL -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -83,7 +85,7 @@
             <form onsubmit="handleRegister(event)" class="space-y-4 pb-6 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-user-plus mr-1 text-ecbGreen"></i> Neuen Mitarbeiter anlegen</h4>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Mitarbeiter-Vollname (Wird automatisch in Protokollen eingetragen):</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Mitarbeiter-Vollname (Wird automatisch in Protokolle eingetragen):</label>
                     <input type="text" id="reg-fullname" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Vor- und Nachname eingeben">
                 </div>
                 <div>
@@ -104,6 +106,7 @@
         </div>
     </div>
 
+    <!-- PASSWORD CHANGE MODAL -->
     <div id="modal-password" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -122,6 +125,7 @@
         </div>
     </div>
 
+    <!-- DGUV HISTORY MODAL -->
     <div id="modal-dguv-history" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-xl w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -140,6 +144,7 @@
         </div>
     </div>
 
+    <!-- HEADER -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
@@ -191,7 +196,7 @@
                     <div>
                         <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                         <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen-, Maschinen- &amp; DGUV-Wartung</h2>
-                        <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen. Fälligkeitstermine &amp; Überfälligkeiten werden vollautomatisch anhand der Historie abgeglichen.</p>
+                        <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen. Fälligkeitstermine &amp; Überfälligkeiten werden vollautomatisch anhand der History abgeglichen.</p>
                     </div>
                 </div>
                 <!-- ADMIN BUTTON ON DASHBOARD -->
@@ -790,9 +795,9 @@
 
                     dueEl.innerHTML = `<i class="fa-regular fa-calendar-days text-ecbGreen mr-1"></i> Nächster Termin: <strong>${formattedDate}</strong>`;
                     if (isOverdue) {
-                        badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-red-600 text-white rounded-full text-[10px] font-extrabold uppercase animate-pulse shadow-sm">ÜBERFÄLLIG!</span>`;
+                        badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-red-600 text-white rounded-full text-[10px] font-extrabold uppercase animate-pulse shadow-sm">WARTUNG ÜBERFÄLLIG</span>`;
                     } else {
-                        badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-extrabold uppercase">Termin OK</span>`;
+                        badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-extrabold uppercase">Termin eingehalten</span>`;
                     }
                 }
             });
