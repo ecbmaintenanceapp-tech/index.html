@@ -766,6 +766,21 @@
             updateDashboardDueDates();
         }
 
+        function parseProtocolDate(dateStr) {
+            if (!dateStr) return null;
+            // Check if format is DD.MM.YYYY HH:MM:SS or DD.MM.YYYY
+            const parts = dateStr.split(',')[0].trim().split('.');
+            if (parts.length === 3) {
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1;
+                const year = parseInt(parts[2], 10);
+                const d = new Date(year, month, day);
+                if (!isNaN(d.getTime())) return d;
+            }
+            const fallback = new Date(dateStr);
+            return !isNaN(fallback.getTime()) ? fallback : null;
+        }
+
         function updateDashboardDueDates() {
             const categories = [
                 { key: 'Waschmaschine', days: 14, name: 'Waschmaschinen' },
@@ -787,7 +802,7 @@
                     badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-[10px] font-extrabold uppercase">Kein Protokoll</span>`;
                 } else {
                     const latest = matching.reduce((prev, curr) => (curr.timestamp > prev.timestamp) ? curr : prev);
-                    const lastDate = new Date(latest.timestamp);
+                    const lastDate = parseProtocolDate(latest.date) || new Date(latest.timestamp);
                     const nextDueDate = new Date(lastDate.getTime() + (cat.days * 24 * 60 * 60 * 1000));
                     
                     const isOverdue = now > nextDueDate.getTime();
