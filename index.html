@@ -87,8 +87,8 @@
             
             <!-- PDF TEMPLATE UPLOAD SECTION -->
             <div class="p-5 bg-ecbLightGreen/60 rounded-2xl border border-ecbGreen/30 space-y-3">
-                <h4 class="font-bold text-ecbDarkGreen text-sm"><i class="fa-solid fa-file-pdf mr-1"></i> Eigene PDF-Vorlage (Optional)</h4>
-                <p class="text-xs text-slate-700">Laden Sie hier eine PDF-Vorlage hoch (Standardmäßig wird das offizielle ECB-Layout direkt erzeugt).</p>
+                <h4 class="font-bold text-ecbDarkGreen text-sm"><i class="fa-solid fa-file-pdf mr-1"></i> Eigene PDF-Vorlage hochladen</h4>
+                <p class="text-xs text-slate-700">Laden Sie Ihr offizielles PDF-Formular hoch. Das System trägt alle Wartungsdaten direkt in dieses Dokument ein.</p>
                 <div class="flex items-center gap-3">
                     <label class="px-4 py-2.5 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-sm flex items-center gap-2">
                         <i class="fa-solid fa-upload"></i> Vorlage auswählen
@@ -537,7 +537,7 @@
 
             if (customPdfTemplateBase64) {
                 const statusEl = document.getElementById('template-status-text');
-                if (statusEl) statusEl.innerText = "Vorlagen-PDF hinterlegt ✔";
+                if (statusEl) statusEl.innerText = "Eigene PDF-Vorlage hinterlegt ✔";
             }
 
             try {
@@ -840,7 +840,8 @@
 
         function parseProtocolDate(dateStr) {
             if (!dateStr) return null;
-            const parts = dateStr.split(',')[0].trim().split('.');
+            const cleanStr = dateStr.split(',')[0].trim();
+            const parts = cleanStr.split('.');
             if (parts.length === 3) {
                 const day = parseInt(parts[0], 10);
                 const month = parseInt(parts[1], 10) - 1;
@@ -1316,7 +1317,7 @@
 
             await generatePDF(protocol);
             updateUI();
-            showModal('Erfolg', 'Wartungsprotokoll in der Cloud gespeichert & offizielles ECB-PDF erstellt!', true);
+            showModal('Erfolg', 'Wartungsprotokoll in der Cloud gespeichert & offizielle ECB-PDF erstellt!', true);
             switchTab('history');
         }
 
@@ -1570,38 +1571,48 @@
         async function generatePDF(p) {
             try {
                 if (customPdfTemplateBase64) {
-                    const existingPdfBytes = await fetch(customPdfTemplateBase64).then(res => res.arrayBuffer());
-                    const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-                    const pages = pdfDoc.getPages();
-                    const firstPage = pages[0];
-                    const { width, height } = firstPage.getSize();
+                    try {
+                        const existingPdfBytes = await fetch(customPdfTemplateBase64).then(res => res.arrayBuffer());
+                        const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+                        const pages = pdfDoc.getPages();
+                        const firstPage = pages[0];
+                        const { width, height } = firstPage.getSize();
+                        const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
 
-                    firstPage.drawText(`Protokoll-ID: ${p.id}`, { x: 50, y: height - 50, size: 10, color: PDFLib.rgb(0,0,0) });
-                    firstPage.drawText(`Maschine: ${p.machine}`, { x: 50, y: height - 65, size: 10, color: PDFLib.rgb(0,0,0) });
-                    firstPage.drawText(`Techniker: ${p.employee}`, { x: 50, y: height - 80, size: 10, color: PDFLib.rgb(0,0,0) });
-                    firstPage.drawText(`Datum: ${p.date}`, { x: 50, y: height - 95, size: 10, color: PDFLib.rgb(0,0,0) });
+                        // Overlay dynamic data onto custom template matching official ECB Blanko layout structure
+                        firstPage.drawText(`Protokoll-ID: ${p.id}`, { x: 50, y: height - 55, size: 10, font, color: PDFLib.rgb(0, 0, 0) });
+                        firstPage.drawText(`Maschine: ${p.machine}`, { x: 50, y: height - 72, size: 10, font, color: PDFLib.rgb(0, 0, 0) });
+                        firstPage.drawText(`Techniker: ${p.employee}`, { x: 50, y: height - 89, size: 10, font, color: PDFLib.rgb(0, 0, 0) });
+                        firstPage.drawText(`Datum & Uhrzeit: ${p.date}`, { x: 50, y: height - 106, size: 10, font, color: PDFLib.rgb(0, 0, 0) });
 
-                    let textY = height - 125;
-                    p.points.forEach((pt) => {
-                        firstPage.drawText(`${pt.title}: ${pt.status.toUpperCase()}`, { x: 50, y: textY, size: 9, color: PDFLib.rgb(0,0,0) });
-                        textY -= 15;
-                    });
+                        let textY = height - 136;
+                        (p.points || []).forEach((pt) => {
+                            const statusText = pt.status.toUpperCase() === 'ERLEDIGT' ? 'ERLEDIGT (OK)' : 'NICHT IN ORDNUNG';
+                            firstPage.drawText(`${pt.pointNumber}. ${pt.title}: ${statusText}`, { x: 50, y: textY, size: 9, font, color: PDFLib.rgb(0, 0, 0) });
+                            textY -= 16;
+                        });
 
-                    if (p.signature) {
-                        try {
-                            const pngImageBytes = await fetch(p.signature).then(res => res.arrayBuffer());
-                            const pngImage = await pdfDoc.embedPng(pngImageBytes);
-                            firstPage.drawImage(pngImage, { x: 50, y: 50, width: 120, height: 45 });
-                        } catch(e) {}
+                        textY -= 10;
+                        firstPage.drawText(`Bemerkungen: ${p.remarks || 'Keine'}`, { x: 50, y: textY, size: 9, font, color: PDFLib.rgb(0, 0, 0) });
+
+                        if (p.signature) {
+                            try {
+                                const pngImageBytes = await fetch(p.signature).then(res => res.arrayBuffer());
+                                const pngImage = await pdfDoc.embedPng(pngImageBytes);
+                                firstPage.drawImage(pngImage, { x: 50, y: 40, width: 110, height: 40 });
+                            } catch(e) {}
+                        }
+
+                        const pdfBytes = await pdfDoc.save();
+                        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = `ECB_Wartungsprotokoll_${p.id}.pdf`;
+                        link.click();
+                        return;
+                    } catch(errTemplate) {
+                        console.warn("Template fill fallback to native ECB layout:", errTemplate);
                     }
-
-                    const pdfBytes = await pdfDoc.save();
-                    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = `ECB_Wartungsprotokoll_${p.id}.pdf`;
-                    link.click();
-                    return;
                 }
 
                 // Standard Professional jsPDF Generation matching exact ECB blanko layout
@@ -1650,7 +1661,7 @@
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(9);
-                p.points.forEach(pt => {
+                (p.points || []).forEach(pt => {
                     const isOk = pt.status === 'erledigt';
                     doc.setTextColor(15, 23, 42);
                     doc.text(`${pt.pointNumber}. ${pt.title}`, 20, startY);
