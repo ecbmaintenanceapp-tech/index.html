@@ -1642,7 +1642,7 @@
                 doc.text('Wartungsprotokoll', 48, 23);
 
                 doc.setFillColor(241, 245, 249);
-                doc.roundedRect(15, 43, 180, 28, 3, 3, 'F');
+                doc.roundedRect(15, 43, 180, p.runtime ? 32 : 28, 3, 3, 'F');
                 
                 doc.setTextColor(15, 23, 42);
                 doc.setFont('helvetica', 'bold');
@@ -1652,13 +1652,13 @@
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(9);
                 doc.text(`Techniker: ${p.employee}`, 20, 57);
-                doc.text(`Datum & Uhrzeit: ${p.date}`, 115, 50);
-                doc.text(`Kategorie: ${p.category}`, 115, 57);
+                doc.text(`Zeitstempel: ${p.date}`, 120, 50);
+                doc.text(`Kategorie: ${p.category}`, 120, 57);
                 if (p.runtime) {
                     doc.text(`Betriebsstunden: ${p.runtime} Std.`, 20, 64);
                 }
 
-                let startY = 78;
+                let startY = p.runtime ? 82 : 78;
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(10);
                 doc.setTextColor(63, 98, 18);
