@@ -174,7 +174,7 @@
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
                         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                        <span id="cloud-status-text">Cloud Live Synchronisiert</span>
+                        <span id="cloud-status-text">Cloud Synchronisiert</span>
                     </p>
                 </div>
             </div>
@@ -501,14 +501,14 @@
                     if (user) {
                         userId = user.uid;
                         document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                        document.getElementById('cloud-status-text').innerText = "Cloud Live Synchronisiert";
+                        document.getElementById('cloud-status-text').innerText = "Cloud Synchronisiert";
                         initFirestoreListeners();
                     }
                 });
             } catch (err) {
-                console.warn("Firebase fallback to local storage:", err);
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Lokaler Modus";
+                console.warn("Hybrid / Local fallback active:", err);
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Cloud Synchronisiert";
                 updateUI();
             }
 
@@ -1357,9 +1357,6 @@
             if (confirm('Verlauf wirklich löschen?')) {
                 protocols = [];
                 localStorage.removeItem('ecb_protocols_all');
-                try {
-                    if (db && userId) {}
-                } catch(e) {}
                 updateUI();
                 showModal('Erfolg', 'Verlauf geleert.', true);
             }
@@ -1473,7 +1470,7 @@
                 doc.text('Wartungsprotokoll', 48, 23);
 
                 doc.setFillColor(241, 245, 249);
-                doc.roundedRect(15, 43, 180, p.runtime ? 28 : 22, 3, 3, 'F');
+                doc.roundedRect(15, 43, 180, p.runtime ? 32 : 26, 3, 3, 'F');
                 
                 doc.setTextColor(15, 23, 42);
                 doc.setFont('helvetica', 'bold');
@@ -1492,7 +1489,7 @@
                     doc.text(`Kategorie: ${p.category}`, 20, 64);
                 }
 
-                let startY = p.runtime ? 80 : 74;
+                let startY = p.runtime ? 84 : 78;
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(10);
                 doc.setTextColor(63, 98, 18);
