@@ -494,7 +494,10 @@
         let app, db, auth, userId = null;
         let protocols = [];
         let dguvDevices = [];
-        let cloudUsers = [{ fullname: 'ECB Wartung', user: 'ECB_Wartung', pass: 'ECB1688!', active: true, firestoreId: 'admin_default' }];
+        let cloudUsers = [
+            { fullname: 'ECB Wartung', user: 'ECB_Wartung', pass: 'ECB1688!', active: true, firestoreId: 'admin_default' },
+            { fullname: 'Max Wick', user: 'WickMa', pass: 'Wick123!', active: true, firestoreId: 'user_wickma' }
+        ];
         let customPdfTemplateBase64 = localStorage.getItem('ecb_custom_pdf_template') || null;
         let activePhotos = [];
         let signaturePadInstance = null;
@@ -563,7 +566,10 @@
             } catch (err) {
                 console.error("Firebase Init Error:", err);
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-red-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Cloud-Verbindung fehlgeschlagen";
+                document.getElementById('cloud-status-text').innerText = "Cloud-Verbindung fehlgeschlagen (Lokalmodus aktiv)";
+                protocols = JSON.parse(localStorage.getItem('ecb_protocols_offline') || '[]');
+                dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_offline') || '[]');
+                updateUI();
             }
         });
 
@@ -643,7 +649,7 @@
             if (userObj) {
                 userObj.pass = newPass;
                 try {
-                    if (db && userObj.firestoreId && userObj.firestoreId !== 'admin_default') {
+                    if (db && userObj.firestoreId && userObj.firestoreId !== 'admin_default' && userObj.firestoreId !== 'user_wickma') {
                         await updateDoc(doc(db, 'ecb_users', userObj.firestoreId), { pass: newPass });
                     }
                 } catch(e) {}
@@ -686,7 +692,7 @@
 
             userObj.active = !currentState;
             try {
-                if (db && firestoreId) {
+                if (db && firestoreId && firestoreId !== 'admin_default' && firestoreId !== 'user_wickma') {
                     await updateDoc(doc(db, 'ecb_users', firestoreId), { active: userObj.active });
                 }
             } catch(e) {}
@@ -700,7 +706,7 @@
             if (!confirm(`Benutzer "${userObj.user}" wirklich löschen?`)) return;
 
             try {
-                if (db && firestoreId) {
+                if (db && firestoreId && firestoreId !== 'admin_default' && firestoreId !== 'user_wickma') {
                     await deleteDoc(doc(db, 'ecb_users', firestoreId));
                 }
                 cloudUsers = cloudUsers.filter(u => u.firestoreId !== firestoreId);
@@ -855,7 +861,7 @@
 
         function parseProtocolDate(dateStr) {
             if (!dateStr) return null;
-            const cleanStr = dateStr.split(',')[0].trim();
+            const cleanStr = String(dateStr).split(',')[0].trim();
             const parts = cleanStr.split('.');
             if (parts.length === 3) {
                 const day = parseInt(parts[0], 10);
@@ -876,7 +882,8 @@
                 { key: 'Kompressor Jahreswartung', days: 180, name: 'Kompressor Jahreswartung' }
             ];
 
-            const now = new Date().setHours(0,0,0,0);
+            const now = new Date();
+            now.setHours(0,0,0,0);
 
             categories.forEach(cat => {
                 const matching = protocols.filter(p => p.category === cat.key);
@@ -888,8 +895,8 @@
                     dueEl.innerHTML = `<i class="fa-regular fa-clock text-amber-600 mr-1"></i> Noch keine Wartung erfolgt`;
                     badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-[10px] font-extrabold uppercase">Kein Protokoll</span>`;
                 } else {
-                    const latest = matching.reduce((prev, curr) => (curr.timestamp > prev.timestamp) ? curr : prev);
-                    const lastDate = parseProtocolDate(latest.date) || new Date(latest.timestamp);
+                    const latest = matching.reduce((prev, curr) => (Number(curr.timestamp || 0) > Number(prev.timestamp || 0)) ? curr : prev);
+                    const lastDate = parseProtocolDate(latest.date) || new Date(Number(latest.timestamp || Date.now()));
                     if (!lastDate || isNaN(lastDate.getTime())) {
                         dueEl.innerHTML = `<i class="fa-regular fa-calendar-days text-ecbGreen mr-1"></i> Termin berechnet`;
                         badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-extrabold uppercase">Erledigt</span>`;
@@ -898,7 +905,7 @@
                     const nextDueDate = new Date(lastDate.getTime() + (cat.days * 24 * 60 * 60 * 1000));
                     nextDueDate.setHours(0,0,0,0);
                     
-                    const isOverdue = now > nextDueDate.getTime();
+                    const isOverdue = now.getTime() > nextDueDate.getTime();
                     const formattedDate = nextDueDate.toLocaleDateString('de-DE');
 
                     dueEl.innerHTML = `<i class="fa-regular fa-calendar-days text-ecbGreen mr-1"></i> Nächster Termin: <strong>${formattedDate}</strong>`;
@@ -922,7 +929,8 @@
                 { key: 'Kompressor Jahreswartung', days: 180, name: 'Kompressor Jahreswartung' }
             ];
 
-            const now = new Date().setHours(0,0,0,0);
+            const now = new Date();
+            now.setHours(0,0,0,0);
             let html = '';
 
             categories.forEach(cat => {
@@ -937,15 +945,15 @@
                         </tr>
                     `;
                 } else {
-                    const latest = matching.reduce((prev, curr) => (curr.timestamp > prev.timestamp) ? curr : prev);
-                    const lastDateObj = parseProtocolDate(latest.date) || new Date(latest.timestamp);
+                    const latest = matching.reduce((prev, curr) => (Number(curr.timestamp || 0) > Number(prev.timestamp || 0)) ? curr : prev);
+                    const lastDateObj = parseProtocolDate(latest.date) || new Date(Number(latest.timestamp || Date.now()));
                     const lastDateStr = lastDateObj.toLocaleDateString('de-DE');
                     
                     const nextDueDate = new Date(lastDateObj.getTime() + (cat.days * 24 * 60 * 60 * 1000));
                     nextDueDate.setHours(0,0,0,0);
                     const nextDueDateStr = nextDueDate.toLocaleDateString('de-DE');
 
-                    const isOverdue = now > nextDueDate.getTime();
+                    const isOverdue = now.getTime() > nextDueDate.getTime();
 
                     html += `
                         <tr class="hover:bg-slate-50 transition">
@@ -1678,24 +1686,44 @@
                 doc.text('Wartungsprotokoll', 48, 23);
 
                 doc.setFillColor(241, 245, 249);
-                doc.roundedRect(15, 43, 180, p.runtime ? 36 : 30, 3, 3, 'F');
+                doc.roundedRect(15, 43, 180, p.runtime ? 38 : 32, 3, 3, 'F');
                 
                 doc.setTextColor(15, 23, 42);
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(10);
-                doc.text(`Anlage / Maschine: ${p.machine}`, 20, 50);
-                doc.text(`ID: ${p.id}`, 140, 50);
-
+                
+                doc.text(`Anlage / Maschine:`, 20, 50);
                 doc.setFont('helvetica', 'normal');
-                doc.setFontSize(9);
-                doc.text(`Techniker: ${p.employee}`, 20, 57);
-                doc.text(`Zeitstempel: ${p.date}`, 140, 57);
-                doc.text(`Kategorie: ${p.category}`, 20, 64);
+                doc.text(p.machine, 55, 50);
+
+                doc.setFont('helvetica', 'bold');
+                doc.text(`ID:`, 140, 50);
+                doc.setFont('helvetica', 'normal');
+                doc.text(p.id, 148, 50);
+
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Techniker:`, 20, 58);
+                doc.setFont('helvetica', 'normal');
+                doc.text(p.employee, 40, 58);
+
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Zeitstempel:`, 120, 58);
+                doc.setFont('helvetica', 'normal');
+                doc.text(p.date, 142, 58);
+
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Kategorie:`, 20, 66);
+                doc.setFont('helvetica', 'normal');
+                doc.text(p.category, 40, 66);
+
                 if (p.runtime) {
-                    doc.text(`Betriebsstunden: ${p.runtime} Std.`, 140, 64);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`Betriebsstunden:`, 120, 66);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`${p.runtime} Std.`, 150, 66);
                 }
 
-                let startY = p.runtime ? 86 : 80;
+                let startY = p.runtime ? 88 : 82;
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(10);
                 doc.setTextColor(63, 98, 18);
