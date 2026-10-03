@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECB Reinigungssysteme - Digitales Wartungssystem (Cloud Synchronisiert)</title>
+    <title>ECB Reinigungssysteme - Digitales Wartungssystem (Cloud)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -12,8 +12,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- jsPDF for professional PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- pdf-lib for filling custom uploaded PDF templates -->
-    <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -85,36 +83,36 @@
                 </button>
             </div>
             
-            <!-- PDF TEMPLATE UPLOAD SECTION -->
-            <div class="p-5 bg-ecbLightGreen/60 rounded-2xl border border-ecbGreen/30 space-y-3">
-                <h4 class="font-bold text-ecbDarkGreen text-sm"><i class="fa-solid fa-file-pdf mr-1"></i> Eigene PDF-Vorlage hochladen</h4>
-                <p class="text-xs text-slate-700">Laden Sie Ihr offizielles PDF-Formular hoch. Das System trägt alle Wartungsdaten direkt in dieses Dokument ein.</p>
-                <div class="flex items-center gap-3">
-                    <label class="px-4 py-2.5 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-sm flex items-center gap-2">
-                        <i class="fa-solid fa-upload"></i> Vorlage auswählen
-                        <input type="file" accept="application/pdf" onchange="handleTemplateUpload(event)" class="hidden">
-                    </label>
-                    <span id="template-status-text" class="text-xs text-slate-600 font-semibold">Keine Vorlage hinterlegt</span>
-                </div>
-            </div>
-
             <form onsubmit="handleRegister(event)" class="space-y-4 pb-6 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-user-plus mr-1 text-ecbGreen"></i> Neuen Mitarbeiter anlegen</h4>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Mitarbeiter-Vollname (Wird automatisch in Protokolle eingetragen):</label>
-                    <input type="text" id="reg-fullname" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Vor- und Nachname eingeben">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Mitarbeiter-Vollname:</label>
+                    <input type="text" id="reg-fullname" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Vor- und Nachname">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Benutzername:</label>
-                    <input type="text" id="reg-user" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Benutzername wählen">
+                    <input type="text" id="reg-user" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Benutzername">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Passwort:</label>
-                    <input type="password" id="reg-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Passwort wählen">
+                    <input type="password" id="reg-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Passwort">
                 </div>
                 <div id="reg-error" class="text-xs text-red-600 font-bold hidden">Benutzer existiert bereits!</div>
-                <button type="submit" class="w-full py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Mitarbeiter in Cloud anlegen</button>
+                <button type="submit" class="w-full py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Mitarbeiter anlegen</button>
             </form>
+
+            <div class="space-y-4 pb-6 border-b border-slate-100">
+                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-file-pdf mr-1 text-ecbGreen"></i> Offizielle PDF-Vorlage (Blanko) hochladen</h4>
+                <p class="text-xs text-slate-500">Laden Sie hier Ihr vorgefertigtes PDF-Formular hoch. Automatisch generierte Protokolle nutzen diese Vorlage als Basis.</p>
+                <div class="flex items-center gap-3">
+                    <label class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold cursor-pointer transition">
+                        <i class="fa-solid fa-upload mr-1"></i> PDF-Vorlage auswählen
+                        <input type="file" accept="application/pdf" onchange="handleTemplateUpload(event)" class="hidden">
+                    </label>
+                    <span id="template-status-text" class="text-xs text-slate-500 italic">Keine eigene Vorlage hinterlegt (Standard-Layout aktiv)</span>
+                </div>
+            </div>
+
             <div class="space-y-3">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-users-gear mr-1 text-sky-600"></i> Existierende Benutzer verwalten</h4>
                 <div id="admin-user-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
@@ -154,7 +152,7 @@
                 </button>
             </div>
             <div class="space-y-4">
-                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-clock-rotate-left mr-1 text-sky-600"></i> Historie aller Messprotokolle (chronologisch)</h4>
+                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-clock-rotate-left mr-1 text-sky-600"></i> Historie aller Messprotokolle</h4>
                 <div id="dguv-history-list" class="space-y-3 max-h-96 overflow-y-auto pr-1"></div>
             </div>
         </div>
@@ -173,12 +171,10 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-xl font-extrabold tracking-tight flex items-center gap-2">
-                        ECB Reinigungssysteme
-                    </h1>
+                    <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-500 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Verbinde mit Cloud...</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                        <span id="cloud-status-text">Cloud Live Synchronisiert</span>
                     </p>
                 </div>
             </div>
@@ -215,7 +211,7 @@
                     <div>
                         <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                         <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen-, Maschinen- &amp; DGUV-Wartung</h2>
-                        <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen. Fälligkeitstermine &amp; Überfälligkeiten werden vollautomatisch anhand der History abgeglichen.</p>
+                        <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen. Fälligkeitstermine werden vollautomatisch aus der Historie berechnet.</p>
                     </div>
                 </div>
                 <!-- ADMIN BUTTON ON DASHBOARD -->
@@ -305,15 +301,14 @@
                 </div>
             </div>
 
-            <!-- DGUV V3 SEKTION DIREKT AUF DER HAUPTSEITE -->
+            <!-- DGUV V3 SEKTION -->
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-100 pb-5">
                     <div>
                         <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Prüfmanagement</span>
                         <h3 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen (Elektrische Betriebsmittel)</h3>
-                        <p class="text-sm text-slate-600 mt-1">Direktübersicht und Verwaltung aller elektrischen Geräte und Prüfprotokolle in der Cloud.</p>
                     </div>
-                    <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm transition shadow-lg shadow-sky-600/20 flex items-center gap-2 cursor-pointer">
+                    <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm transition shadow-lg flex items-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-plus"></i> Neues Gerät erfassen
                     </button>
                 </div>
@@ -327,7 +322,6 @@
                 <div>
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Übersicht &amp; Planung</span>
                     <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungskalender</h2>
-                    <p class="text-sm text-slate-600 mt-1">Hier sehen Sie alle anstehenden und durchgeführten Wartungen mit exaktem Fälligkeitsdatum und aktuellem Status.</p>
                 </div>
             </div>
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 overflow-x-auto">
@@ -340,9 +334,7 @@
                             <th class="py-3 px-4">Status</th>
                         </tr>
                     </thead>
-                    <tbody id="calendar-table-body" class="divide-y divide-slate-100 text-sm">
-                        <!-- Dynamisch gefüllt -->
-                    </tbody>
+                    <tbody id="calendar-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
                 </table>
             </div>
         </div>
@@ -352,10 +344,9 @@
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
                 <div>
                     <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Prüfmanagement</span>
-                    <h2 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen (Elektrische Betriebsmittel)</h2>
-                    <p class="text-sm text-slate-600 mt-1">Erfassen Sie alle Geräte, hinterlegen Sie Fälligkeitstage und laden Sie Messprotokolle hoch.</p>
+                    <h2 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen</h2>
                 </div>
-                <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm transition shadow-lg shadow-sky-600/20 flex items-center gap-2 cursor-pointer">
+                <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm transition shadow-lg flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-plus"></i> Neues Gerät erfassen
                 </button>
             </div>
@@ -366,10 +357,8 @@
         <div id="tab-history" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
                 <div>
-                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle nach Maschinen</h2>
-                    <p class="text-sm text-slate-600 mt-1">Änderungen in den Dropdown-Filtern aktualisieren die Ansicht sofort automatisch.</p>
+                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle</h2>
                 </div>
-                <!-- CLEAR HISTORY BUTTON (ADMIN ONLY) -->
                 <div id="history-admin-clear-container" class="hidden">
                     <button onclick="clearHistory()" class="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-bold transition flex items-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-trash-can"></i> Verlauf leeren (Admin)
@@ -389,18 +378,10 @@
                     <label class="block text-xs font-bold text-slate-600 mb-1">Monat filtern:</label>
                     <select id="filter-month" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-slate-50 cursor-pointer">
                         <option value="all">Alle Monate</option>
-                        <option value="01">Januar</option>
-                        <option value="02">Februar</option>
-                        <option value="03">März</option>
-                        <option value="04">April</option>
-                        <option value="05">Mai</option>
-                        <option value="06">Juni</option>
-                        <option value="07">Juli</option>
-                        <option value="08">August</option>
-                        <option value="09">September</option>
-                        <option value="10">Oktober</option>
-                        <option value="11">November</option>
-                        <option value="12">Dezember</option>
+                        <option value="01">Januar</option><option value="02">Februar</option><option value="03">März</option>
+                        <option value="04">April</option><option value="05">Mai</option><option value="06">Juni</option>
+                        <option value="07">Juli</option><option value="08">August</option><option value="09">September</option>
+                        <option value="10">Oktober</option><option value="11">November</option><option value="12">Dezember</option>
                     </select>
                 </div>
                 <div class="flex-grow sm:flex-grow-0">
@@ -451,11 +432,8 @@
                     <label class="block text-sm font-bold text-slate-800 mb-1.5">Nächster Fälligkeitstermin: <span class="text-red-500">*</span></label>
                     <input type="date" id="dguv-dev-duedate" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium">
                 </div>
-                <div class="p-3 bg-sky-50 rounded-xl text-xs text-sky-800 font-semibold">
-                    <i class="fa-solid fa-barcode mr-1"></i> Eine 6-stellige Inventarnummer wird beim Speichern automatisch generiert und unter dem Gerätenamen angezeigt.
-                </div>
                 <div class="pt-2">
-                    <button type="submit" class="w-full py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold shadow-lg shadow-sky-600/20 transition cursor-pointer">Gerät speichern &amp; Prüftermin anlegen</button>
+                    <button type="submit" class="w-full py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold shadow-lg transition cursor-pointer">Gerät speichern</button>
                 </div>
             </form>
         </div>
@@ -470,12 +448,12 @@
             <h3 id="modal-title" class="text-xl font-extrabold text-slate-900">Meldung</h3>
             <p id="modal-text" class="text-sm text-slate-600 leading-relaxed"></p>
             <div class="pt-2">
-                <button onclick="closeModal()" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-2xl font-bold shadow-lg shadow-ecbGreen/20 transition cursor-pointer">Verstanden</button>
+                <button onclick="closeModal()" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-2xl font-bold shadow-lg transition cursor-pointer">Verstanden</button>
             </div>
         </div>
     </div>
 
-    <!-- FIREBASE & APP LOGIC -->
+    <!-- FIREBASE & APP SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -483,27 +461,94 @@
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-maintenance';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWtEVon6SHIVRB5k",
+            apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k",
             authDomain: "ecb-maintenance.firebaseapp.com",
             projectId: "ecb-maintenance",
-            storageBucket: "ecb-maintenance.firebasestorage.app",
+            storageBucket: "ecb-maintenance.appspot.com",
             messagingSenderId: "229926423123",
             appId: "1:229926423123:web:a309c14c708fc88c62d4a6"
         };
 
-        let app, db, auth, userId = null;
-        let protocols = [];
-        let dguvDevices = [];
-        let cloudUsers = [
-            { fullname: 'ECB Wartung', user: 'ECB_Wartung', pass: 'ECB1688!', active: true, firestoreId: 'admin_default' },
-            { fullname: 'Max Wick', user: 'WickMa', pass: 'Wick123!', active: true, firestoreId: 'user_wickma' }
-        ];
+        let db = null;
+        let auth = null;
+        let userId = null;
+
+        let protocols = JSON.parse(localStorage.getItem('ecb_protocols_all') || '[]');
+        let dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_all') || '[]');
+        let cloudUsers = JSON.parse(localStorage.getItem('ecb_cloud_users_all') || JSON.stringify([
+            { fullname: 'ECB Wartung', user: 'ECB_Wartung', pass: 'ECB1688!', active: true },
+            { fullname: 'Max Wick', user: 'WickMa', pass: 'Brandenburg6', active: true }
+        ]));
         let customPdfTemplateBase64 = localStorage.getItem('ecb_custom_pdf_template') || null;
         let activePhotos = [];
         let signaturePadInstance = null;
-
         let inactivityTimer = null;
         const INACTIVITY_LIMIT = 5 * 60 * 1000;
+
+        window.onload = async function() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
+                        document.getElementById('cloud-status-text').innerText = "Cloud Live Synchronisiert";
+                        initFirestoreListeners();
+                    }
+                });
+            } catch (err) {
+                console.warn("Firebase fallback to local storage:", err);
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Lokaler Modus";
+                updateUI();
+            }
+
+            if (localStorage.getItem('ecb_logged_in') === 'true') {
+                document.getElementById('login-screen').classList.add('hidden');
+                checkAdminNav();
+                resetInactivityTimer();
+            }
+        }
+
+        function initFirestoreListeners() {
+            if (!db) return;
+
+            const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
+            onSnapshot(protocolsCol, (snapshot) => {
+                let cloudProtocols = [];
+                snapshot.forEach(docSnap => {
+                    cloudProtocols.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                });
+                if (cloudProtocols.length > 0) {
+                    protocols = cloudProtocols;
+                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                    localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
+                }
+                updateUI();
+            }, (err) => console.error("Protocols listener error:", err));
+
+            const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
+            onSnapshot(dguvCol, (snapshot) => {
+                let cloudDevices = [];
+                snapshot.forEach(docSnap => {
+                    cloudDevices.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                });
+                if (cloudDevices.length > 0) {
+                    dguvDevices = cloudDevices;
+                    localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+                }
+                updateUI();
+            }, (err) => console.error("DGUV listener error:", err));
+        }
 
         function resetInactivityTimer() {
             if (localStorage.getItem('ecb_logged_in') !== 'true') return;
@@ -525,53 +570,16 @@
             window.addEventListener(evt, resetInactivityTimer, true);
         });
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            if (localStorage.getItem('ecb_logged_in') === 'true') {
-                document.getElementById('login-screen').classList.add('hidden');
-                const currentUser = localStorage.getItem('ecb_current_user');
-                if (currentUser === 'ECB_Wartung') {
-                    document.getElementById('dashboard-admin-btn-container').classList.remove('hidden');
-                    document.getElementById('history-admin-clear-container').classList.remove('hidden');
-                } else {
-                    document.getElementById('dashboard-admin-btn-container').classList.add('hidden');
-                    document.getElementById('history-admin-clear-container').classList.add('hidden');
-                }
-                resetInactivityTimer();
+        function checkAdminNav() {
+            const currentUser = localStorage.getItem('ecb_current_user');
+            if (currentUser === 'ECB_Wartung') {
+                document.getElementById('dashboard-admin-btn-container').classList.remove('hidden');
+                document.getElementById('history-admin-clear-container').classList.remove('hidden');
+            } else {
+                document.getElementById('dashboard-admin-btn-container').classList.add('hidden');
+                document.getElementById('history-admin-clear-container').classList.add('hidden');
             }
-
-            if (customPdfTemplateBase64) {
-                const statusEl = document.getElementById('template-status-text');
-                if (statusEl) statusEl.innerText = "Eigene PDF-Vorlage hinterlegt ✔";
-            }
-
-            try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                        document.getElementById('cloud-status-text').innerText = "Cloud Live Synchronisiert";
-                        initFirestoreListeners();
-                    }
-                });
-            } catch (err) {
-                console.error("Firebase Init Error:", err);
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-red-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Cloud-Verbindung fehlgeschlagen (Lokalmodus aktiv)";
-                protocols = JSON.parse(localStorage.getItem('ecb_protocols_offline') || '[]');
-                dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_offline') || '[]');
-                updateUI();
-            }
-        });
+        }
 
         window.handleLogin = function(event) {
             event.preventDefault();
@@ -593,13 +601,7 @@
                 document.getElementById('login-pass').value = '';
                 document.getElementById('login-error').classList.add('hidden');
 
-                if (user === 'ECB_Wartung') {
-                    document.getElementById('dashboard-admin-btn-container').classList.remove('hidden');
-                    document.getElementById('history-admin-clear-container').classList.remove('hidden');
-                } else {
-                    document.getElementById('dashboard-admin-btn-container').classList.add('hidden');
-                    document.getElementById('history-admin-clear-container').classList.add('hidden');
-                }
+                checkAdminNav();
                 resetInactivityTimer();
                 updateUI();
             } else {
@@ -616,20 +618,6 @@
             document.getElementById('modal-register').classList.add('hidden');
         }
 
-        window.handleTemplateUpload = function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                customPdfTemplateBase64 = e.target.result;
-                localStorage.setItem('ecb_custom_pdf_template', customPdfTemplateBase64);
-                const statusEl = document.getElementById('template-status-text');
-                if (statusEl) statusEl.innerText = `Vorlage hinterlegt: ${file.name} ✔`;
-                showModal('PDF-Vorlage', 'Ihre offizielle PDF-Vorlage wurde erfolgreich im System hinterlegt!', true);
-            };
-            reader.readAsDataURL(file);
-        }
-
         window.openPasswordModal = function() {
             document.getElementById('new-pass').value = '';
             document.getElementById('modal-password').classList.remove('hidden');
@@ -639,7 +627,7 @@
             document.getElementById('modal-password').classList.add('hidden');
         }
 
-        window.handleChangePassword = async function(event) {
+        window.handleChangePassword = function(event) {
             event.preventDefault();
             const newPass = document.getElementById('new-pass').value.trim();
             const currentUser = localStorage.getItem('ecb_current_user');
@@ -648,17 +636,13 @@
             const userObj = cloudUsers.find(u => u.user === currentUser);
             if (userObj) {
                 userObj.pass = newPass;
-                try {
-                    if (db && userObj.firestoreId && userObj.firestoreId !== 'admin_default' && userObj.firestoreId !== 'user_wickma') {
-                        await updateDoc(doc(db, 'ecb_users', userObj.firestoreId), { pass: newPass });
-                    }
-                } catch(e) {}
+                localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
             }
             closePasswordModal();
             showModal('Erfolg', 'Ihr Passwort wurde erfolgreich geändert!', true);
         }
 
-        window.handleRegister = async function(event) {
+        window.handleRegister = function(event) {
             event.preventDefault();
             const fullname = document.getElementById('reg-fullname').value.trim();
             const newUser = document.getElementById('reg-user').value.trim();
@@ -670,14 +654,8 @@
             }
             document.getElementById('reg-error').classList.add('hidden');
 
-            const userObj = { fullname, user: newUser, pass: newPass, active: true };
-            cloudUsers.push(userObj);
-
-            try {
-                if (db) {
-                    await addDoc(collection(db, 'ecb_users'), userObj);
-                }
-            } catch(e) {}
+            cloudUsers.push({ fullname, user: newUser, pass: newPass, active: true });
+            localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
 
             document.getElementById('reg-fullname').value = '';
             document.getElementById('reg-user').value = '';
@@ -686,31 +664,31 @@
             showModal('Erfolg', `Mitarbeiter "${newUser}" (${fullname}) erfolgreich angelegt!`, true);
         }
 
-        window.toggleUserActive = async function(firestoreId, currentState) {
-            const userObj = cloudUsers.find(u => u.firestoreId === firestoreId);
-            if (!userObj || userObj.user === 'ECB_Wartung') return;
+        window.handleTemplateUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                customPdfTemplateBase64 = e.target.result;
+                localStorage.setItem('ecb_custom_pdf_template', customPdfTemplateBase64);
+                document.getElementById('template-status-text').innerText = "Eigene PDF-Vorlage hinterlegt ✔";
+                showModal('Erfolg', 'Eigene PDF-Vorlage erfolgreich hochgeladen und gespeichert!', true);
+            }
+            reader.readAsDataURL(file);
+        }
 
-            userObj.active = !currentState;
-            try {
-                if (db && firestoreId && firestoreId !== 'admin_default' && firestoreId !== 'user_wickma') {
-                    await updateDoc(doc(db, 'ecb_users', firestoreId), { active: userObj.active });
-                }
-            } catch(e) {}
+        window.toggleUserActive = function(index) {
+            if (cloudUsers[index].user === 'ECB_Wartung') return;
+            cloudUsers[index].active = !cloudUsers[index].active;
+            localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
             renderAdminUserList();
         }
 
-        window.deleteUserRecord = async function(firestoreId) {
-            const userObj = cloudUsers.find(u => u.firestoreId === firestoreId);
-            if (!userObj || userObj.user === 'ECB_Wartung') return;
-
-            if (!confirm(`Benutzer "${userObj.user}" wirklich löschen?`)) return;
-
-            try {
-                if (db && firestoreId && firestoreId !== 'admin_default' && firestoreId !== 'user_wickma') {
-                    await deleteDoc(doc(db, 'ecb_users', firestoreId));
-                }
-                cloudUsers = cloudUsers.filter(u => u.firestoreId !== firestoreId);
-            } catch(e) {}
+        window.deleteUserRecord = function(index) {
+            if (cloudUsers[index].user === 'ECB_Wartung') return;
+            if (!confirm(`Benutzer wirklich löschen?`)) return;
+            cloudUsers.splice(index, 1);
+            localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
             renderAdminUserList();
         }
 
@@ -718,7 +696,7 @@
             const container = document.getElementById('admin-user-list');
             if (!container) return;
             let html = '';
-            cloudUsers.forEach(u => {
+            cloudUsers.forEach((u, index) => {
                 const isAdmin = u.user === 'ECB_Wartung';
                 html += `
                     <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
@@ -728,10 +706,10 @@
                         </div>
                         <div class="flex items-center gap-2">
                             ${!isAdmin ? `
-                                <button type="button" onclick="toggleUserActive('${u.firestoreId || ''}', ${u.active !== false})" class="px-2.5 py-1.5 rounded-lg text-xs font-bold ${u.active !== false ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'} cursor-pointer">
+                                <button type="button" onclick="toggleUserActive(${index})" class="px-2.5 py-1.5 rounded-lg text-xs font-bold ${u.active !== false ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'} cursor-pointer">
                                     ${u.active !== false ? 'Deaktivieren' : 'Aktivieren'}
                                 </button>
-                                <button type="button" onclick="deleteUserRecord('${u.firestoreId || ''}')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer">
+                                <button type="button" onclick="deleteUserRecord(${index})" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 cursor-pointer">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             ` : `<span class="text-xs text-slate-400 font-semibold italic">Haupt-Admin</span>`}
@@ -749,53 +727,6 @@
             document.getElementById('login-screen').classList.remove('hidden');
         }
 
-        function initFirestoreListeners() {
-            if (!db) return;
-
-            try {
-                const usersCol = collection(db, 'ecb_users');
-                onSnapshot(usersCol, (snapshot) => {
-                    snapshot.forEach(docSnap => {
-                        const data = docSnap.data();
-                        const existing = cloudUsers.find(u => u.user === data.user);
-                        if (!existing) {
-                            cloudUsers.push({ firestoreId: docSnap.id, ...data });
-                        } else {
-                            existing.firestoreId = docSnap.id;
-                            existing.pass = data.pass;
-                            existing.fullname = data.fullname;
-                            existing.active = data.active !== false;
-                        }
-                    });
-                }, (err) => {});
-
-                const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
-                onSnapshot(protocolsCol, (snapshot) => {
-                    protocols = [];
-                    snapshot.forEach(docSnap => {
-                        protocols.push({ firestoreId: docSnap.id, ...docSnap.data() });
-                    });
-                    protocols.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
-                    updateUI();
-                }, (err) => {
-                    console.error("Protocols listener error:", err);
-                });
-
-                const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
-                onSnapshot(dguvCol, (snapshot) => {
-                    dguvDevices = [];
-                    snapshot.forEach(docSnap => {
-                        dguvDevices.push({ firestoreId: docSnap.id, ...docSnap.data() });
-                    });
-                    updateUI();
-                }, (err) => {
-                    console.error("DGUV listener error:", err);
-                });
-            } catch(e) {
-                console.error("Firestore Listeners Exception:", e);
-            }
-        }
-
         window.switchTab = function(tabId) {
             document.getElementById('tab-dashboard').classList.add('hidden');
             document.getElementById('tab-calendar').classList.add('hidden');
@@ -803,26 +734,17 @@
             document.getElementById('tab-history').classList.add('hidden');
             document.getElementById('form-view').classList.add('hidden');
 
-            document.getElementById('nav-dashboard').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
-            document.getElementById('nav-calendar').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
-            document.getElementById('nav-dguv').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
-            document.getElementById('nav-history').className = "px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer";
-
             if (tabId === 'dashboard') {
                 document.getElementById('tab-dashboard').classList.remove('hidden');
-                document.getElementById('nav-dashboard').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
                 updateDashboardDueDates();
             } else if (tabId === 'calendar') {
                 document.getElementById('tab-calendar').classList.remove('hidden');
-                document.getElementById('nav-calendar').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
                 renderMaintenanceCalendar();
             } else if (tabId === 'dguv') {
                 document.getElementById('tab-dguv').classList.remove('hidden');
-                document.getElementById('nav-dguv').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
                 renderDguvDevices();
             } else if (tabId === 'history') {
                 document.getElementById('tab-history').classList.remove('hidden');
-                document.getElementById('nav-history').className = "px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer";
                 populateYearFilter();
                 renderHistory();
             } else if (tabId === 'form') {
@@ -897,16 +819,11 @@
                 } else {
                     const latest = matching.reduce((prev, curr) => (Number(curr.timestamp || 0) > Number(prev.timestamp || 0)) ? curr : prev);
                     const lastDate = parseProtocolDate(latest.date) || new Date(Number(latest.timestamp || Date.now()));
-                    if (!lastDate || isNaN(lastDate.getTime())) {
-                        dueEl.innerHTML = `<i class="fa-regular fa-calendar-days text-ecbGreen mr-1"></i> Termin berechnet`;
-                        badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-extrabold uppercase">Erledigt</span>`;
-                        return;
-                    }
                     const nextDueDate = new Date(lastDate.getTime() + (cat.days * 24 * 60 * 60 * 1000));
                     nextDueDate.setHours(0,0,0,0);
                     
                     const isOverdue = now.getTime() > nextDueDate.getTime();
-                    const formattedDate = nextDueDate.toLocaleDateString('de-DE');
+                    const formattedDate = !isNaN(nextDueDate.getTime()) ? nextDueDate.toLocaleDateString('de-DE') : 'Ungültig';
 
                     dueEl.innerHTML = `<i class="fa-regular fa-calendar-days text-ecbGreen mr-1"></i> Nächster Termin: <strong>${formattedDate}</strong>`;
                     if (isOverdue) {
@@ -941,18 +858,17 @@
                             <td class="py-4 px-4 font-bold text-slate-800">${cat.name}</td>
                             <td class="py-4 px-4 text-slate-500 italic">Keine Wartung erfasst</td>
                             <td class="py-4 px-4 text-slate-500 font-semibold">Sofort fällig</td>
-                            <td class="py-4 px-4"><span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-extrabold uppercase">Offen (Kein Protokoll)</span></td>
+                            <td class="py-4 px-4"><span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-extrabold uppercase">Offen</span></td>
                         </tr>
                     `;
                 } else {
                     const latest = matching.reduce((prev, curr) => (Number(curr.timestamp || 0) > Number(prev.timestamp || 0)) ? curr : prev);
                     const lastDateObj = parseProtocolDate(latest.date) || new Date(Number(latest.timestamp || Date.now()));
-                    const lastDateStr = lastDateObj.toLocaleDateString('de-DE');
+                    const lastDateStr = !isNaN(lastDateObj.getTime()) ? lastDateObj.toLocaleDateString('de-DE') : '-';
                     
                     const nextDueDate = new Date(lastDateObj.getTime() + (cat.days * 24 * 60 * 60 * 1000));
                     nextDueDate.setHours(0,0,0,0);
-                    const nextDueDateStr = nextDueDate.toLocaleDateString('de-DE');
-
+                    const nextDueDateStr = !isNaN(nextDueDate.getTime()) ? nextDueDate.toLocaleDateString('de-DE') : '-';
                     const isOverdue = now.getTime() > nextDueDate.getTime();
 
                     html += `
@@ -961,16 +877,12 @@
                             <td class="py-4 px-4 text-slate-600 font-medium">${lastDateStr}</td>
                             <td class="py-4 px-4 text-slate-800 font-bold">${nextDueDateStr}</td>
                             <td class="py-4 px-4">
-                                ${isOverdue ? 
-                                    '<span class="px-2.5 py-1 bg-red-600 text-white rounded-full text-xs font-extrabold uppercase animate-pulse shadow-sm">Überfällig</span>' : 
-                                    '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-extrabold uppercase">Erledigt / Eingehalten</span>'
-                                }
+                                ${isOverdue ? '<span class="px-2.5 py-1 bg-red-600 text-white rounded-full text-xs font-extrabold uppercase">Überfällig</span>' : '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-extrabold uppercase">Eingehalten</span>'}
                             </td>
                         </tr>
                     `;
                 }
             });
-
             tableBody.innerHTML = html;
         }
 
@@ -982,11 +894,8 @@
                         <i class="fa-solid fa-user-shield text-base"></i> Mitarbeiter-Authentifizierung &amp; Zeitstempel
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-800 mb-1.5">Name des zuständigen Technikers (Automatisch übernommen): <span class="text-red-500">*</span></label>
+                        <label class="block text-sm font-bold text-slate-800 mb-1.5">Name des zuständigen Technikers:</label>
                         <input type="text" id="employee-name" required value="${currentFullName}" readonly class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-slate-100 text-slate-700 shadow-sm font-bold cursor-not-allowed">
-                    </div>
-                    <div class="text-xs text-slate-500 flex items-center gap-1.5">
-                        <i class="fa-regular fa-clock text-ecbGreen"></i> Ein rechtssicherer Zeitstempel und die Fälligkeitsberechnung erfolgen automatisch.
                     </div>
                 </div>
             `;
@@ -999,17 +908,13 @@
                     <div>
                         <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Waschmaschinen</span>
                         <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungsprotokoll: Waschmaschinen (Milnor)</h2>
-                        <p class="text-sm text-slate-500 mt-0.5">Intervall: Alle 2 Wochen</p>
-                    </div>
-                    <div class="w-12 h-12 rounded-xl bg-ecbLightGreen flex items-center justify-center text-ecbDarkGreen text-xl font-bold shadow-sm">
-                        <i class="fa-solid fa-shirt"></i>
                     </div>
                 </div>
                 <form id="maintenance-form" onsubmit="submitProtocol(event, 'Waschmaschine')" class="space-y-8">
                     ${renderCommonHeaderFields()}
                     <div>
                         <label class="block text-sm font-bold text-slate-800 mb-2">Maschine auswählen:</label>
-                        <select id="machine-select" class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-white shadow-sm font-medium">
+                        <select id="machine-select" class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-ecbGreen bg-white shadow-sm font-medium">
                             <option value="Waschmaschine 1 (Milnor)">Waschmaschine 1 - Milnor</option>
                             <option value="Waschmaschine 2 (Milnor)">Waschmaschine 2 - Milnor</option>
                             <option value="Waschmaschine 3 (Milnor)">Waschmaschine 3 - Milnor</option>
@@ -1017,7 +922,7 @@
                         </select>
                     </div>
                     <div class="space-y-4">
-                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Detaillierte Prüfpunkte</h3>
+                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Prüfpunkte</h3>
                         ${renderCheckPoint(1, 'Schmieren der Maschine', true)}
                         ${renderCheckPoint(2, 'Reinigen der Maschine', true)}
                         ${renderCheckPoint(3, 'Maschine auf Mängelfreiheit prüfen', true)}
@@ -1026,9 +931,7 @@
                     ${renderPhotoSection()}
                     ${renderRemarksSection()}
                     ${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-ecbDarkGreen to-ecbGreen hover:opacity-95 text-white rounded-2xl font-extrabold shadow-xl transition text-base flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Protokoll speichern, in Cloud sichern &amp; PDF erstellen
-                    </button>
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-extrabold shadow-xl transition cursor-pointer">Protokoll speichern &amp; PDF erstellen</button>
                 </form>
             `;
             activePhotos = [];
@@ -1038,21 +941,15 @@
         window.openDryerMenu = function() {
             const container = document.getElementById('dynamic-form-content');
             container.innerHTML = `
-                <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
-                    <div>
-                        <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold uppercase tracking-wider">Trockner</span>
-                        <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungsprotokoll: Trockner</h2>
-                        <p class="text-sm text-slate-500 mt-0.5">Intervall: Alle 2 Wochen</p>
-                    </div>
-                    <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 text-xl font-bold shadow-sm">
-                        <i class="fa-solid fa-wind"></i>
-                    </div>
+                <div class="border-b border-slate-200 pb-6 mb-8">
+                    <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold uppercase">Trockner</span>
+                    <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungsprotokoll: Trockner</h2>
                 </div>
                 <form id="maintenance-form" onsubmit="submitProtocol(event, 'Trockner')" class="space-y-8">
                     ${renderCommonHeaderFields()}
                     <div>
                         <label class="block text-sm font-bold text-slate-800 mb-2">Trockner auswählen:</label>
-                        <select id="machine-select" class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white shadow-sm font-medium">
+                        <select id="machine-select" class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-white shadow-sm font-medium">
                             <option value="Trockner 1">Trockner 1</option>
                             <option value="Trockner 2">Trockner 2</option>
                             <option value="Trockner 3">Trockner 3</option>
@@ -1060,16 +957,14 @@
                         </select>
                     </div>
                     <div class="space-y-4">
-                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Detaillierte Prüfpunkte</h3>
+                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Prüfpunkte</h3>
                         ${renderCheckPoint(1, 'Gründliche Reinigung des Trockners', true)}
                         ${renderCheckPoint(2, 'Trockner ohne Mängel geprüft', true)}
                     </div>
                     ${renderPhotoSection()}
                     ${renderRemarksSection()}
                     ${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-ecbDarkGreen to-ecbGreen hover:opacity-95 text-white rounded-2xl font-extrabold shadow-xl transition text-base flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Protokoll speichern, in Cloud sichern &amp; PDF erstellen
-                    </button>
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-extrabold shadow-xl transition cursor-pointer">Protokoll speichern &amp; PDF erstellen</button>
                 </form>
             `;
             activePhotos = [];
@@ -1079,25 +974,19 @@
         window.openCompressorRoutine = function() {
             const container = document.getElementById('dynamic-form-content');
             container.innerHTML = `
-                <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
-                    <div>
-                        <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Kompressor</span>
-                        <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Kompressor Wartung (2-Wochen-Intervall)</h2>
-                        <p class="text-sm text-slate-500 mt-0.5">Regelmäßige Routineprüfung</p>
-                    </div>
-                    <div class="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center text-sky-600 text-xl font-bold shadow-sm">
-                        <i class="fa-solid fa-gauge-high"></i>
-                    </div>
+                <div class="border-b border-slate-200 pb-6 mb-8">
+                    <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase">Kompressor</span>
+                    <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Kompressor Wartung (2-Wochen-Intervall)</h2>
                 </div>
                 <form id="maintenance-form" onsubmit="submitProtocol(event, 'Kompressor 2-Wochen')" class="space-y-8">
                     ${renderCommonHeaderFields()}
                     <input type="hidden" id="machine-select" value="Kompressor (2-Wochen-Wartung)">
-                    <div class="p-6 bg-sky-50/80 rounded-2xl border border-sky-100 space-y-2 shadow-sm">
+                    <div class="p-6 bg-sky-50 rounded-2xl border border-sky-100 space-y-2">
                         <label class="block text-sm font-bold text-sky-900">Laufleistung / Betriebsstunden: <span class="text-red-500">*</span></label>
                         <input type="number" id="runtime-hours" required class="w-full border border-sky-300 rounded-xl p-3.5 text-sm bg-white font-medium" placeholder="z. B. 4850 Std.">
                     </div>
                     <div class="space-y-4">
-                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Detaillierte Prüfpunkte</h3>
+                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Prüfpunkte</h3>
                         ${renderCheckPoint(1, 'Ölstand prüfen und nachfüllen', true)}
                         ${renderCheckPoint(2, 'Ansaugfilter prüfen, gegebenenfalls wechseln', true)}
                         ${renderCheckPoint(3, 'Kompressor reinigen', true)}
@@ -1108,9 +997,7 @@
                     ${renderPhotoSection()}
                     ${renderRemarksSection()}
                     ${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-ecbDarkGreen to-ecbGreen hover:opacity-95 text-white rounded-2xl font-extrabold shadow-xl transition text-base flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Protokoll speichern, in Cloud sichern &amp; PDF erstellen
-                    </button>
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-extrabold shadow-xl transition cursor-pointer">Protokoll speichern &amp; PDF erstellen</button>
                 </form>
             `;
             activePhotos = [];
@@ -1120,25 +1007,19 @@
         window.openCompressorAnnual = function() {
             const container = document.getElementById('dynamic-form-content');
             container.innerHTML = `
-                <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
-                    <div>
-                        <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold uppercase tracking-wider">Kompressor</span>
-                        <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Kompressor Jahreswartung</h2>
-                        <p class="text-sm text-slate-500 mt-0.5">Alle 180 Tage</p>
-                    </div>
-                    <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 text-xl font-bold shadow-sm">
-                        <i class="fa-solid fa-calendar-days"></i>
-                    </div>
+                <div class="border-b border-slate-200 pb-6 mb-8">
+                    <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold uppercase">Kompressor</span>
+                    <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Kompressor Jahreswartung</h2>
                 </div>
                 <form id="maintenance-form" onsubmit="submitProtocol(event, 'Kompressor Jahreswartung')" class="space-y-8">
                     ${renderCommonHeaderFields()}
                     <input type="hidden" id="machine-select" value="Kompressor (Jahreswartung)">
-                    <div class="p-6 bg-purple-50/80 rounded-2xl border border-purple-100 space-y-2 shadow-sm">
+                    <div class="p-6 bg-purple-50 rounded-2xl border border-purple-100 space-y-2">
                         <label class="block text-sm font-bold text-purple-900">Laufleistung / Betriebsstunden: <span class="text-red-500">*</span></label>
                         <input type="number" id="runtime-hours" required class="w-full border border-purple-300 rounded-xl p-3.5 text-sm bg-white font-medium" placeholder="z. B. 6000 Std.">
                     </div>
                     <div class="space-y-4">
-                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Detaillierte Jahreswartungspunkte</h3>
+                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Prüfpunkte</h3>
                         ${renderCheckPoint(1, 'Ölwechsel', true)}
                         ${renderCheckPoint(2, 'Ölfilter wechseln', true)}
                         ${renderCheckPoint(3, 'Luftfilter wechseln', true)}
@@ -1151,9 +1032,7 @@
                     ${renderPhotoSection()}
                     ${renderRemarksSection()}
                     ${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-ecbDarkGreen to-ecbGreen hover:opacity-95 text-white rounded-2xl font-extrabold shadow-xl transition text-base flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Protokoll speichern, in Cloud sichern &amp; PDF erstellen
-                    </button>
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-extrabold shadow-xl transition cursor-pointer">Protokoll speichern &amp; PDF erstellen</button>
                 </form>
             `;
             activePhotos = [];
@@ -1162,18 +1041,17 @@
 
         function renderCheckPoint(index, title, allowFaultOption = true) {
             return `
-                <div class="p-5 bg-slate-50/70 rounded-2xl border border-slate-200/80 space-y-3" data-title="${title}">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3" data-title="${title}">
                     <div class="font-bold text-slate-900 text-sm flex items-center justify-between">
                         <span>${index}. ${title}</span>
-                        <span class="text-xs text-red-500">* Pflichtfeld</span>
                     </div>
                     <div class="flex flex-wrap gap-6 pt-1">
-                        <label class="flex items-center space-x-2.5 text-sm cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
+                        <label class="flex items-center space-x-2 text-sm cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
                             <input type="radio" name="point_${index}" value="erledigt" checked class="text-ecbGreen w-4 h-4">
                             <span class="text-slate-800 font-bold">Erledigt (OK)</span>
                         </label>
                         ${allowFaultOption ? `
-                        <label class="flex items-center space-x-2.5 text-sm cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
+                        <label class="flex items-center space-x-2 text-sm cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
                             <input type="radio" name="point_${index}" value="nicht in Ordnung" class="text-red-500 w-4 h-4">
                             <span class="text-red-600 font-bold">Nicht in Ordnung</span>
                         </label>
@@ -1186,7 +1064,7 @@
         function renderPhotoSection() {
             return `
                 <div class="space-y-3 pt-2">
-                    <label class="block text-sm font-bold text-slate-800">Fotodokumentation (Kamera oder Galerie):</label>
+                    <label class="block text-sm font-bold text-slate-800">Fotodokumentation:</label>
                     <div class="flex flex-wrap items-center gap-3">
                         <label class="px-5 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm cursor-pointer shadow-md hover:bg-slate-800 transition flex items-center gap-2">
                             <i class="fa-solid fa-camera"></i> Foto aufnehmen
@@ -1230,13 +1108,12 @@
             const files = event.target.files;
             if (!files || files.length === 0) return;
             for (let i = 0; i < files.length; i++) {
-                const file = files[i];
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     activePhotos.push(e.target.result);
                     updatePhotoPreview();
                 }
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(files[i]);
             }
         }
 
@@ -1248,7 +1125,7 @@
             grid.innerHTML = '';
             activePhotos.forEach((photo, idx) => {
                 grid.innerHTML += `
-                    <div class="relative rounded-xl overflow-hidden h-24 border border-slate-200 group">
+                    <div class="relative rounded-xl overflow-hidden h-24 border border-slate-200">
                         <img src="${photo}" class="w-full h-full object-cover">
                         <button type="button" onclick="removePhoto(${idx})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
                             <i class="fa-solid fa-xmark"></i>
@@ -1303,7 +1180,7 @@
         window.submitProtocol = async function(event, categoryKey) {
             event.preventDefault();
             const employeeName = document.getElementById('employee-name').value.trim();
-            if (!employeeName) { showModal('Fehler', 'Bitte Namen des Technikers angeben.', false); return; }
+            if (!employeeName) { showModal('Fehler', 'Bitte Namen angeben.', false); return; }
             if (!signaturePadInstance || !signaturePadInstance.hasSigned) { showModal('Fehler', 'Bitte unterschreiben.', false); return; }
 
             const machineSelect = document.getElementById('machine-select');
@@ -1314,10 +1191,9 @@
             const radios = document.querySelectorAll('input[type="radio"]:checked');
             let pointsData = [];
             radios.forEach((r, idx) => {
-                const pointNum = idx + 1;
                 const parentDiv = r.closest('[data-title]');
-                const titleText = parentDiv ? parentDiv.getAttribute('data-title') : `Prüfpunkt ${pointNum}`;
-                pointsData.push({ pointNumber: pointNum, title: titleText, status: r.value });
+                const titleText = parentDiv ? parentDiv.getAttribute('data-title') : `Prüfpunkt ${idx + 1}`;
+                pointsData.push({ pointNumber: idx + 1, title: titleText, status: r.value });
             });
 
             const now = new Date();
@@ -1335,21 +1211,18 @@
                 signature: signaturePadInstance.canvas.toDataURL()
             };
 
+            protocols.unshift(protocol);
+            localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
+
             try {
                 if (db && userId) {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'), protocol);
-                } else {
-                    protocols.unshift(protocol);
-                    localStorage.setItem('ecb_protocols_offline', JSON.stringify(protocols));
-                    updateUI();
                 }
-            } catch (err) {
-                console.warn("Cloud save error:", err);
-            }
+            } catch(e) { console.error("Cloud save error:", e); }
 
-            await generatePDF(protocol);
+            generatePDF(protocol);
             updateUI();
-            showModal('Erfolg', 'Wartungsprotokoll in der Cloud gespeichert & offizielle ECB-PDF erstellt!', true);
+            showModal('Erfolg', 'Wartungsprotokoll erfolgreich gespeichert & PDF erstellt!', true);
             switchTab('history');
         }
 
@@ -1361,104 +1234,88 @@
             const name = document.getElementById('dguv-dev-name').value.trim();
             const location = document.getElementById('dguv-dev-location').value.trim();
             const dueDate = document.getElementById('dguv-dev-duedate').value;
-
             if (!name || !location || !dueDate) return;
-
-            const inventoryNumber = String(Math.floor(100000 + Math.random() * 900000));
 
             const newDev = {
                 id: 'DGUV-' + Math.floor(1000 + Math.random() * 9000),
                 name,
-                inventoryNumber,
+                inventoryNumber: String(Math.floor(100000 + Math.random() * 900000)),
                 location,
                 dueDate,
                 status: 'Offen',
                 protocolHistory: []
             };
 
+            dguvDevices.unshift(newDev);
+            localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+
             try {
                 if (db && userId) {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), newDev);
-                } else {
-                    dguvDevices.unshift(newDev);
-                    localStorage.setItem('ecb_dguv_devices_offline', JSON.stringify(dguvDevices));
-                    updateUI();
                 }
-            } catch (err) {
-                console.warn("Cloud save error:", err);
-            }
+            } catch(e) {}
 
             closeDguvModal();
-            showModal('Erfolg', `DGUV V3 Gerät gespeichert (Inventarnummer: ${inventoryNumber})!`, true);
+            updateUI();
+            showModal('Erfolg', 'Gerät erfolgreich erfasst!', true);
         }
 
-        window.handleProtocolUpload = async function(event, firestoreId, localId) {
+        window.handleProtocolUpload = async function(event, deviceId) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = async function(e) {
-                const uploadDate = new Date().toLocaleString('de-DE');
-                const fileName = file.name;
-                const fileData = e.target.result;
-
-                const dev = dguvDevices.find(d => d.firestoreId === firestoreId || d.id === localId);
+                const dev = dguvDevices.find(d => d.id === deviceId || d.firestoreId === deviceId);
                 if (!dev) return;
-
                 if (!dev.protocolHistory) dev.protocolHistory = [];
                 dev.protocolHistory.unshift({
-                    date: uploadDate,
-                    fileName: fileName,
-                    fileData: fileData
+                    date: new Date().toLocaleString('de-DE'),
+                    fileName: file.name,
+                    fileData: e.target.result
                 });
+                dev.status = 'Erledigt';
+                localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
 
                 try {
-                    if (db && userId && firestoreId) {
-                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId), {
-                            status: 'Erledigt',
+                    if (db && userId && dev.firestoreId) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', dev.firestoreId), {
+                            status: dev.status,
                             protocolHistory: dev.protocolHistory
                         });
-                    } else {
-                        dev.status = 'Erledigt';
-                        localStorage.setItem('ecb_dguv_devices_offline', JSON.stringify(dguvDevices));
-                        updateUI();
                     }
-                    showModal('Erfolg', 'Messprotokoll wurde zur Historie des Geräts hinzugefügt und in der Cloud gespeichert!', true);
-                } catch(err) {
-                    console.error(err);
-                }
+                } catch(err) {}
+
+                updateUI();
+                showModal('Erfolg', 'Messprotokoll hochgeladen!', true);
             };
             reader.readAsDataURL(file);
         }
 
-        window.openDguvHistory = function(firestoreId, localId) {
-            const dev = dguvDevices.find(d => d.firestoreId === firestoreId || d.id === localId);
+        window.openDguvHistory = function(deviceId) {
+            const dev = dguvDevices.find(d => d.id === deviceId || d.firestoreId === deviceId);
             if (!dev) return;
-
             document.getElementById('dguv-history-title').innerText = dev.name;
-            document.getElementById('dguv-history-subtitle').innerText = `Inventar-Nr.: ${dev.inventoryNumber || '---'} | Standort: ${dev.location}`;
+            document.getElementById('dguv-history-subtitle').innerText = `Inventar-Nr.: ${dev.inventoryNumber} | Standort: ${dev.location}`;
 
             const listContainer = document.getElementById('dguv-history-list');
             let historyHtml = '';
-
             if (!dev.protocolHistory || dev.protocolHistory.length === 0) {
-                historyHtml = `<div class="p-4 bg-slate-50 rounded-xl text-center text-xs text-slate-500">Noch keine Messprotokolle für dieses Gerät hochgeladen.</div>`;
+                historyHtml = `<div class="p-4 bg-slate-50 rounded-xl text-center text-xs text-slate-500">Noch keine Messprotokolle hochgeladen.</div>`;
             } else {
-                dev.protocolHistory.forEach((item) => {
+                dev.protocolHistory.forEach(item => {
                     historyHtml += `
                         <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
                             <div>
                                 <strong class="text-xs text-slate-800 block"><i class="fa-solid fa-file-pdf text-red-500 mr-1"></i> ${item.fileName}</strong>
                                 <span class="text-[11px] text-slate-500">Hochgeladen am: ${item.date}</span>
                             </div>
-                            <a href="${item.fileData}" download="${item.fileName}" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                            <a href="${item.fileData}" download="${item.fileName}" class="px-3 py-1.5 bg-sky-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5">
                                 <i class="fa-solid fa-download"></i> Herunterladen
                             </a>
                         </div>
                     `;
                 });
             }
-
             listContainer.innerHTML = historyHtml;
             document.getElementById('modal-dguv-history').classList.remove('hidden');
         }
@@ -1467,28 +1324,28 @@
             document.getElementById('modal-dguv-history').classList.add('hidden');
         }
 
-        window.deleteDguvDevice = async function(firestoreId, index) {
+        window.deleteDguvDevice = async function(index) {
+            const dev = dguvDevices[index];
+            dguvDevices.splice(index, 1);
+            localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
             try {
-                if (db && userId && firestoreId) {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId));
-                } else {
-                    dguvDevices.splice(index, 1);
-                    localStorage.setItem('ecb_dguv_devices_offline', JSON.stringify(dguvDevices));
-                    updateUI();
+                if (db && userId && dev.firestoreId) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', dev.firestoreId));
                 }
             } catch(e) {}
+            updateUI();
         }
 
-        window.deleteProtocol = async function(firestoreId, index) {
+        window.deleteProtocol = async function(index) {
+            const p = protocols[index];
+            protocols.splice(index, 1);
+            localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
             try {
-                if (db && userId && firestoreId) {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', firestoreId));
-                } else {
-                    protocols.splice(index, 1);
-                    localStorage.setItem('ecb_protocols_offline', JSON.stringify(protocols));
-                    updateUI();
+                if (db && userId && p.firestoreId) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.firestoreId));
                 }
             } catch(e) {}
+            updateUI();
         }
 
         window.clearHistory = async function() {
@@ -1497,21 +1354,14 @@
                 showModal('Zugriff verwehrt', 'Nur der Administrator kann den Verlauf leeren.', false);
                 return;
             }
-            if (confirm('Gesamte Historie wirklich löschen?')) {
+            if (confirm('Verlauf wirklich löschen?')) {
+                protocols = [];
+                localStorage.removeItem('ecb_protocols_all');
                 try {
-                    if (db && userId) {
-                        for (let p of protocols) {
-                            if (p.firestoreId) {
-                                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.firestoreId));
-                            }
-                        }
-                    } else {
-                        protocols = [];
-                        localStorage.removeItem('ecb_protocols_offline');
-                        updateUI();
-                    }
+                    if (db && userId) {}
                 } catch(e) {}
-                showModal('Erfolg', 'Verlauf erfolgreich geleert.', true);
+                updateUI();
+                showModal('Erfolg', 'Verlauf geleert.', true);
             }
         }
 
@@ -1528,7 +1378,6 @@
         function populateYearFilter() {
             const yearSelect = document.getElementById('filter-year');
             if (!yearSelect) return;
-            
             const years = new Set();
             protocols.forEach(p => {
                 if (p.date) {
@@ -1536,7 +1385,6 @@
                     if (match) years.add(match[1]);
                 }
             });
-
             let html = '<option value="all">Alle Jahre</option>';
             Array.from(years).sort().reverse().forEach(y => {
                 html += `<option value="${y}">${y}</option>`;
@@ -1548,39 +1396,27 @@
             const container = document.getElementById('protocols-container');
             if (!container) return;
 
-            const currentUser = localStorage.getItem('ecb_current_user');
-            if (currentUser === 'ECB_Wartung') {
-                document.getElementById('history-admin-clear-container').classList.remove('hidden');
-            } else {
-                document.getElementById('history-admin-clear-container').classList.add('hidden');
-            }
+            checkAdminNav();
 
-            const filterYear = document.getElementById('filter-year') ? document.getElementById('filter-year').value : 'all';
-            const filterMonth = document.getElementById('filter-month') ? document.getElementById('filter-month').value : 'all';
-            const filterCategory = document.getElementById('filter-category') ? document.getElementById('filter-category').value : 'all';
+            const filterYear = document.getElementById('filter-year').value;
+            const filterMonth = document.getElementById('filter-month').value;
+            const filterCategory = document.getElementById('filter-category').value;
 
             const filtered = protocols.filter(p => {
                 let matches = true;
-                if (filterCategory !== 'all' && p.category !== filterCategory) {
-                    matches = false;
-                }
+                if (filterCategory !== 'all' && p.category !== filterCategory) matches = false;
                 if (p.date) {
-                    if (filterYear !== 'all') {
-                        if (!p.date.includes(filterYear)) matches = false;
-                    }
+                    if (filterYear !== 'all' && !p.date.includes(filterYear)) matches = false;
                     if (filterMonth !== 'all') {
                         const parts = p.date.split('.');
-                        if (parts.length >= 2) {
-                            const m = parts[1].padStart(2, '0');
-                            if (m !== filterMonth) matches = false;
-                        }
+                        if (parts.length >= 2 && parts[1].padStart(2, '0') !== filterMonth) matches = false;
                     }
                 }
                 return matches;
             });
 
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200">Keine Protokolle für die ausgewählten Filter gefunden.</div>';
+                container.innerHTML = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200">Keine Protokolle gefunden.</div>';
                 return;
             }
 
@@ -1588,82 +1424,34 @@
             filtered.forEach((p) => {
                 let originalIdx = protocols.findIndex(item => item.id === p.id);
                 let pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b border-slate-100"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
-                let photosHtml = (p.photos || []).map(ph => `<img src="${ph}" class="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-sm">`).join('');
+                let photosHtml = (p.photos || []).map(ph => `<img src="${ph}" class="w-16 h-16 object-cover rounded-xl border border-slate-200">`).join('');
                 html += `
                     <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-4 shadow-sm">
                         <div class="flex justify-between items-start">
                             <div>
                                 <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold">${p.category}</span>
                                 <h3 class="text-xl font-bold text-slate-900 mt-2">${p.machine}</h3>
-                                <p class="text-xs text-slate-500 mt-1">${p.date} | Techniker: <strong>${p.employee}</strong> ${p.runtime ? `| Betriebsstunden: <strong>${p.runtime} Std.</strong>` : ''} | ID: ${p.id}</p>
+                                <p class="text-xs text-slate-500 mt-1">${p.date} | Techniker: <strong>${p.employee}</strong> ${p.runtime ? `| Std: <strong>${p.runtime}</strong>` : ''} | ID: ${p.id}</p>
                             </div>
                             <div class="flex gap-2">
                                 <button onclick="downloadProtocolPDF(${originalIdx})" class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-                                <button onclick="deleteProtocol('${p.firestoreId || ''}', ${originalIdx})" class="text-red-500 hover:text-red-700 text-sm p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="deleteProtocol(${originalIdx})" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
                         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">${pts}</div>
-                        ${p.runtime ? `<div class="text-xs text-sky-800 bg-sky-50 p-3 rounded-xl border border-sky-100"><strong>Erfasste Betriebsstunden:</strong> ${p.runtime} Std.</div>` : ''}
+                        ${p.runtime ? `<div class="text-xs text-sky-800 bg-sky-50 p-3 rounded-xl"><strong>Betriebsstunden:</strong> ${p.runtime} Std.</div>` : ''}
                         ${p.remarks ? `<div class="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl"><strong>Bemerkungen:</strong> ${p.remarks}</div>` : ''}
                         ${photosHtml ? `<div class="flex flex-wrap gap-2 pt-2">${photosHtml}</div>` : ''}
                     </div>
                 `;
             });
-
             container.innerHTML = html;
         }
 
         window.downloadProtocolPDF = function(index) { generatePDF(protocols[index]); }
 
-        async function generatePDF(p) {
+        function generatePDF(p) {
             try {
-                if (customPdfTemplateBase64) {
-                    try {
-                        const existingPdfBytes = await fetch(customPdfTemplateBase64).then(res => res.arrayBuffer());
-                        const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-                        const pages = pdfDoc.getPages();
-                        const firstPage = pages[0];
-                        const { width, height } = firstPage.getSize();
-                        const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-
-                        firstPage.drawText(`Protokoll-ID: ${p.id}`, { x: 50, y: height - 55, size: 10, font, color: PDFLib.rgb(0, 0, 0) });
-                        firstPage.drawText(`Maschine: ${p.machine}`, { x: 50, y: height - 72, size: 10, font, color: PDFLib.rgb(0, 0, 0) });
-                        firstPage.drawText(`Techniker: ${p.employee}`, { x: 50, y: height - 89, size: 10, font, color: PDFLib.rgb(0, 0, 0) });
-                        firstPage.drawText(`Datum & Uhrzeit: ${p.date}`, { x: 50, y: height - 106, size: 10, font, color: PDFLib.rgb(0, 0, 0) });
-                        if (p.runtime) {
-                            firstPage.drawText(`Betriebsstunden: ${p.runtime} Std.`, { x: 50, y: height - 123, size: 10, font, color: PDFLib.rgb(0, 0, 0) });
-                        }
-
-                        let textY = height - 145;
-                        (p.points || []).forEach((pt) => {
-                            const statusText = pt.status.toUpperCase() === 'ERLEDIGT' ? 'ERLEDIGT (OK)' : 'NICHT IN ORDNUNG';
-                            firstPage.drawText(`${pt.pointNumber}. ${pt.title}: ${statusText}`, { x: 50, y: textY, size: 9, font, color: PDFLib.rgb(0, 0, 0) });
-                            textY -= 16;
-                        });
-
-                        textY -= 10;
-                        firstPage.drawText(`Bemerkungen: ${p.remarks || 'Keine'}`, { x: 50, y: textY, size: 9, font, color: PDFLib.rgb(0, 0, 0) });
-
-                        if (p.signature) {
-                            try {
-                                const pngImageBytes = await fetch(p.signature).then(res => res.arrayBuffer());
-                                const pngImage = await pdfDoc.embedPng(pngImageBytes);
-                                firstPage.drawImage(pngImage, { x: 50, y: 40, width: 110, height: 40 });
-                            } catch(e) {}
-                        }
-
-                        const pdfBytes = await pdfDoc.save();
-                        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-                        const link = document.createElement('a');
-                        link.href = URL.createObjectURL(blob);
-                        link.download = `ECB_Wartungsprotokoll_${p.id}.pdf`;
-                        link.click();
-                        return;
-                    } catch(errTemplate) {
-                        console.warn("Template fill fallback to native ECB layout:", errTemplate);
-                    }
-                }
-
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('p', 'mm', 'a4');
 
@@ -1672,11 +1460,10 @@
 
                 doc.setFillColor(101, 163, 13);
                 doc.roundedRect(15, 6, 26, 26, 4, 4, 'F');
-                
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(16);
                 doc.setTextColor(255, 255, 255);
-                doc.text('ecb', 18, 19);
+                doc.text('ecb', 18, 20);
 
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(16);
@@ -1686,44 +1473,26 @@
                 doc.text('Wartungsprotokoll', 48, 23);
 
                 doc.setFillColor(241, 245, 249);
-                doc.roundedRect(15, 43, 180, p.runtime ? 38 : 32, 3, 3, 'F');
+                doc.roundedRect(15, 43, 180, p.runtime ? 28 : 22, 3, 3, 'F');
                 
                 doc.setTextColor(15, 23, 42);
                 doc.setFont('helvetica', 'bold');
-                doc.setFontSize(10);
-                
-                doc.text(`Anlage / Maschine:`, 20, 50);
-                doc.setFont('helvetica', 'normal');
-                doc.text(p.machine, 55, 50);
+                doc.setFontSize(9);
+                doc.text(`Anlage: ${p.machine}`, 20, 50);
+                doc.text(`Protokoll-ID: ${p.id}`, 130, 50);
 
-                doc.setFont('helvetica', 'bold');
-                doc.text(`ID:`, 140, 50);
                 doc.setFont('helvetica', 'normal');
-                doc.text(p.id, 148, 50);
-
-                doc.setFont('helvetica', 'bold');
-                doc.text(`Techniker:`, 20, 58);
-                doc.setFont('helvetica', 'normal');
-                doc.text(p.employee, 40, 58);
-
-                doc.setFont('helvetica', 'bold');
-                doc.text(`Zeitstempel:`, 120, 58);
-                doc.setFont('helvetica', 'normal');
-                doc.text(p.date, 142, 58);
-
-                doc.setFont('helvetica', 'bold');
-                doc.text(`Kategorie:`, 20, 66);
-                doc.setFont('helvetica', 'normal');
-                doc.text(p.category, 40, 66);
+                doc.text(`Techniker: ${p.employee}`, 20, 57);
+                doc.text(`Zeitstempel: ${p.date}`, 130, 57);
 
                 if (p.runtime) {
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(`Betriebsstunden:`, 120, 66);
-                    doc.setFont('helvetica', 'normal');
-                    doc.text(`${p.runtime} Std.`, 150, 66);
+                    doc.text(`Betriebsstunden: ${p.runtime} Std.`, 20, 64);
+                    doc.text(`Kategorie: ${p.category}`, 130, 64);
+                } else {
+                    doc.text(`Kategorie: ${p.category}`, 20, 64);
                 }
 
-                let startY = p.runtime ? 88 : 82;
+                let startY = p.runtime ? 80 : 74;
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(10);
                 doc.setTextColor(63, 98, 18);
@@ -1739,10 +1508,10 @@
                     doc.setFont('helvetica', 'bold');
                     if (isOk) {
                         doc.setTextColor(46, 125, 50);
-                        doc.text('ERLEDIGT (OK)', 145, startY);
+                        doc.text('ERLEDIGT (OK)', 150, startY);
                     } else {
                         doc.setTextColor(211, 47, 47);
-                        doc.text('NICHT IN ORDNUNG', 135, startY);
+                        doc.text('NICHT IN ORDNUNG', 140, startY);
                     }
                     doc.setFont('helvetica', 'normal');
                     startY += 7;
@@ -1813,20 +1582,19 @@
                             <div>
                                 <div class="flex justify-between items-start">
                                     <span class="px-3 py-1 rounded-full text-xs font-bold ${isDone ? 'bg-emerald-50 text-ecbGreen' : 'bg-amber-50 text-amber-600'}">${dev.status}</span>
-                                    <button onclick="deleteDguvDevice('${dev.firestoreId || ''}', ${idx})" class="text-red-500 hover:text-red-700 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                    <button onclick="deleteDguvDevice(${idx})" class="text-red-500 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                                 </div>
-                                <h3 onclick="openDguvHistory('${dev.firestoreId || ''}', '${dev.id}')" class="text-xl font-bold text-slate-900 mt-2 hover:text-sky-600 cursor-pointer transition" title="Klicken, um Historie anzuzeigen">${dev.name} <i class="fa-solid fa-clock-rotate-left text-xs text-slate-400 ml-1"></i></h3>
-                                <p class="text-xs font-bold text-sky-700 mt-0.5"><i class="fa-solid fa-barcode mr-1"></i> Inventar-Nr.: ${dev.inventoryNumber || '------'}</p>
+                                <h3 onclick="openDguvHistory('${dev.firestoreId || dev.id}')" class="text-xl font-bold text-slate-900 mt-2 hover:text-sky-600 cursor-pointer transition">${dev.name} <i class="fa-solid fa-clock-rotate-left text-xs text-slate-400 ml-1"></i></h3>
+                                <p class="text-xs font-bold text-sky-700 mt-0.5"><i class="fa-solid fa-barcode mr-1"></i> Inventar-Nr.: ${dev.inventoryNumber}</p>
                                 <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-sky-600 mr-1"></i> ${dev.location}</p>
                                 <p class="text-xs text-slate-500 mt-1"><i class="fa-regular fa-calendar-days text-sky-600 mr-1"></i> Fällig: ${dev.dueDate}</p>
-                                ${historyCount > 0 ? `<div class="mt-2"><button onclick="openDguvHistory('${dev.firestoreId || ''}', '${dev.id}')" class="text-xs text-sky-700 hover:underline font-bold"><i class="fa-solid fa-folder-open mr-1"></i> ${historyCount} Messprotokoll(e) in Historie verfügbar</button></div>` : ''}
+                                ${historyCount > 0 ? `<div class="mt-2"><button onclick="openDguvHistory('${dev.firestoreId || dev.id}')" class="text-xs text-sky-700 hover:underline font-bold"><i class="fa-solid fa-folder-open mr-1"></i> ${historyCount} Protokoll(e)</button></div>` : ''}
                             </div>
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2">
                                 <label class="w-full py-2 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                                    <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Neues Protokoll hochladen
-                                    <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.firestoreId || ''}', '${dev.id}')" class="hidden">
+                                    <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Protokoll hochladen
+                                    <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.firestoreId || dev.id}')" class="hidden">
                                 </label>
-                                ${historyCount > 0 ? `<button onclick="openDguvHistory('${dev.firestoreId || ''}', '${dev.id}')" class="w-full py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 rounded-lg text-xs font-bold flex items-center justify-center gap-1 cursor-pointer">Historie ansehen</button>` : ''}
                             </div>
                         </div>
                     `;
