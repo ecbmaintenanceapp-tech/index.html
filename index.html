@@ -499,7 +499,6 @@
         let activePhotos = [];
         let signaturePadInstance = null;
 
-        // INACTIVITY AUTO-LOGOUT (5 MINUTES)
         let inactivityTimer = null;
         const INACTIVITY_LIMIT = 5 * 60 * 1000;
 
@@ -562,12 +561,9 @@
                     }
                 });
             } catch (err) {
-                console.warn("Firebase Init Error:", err);
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Lokaler Modus";
-                protocols = JSON.parse(localStorage.getItem('ecb_protocols_offline') || '[]');
-                dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_offline') || '[]');
-                updateUI();
+                console.error("Firebase Init Error:", err);
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-red-500 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Cloud-Verbindung fehlgeschlagen";
             }
         });
 
@@ -767,7 +763,6 @@
                     });
                 }, (err) => {});
 
-                // CRITICAL FIX: Using standard public artifacts path for foolproof cross-device sync
                 const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
                 onSnapshot(protocolsCol, (snapshot) => {
                     protocols = [];
@@ -1661,11 +1656,9 @@
                     }
                 }
 
-                // Standard Professional jsPDF Generation matching exact ECB blanko layout
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('p', 'mm', 'a4');
 
-                // Header Banner Background (ECB Dark Green)
                 doc.setFillColor(63, 98, 18);
                 doc.rect(0, 0, 210, 38, 'F');
 
@@ -1690,16 +1683,16 @@
                 doc.setTextColor(15, 23, 42);
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(10);
-                doc.text(`Protokoll: ${p.machine}`, 20, 50);
-                doc.text(`ID: ${p.id}`, 115, 50);
+                doc.text(`Anlage / Maschine: ${p.machine}`, 20, 50);
+                doc.text(`ID: ${p.id}`, 140, 50);
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(9);
-                doc.text(`Techniker: ${p.employee}`, 20, 58);
-                doc.text(`Datum/Uhrzeit: ${p.date}`, 115, 58);
-                doc.text(`Kategorie: ${p.category}`, 20, 66);
+                doc.text(`Techniker: ${p.employee}`, 20, 57);
+                doc.text(`Zeitstempel: ${p.date}`, 140, 57);
+                doc.text(`Kategorie: ${p.category}`, 20, 64);
                 if (p.runtime) {
-                    doc.text(`Betriebsstunden: ${p.runtime} Std.`, 115, 66);
+                    doc.text(`Betriebsstunden: ${p.runtime} Std.`, 140, 64);
                 }
 
                 let startY = p.runtime ? 86 : 80;
