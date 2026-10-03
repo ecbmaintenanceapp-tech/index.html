@@ -1642,28 +1642,29 @@
                 doc.text('Wartungsprotokoll', 48, 23);
 
                 doc.setFillColor(241, 245, 249);
-                doc.roundedRect(15, 43, 180, p.runtime ? 32 : 28, 3, 3, 'F');
+                doc.roundedRect(15, 43, 180, p.runtime ? 36 : 30, 3, 3, 'F');
                 
                 doc.setTextColor(15, 23, 42);
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(10);
-                doc.text(`Wartungsprotokoll: ${p.machine} (${p.id})`, 20, 50);
+                doc.text(`Wartungsprotokoll: ${p.machine}`, 20, 50);
+                doc.text(`(${p.id})`, 20, 56);
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(9);
-                doc.text(`Techniker: ${p.employee}`, 20, 57);
-                doc.text(`Zeitstempel: ${p.date}`, 120, 50);
-                doc.text(`Kategorie: ${p.category}`, 120, 57);
+                doc.text(`Techniker: ${p.employee}`, 20, 64);
+                doc.text(`Zeitstempel: ${p.date}`, 115, 50);
+                doc.text(`Kategorie: ${p.category}`, 115, 56);
                 if (p.runtime) {
-                    doc.text(`Betriebsstunden: ${p.runtime} Std.`, 20, 64);
+                    doc.text(`Betriebsstunden: ${p.runtime} Std.`, 20, 71);
                 }
 
-                let startY = p.runtime ? 82 : 78;
+                let startY = p.runtime ? 86 : 80;
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(10);
                 doc.setTextColor(63, 98, 18);
                 doc.text('Prüfpunkt-Auswertung:', 15, startY);
-                startY += 5;
+                startY += 6;
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(9);
@@ -1680,14 +1681,14 @@
                         doc.text('NICHT IN ORDNUNG', 135, startY);
                     }
                     doc.setFont('helvetica', 'normal');
-                    startY += 6;
+                    startY += 7;
                 });
 
                 startY += 4;
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(63, 98, 18);
                 doc.text('Bemerkungen:', 15, startY);
-                startY += 5;
+                startY += 6;
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(15, 23, 42);
                 const remarksText = p.remarks || 'Keine Bemerkungen.';
@@ -1700,7 +1701,7 @@
                     doc.setFont('helvetica', 'bold');
                     doc.setTextColor(63, 98, 18);
                     doc.text(`Fotodokumentation (${p.photos.length} Fotos):`, 15, startY);
-                    startY += 5;
+                    startY += 6;
                     let xPos = 15;
                     let yPos = startY;
                     p.photos.forEach(ph => {
@@ -1717,7 +1718,7 @@
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(63, 98, 18);
                 doc.text('Digitale Unterschrift des Technikers:', 15, startY);
-                startY += 5;
+                startY += 6;
                 if (p.signature) {
                     doc.addImage(p.signature, 'PNG', 15, startY, 55, 20);
                 }
