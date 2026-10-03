@@ -1549,7 +1549,7 @@
                             <div>
                                 <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold">${p.category}</span>
                                 <h3 class="text-xl font-bold text-slate-900 mt-2">${p.machine}</h3>
-                                <p class="text-xs text-slate-500 mt-1">${p.date} | Techniker: <strong>${p.employee}</strong> | ID: ${p.id}</p>
+                                <p class="text-xs text-slate-500 mt-1">${p.date} | Techniker: <strong>${p.employee}</strong> ${p.runtime ? `| Betriebsstunden: <strong>${p.runtime} Std.</strong>` : ''} | ID: ${p.id}</p>
                             </div>
                             <div class="flex gap-2">
                                 <button onclick="downloadProtocolPDF(${originalIdx})" class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-file-pdf"></i> PDF</button>
@@ -1557,6 +1557,7 @@
                             </div>
                         </div>
                         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">${pts}</div>
+                        ${p.runtime ? `<div class="text-xs text-sky-800 bg-sky-50 p-3 rounded-xl border border-sky-100"><strong>Erfasste Betriebsstunden:</strong> ${p.runtime} Std.</div>` : ''}
                         ${p.remarks ? `<div class="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl"><strong>Bemerkungen:</strong> ${p.remarks}</div>` : ''}
                         ${photosHtml ? `<div class="flex flex-wrap gap-2 pt-2">${photosHtml}</div>` : ''}
                     </div>
@@ -1579,13 +1580,15 @@
                         const { width, height } = firstPage.getSize();
                         const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
 
-                        // Overlay dynamic data onto custom template matching official ECB Blanko layout structure
                         firstPage.drawText(`Protokoll-ID: ${p.id}`, { x: 50, y: height - 55, size: 10, font, color: PDFLib.rgb(0, 0, 0) });
                         firstPage.drawText(`Maschine: ${p.machine}`, { x: 50, y: height - 72, size: 10, font, color: PDFLib.rgb(0, 0, 0) });
                         firstPage.drawText(`Techniker: ${p.employee}`, { x: 50, y: height - 89, size: 10, font, color: PDFLib.rgb(0, 0, 0) });
                         firstPage.drawText(`Datum & Uhrzeit: ${p.date}`, { x: 50, y: height - 106, size: 10, font, color: PDFLib.rgb(0, 0, 0) });
+                        if (p.runtime) {
+                            firstPage.drawText(`Betriebsstunden: ${p.runtime} Std.`, { x: 50, y: height - 123, size: 10, font, color: PDFLib.rgb(0, 0, 0) });
+                        }
 
-                        let textY = height - 136;
+                        let textY = height - 145;
                         (p.points || []).forEach((pt) => {
                             const statusText = pt.status.toUpperCase() === 'ERLEDIGT' ? 'ERLEDIGT (OK)' : 'NICHT IN ORDNUNG';
                             firstPage.drawText(`${pt.pointNumber}. ${pt.title}: ${statusText}`, { x: 50, y: textY, size: 9, font, color: PDFLib.rgb(0, 0, 0) });
@@ -1639,7 +1642,7 @@
                 doc.text('Wartungsprotokoll', 48, 23);
 
                 doc.setFillColor(241, 245, 249);
-                doc.roundedRect(15, 43, 180, 26, 3, 3, 'F');
+                doc.roundedRect(15, 43, 180, 28, 3, 3, 'F');
                 
                 doc.setTextColor(15, 23, 42);
                 doc.setFont('helvetica', 'bold');
@@ -1651,8 +1654,11 @@
                 doc.text(`Techniker: ${p.employee}`, 20, 57);
                 doc.text(`Datum & Uhrzeit: ${p.date}`, 115, 50);
                 doc.text(`Kategorie: ${p.category}`, 115, 57);
+                if (p.runtime) {
+                    doc.text(`Betriebsstunden: ${p.runtime} Std.`, 20, 64);
+                }
 
-                let startY = 76;
+                let startY = 78;
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(10);
                 doc.setTextColor(63, 98, 18);
