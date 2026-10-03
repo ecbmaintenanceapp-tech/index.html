@@ -102,22 +102,16 @@
                 <button type="submit" class="w-full py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Mitarbeiter anlegen</button>
             </form>
 
-            <!-- WARTUNG NACHTRAGEN (NEU) -->
-            <form onsubmit="handleBackdateMaintenance(event)" class="space-y-4 pb-6 border-b border-slate-100">
-                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-calendar-plus mr-1 text-sky-600"></i> Wartung nachträglich erfassen</h4>
+            <!-- WARTUNG NACHTRAGEN (STARTET VOLLES FORMULAR) -->
+            <form onsubmit="startBackdateForm(event)" class="space-y-4 pb-6 border-b border-slate-100">
+                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-calendar-plus mr-1 text-sky-600"></i> Vollständige Wartung nachtragen (mit Prüfpunkten &amp; Fotos)</h4>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Maschine / Anlage:</label>
-                    <select id="backdate-machine" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50 cursor-pointer">
-                        <option value="Waschmaschine 1 (Milnor)">Waschmaschine 1 (Milnor)</option>
-                        <option value="Waschmaschine 2 (Milnor)">Waschmaschine 2 (Milnor)</option>
-                        <option value="Waschmaschine 3 (Milnor)">Waschmaschine 3 (Milnor)</option>
-                        <option value="Waschmaschine 4 (Milnor)">Waschmaschine 4 (Milnor)</option>
-                        <option value="Trockner 1">Trockner 1</option>
-                        <option value="Trockner 2">Trockner 2</option>
-                        <option value="Trockner 3">Trockner 3</option>
-                        <option value="Trockner 4">Trockner 4</option>
-                        <option value="Kompressor (2-Wochen-Wartung)">Kompressor (2-Wochen-Wartung)</option>
-                        <option value="Kompressor (Jahreswartung)">Kompressor (Jahreswartung)</option>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Kategorie / Anlage:</label>
+                    <select id="backdate-category" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50 cursor-pointer">
+                        <option value="Waschmaschine">Waschmaschinen</option>
+                        <option value="Trockner">Trockner</option>
+                        <option value="Kompressor 2-Wochen">Kompressor Wartung (2-Wochen)</option>
+                        <option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option>
                     </select>
                 </div>
                 <div>
@@ -127,26 +121,11 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Durchführungsdatum &amp; Uhrzeit:</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Durchführungsdatum (Datum &amp; Uhrzeit):</label>
                     <input type="datetime-local" id="backdate-datetime" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50">
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Betriebsstunden (optional bei Kompressor):</label>
-                    <input type="number" id="backdate-runtime" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50" placeholder="z. B. 5000">
-                </div>
-                <button type="submit" class="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Nachträgliche Wartung speichern</button>
+                <button type="submit" class="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Wartungsformular mit diesem Datum starten</button>
             </form>
-
-            <div class="space-y-4 pb-6 border-b border-slate-100">
-                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-file-pdf mr-1 text-ecbGreen"></i> Offizielle PDF-Vorlage (Blanko) hochladen</h4>
-                <div class="flex items-center gap-3">
-                    <label class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold cursor-pointer transition">
-                        <i class="fa-solid fa-upload mr-1"></i> PDF-Vorlage auswählen
-                        <input type="file" accept="application/pdf" onchange="handleTemplateUpload(event)" class="hidden">
-                    </label>
-                    <span id="template-status-text" class="text-xs text-slate-500 italic">Keine eigene Vorlage hinterlegt</span>
-                </div>
-            </div>
 
             <div class="space-y-3">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-users-gear mr-1 text-sky-600"></i> Existierende Benutzer verwalten</h4>
@@ -209,7 +188,7 @@
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
                         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                        <span id="cloud-status-text">Cloud Synchronisiert</span>
+                        <span id="cloud-status-text">Cloud Live Synchronisiert</span>
                     </p>
                 </div>
             </div>
@@ -514,10 +493,11 @@
             { fullname: 'ECB Wartung', user: 'ECB_Wartung', pass: 'ECB1688!', active: true },
             { fullname: 'Max Wick', user: 'WickMa', pass: 'Brandenburg6', active: true }
         ]));
-        let customPdfTemplateBase64 = localStorage.getItem('ecb_custom_pdf_template') || null;
+        
         let activePhotos = [];
         let signaturePadInstance = null;
         let inactivityTimer = null;
+        let backdateContext = null; // Speichert gewählten Techniker und Datum beim Nachtragen
         const INACTIVITY_LIMIT = 5 * 60 * 1000;
 
         window.onload = async function() {
@@ -536,14 +516,14 @@
                     if (user) {
                         userId = user.uid;
                         document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                        document.getElementById('cloud-status-text').innerText = "Cloud Synchronisiert";
+                        document.getElementById('cloud-status-text').innerText = "Cloud Live Synchronisiert";
                         initFirestoreListeners();
                     }
                 });
             } catch (err) {
                 console.warn("Hybrid / Local fallback active:", err);
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Cloud Synchronisiert";
+                document.getElementById('cloud-status-text').innerText = "Cloud Live Synchronisiert";
                 updateUI();
             }
 
@@ -701,15 +681,15 @@
             showModal('Erfolg', `Mitarbeiter "${newUser}" (${fullname}) erfolgreich angelegt!`, true);
         }
 
-        window.handleBackdateMaintenance = async function(event) {
+        // STARTET DAS VOLLE WARTUNGSFORMULAR FÜR NACHTRÄGLICHE ERFASSUNG
+        window.startBackdateForm = function(event) {
             event.preventDefault();
-            const machineName = document.getElementById('backdate-machine').value;
+            const categoryKey = document.getElementById('backdate-category').value;
             const technician = document.getElementById('backdate-technician').value;
             const datetimeInput = document.getElementById('backdate-datetime').value;
-            const runtimeInput = document.getElementById('backdate-runtime').value;
 
-            if (!machineName || !technician || !datetimeInput) {
-                showModal('Fehler', 'Bitte alle Pflichtfelder ausfüllen.', false);
+            if (!categoryKey || !technician || !datetimeInput) {
+                showModal('Fehler', 'Bitte alle Felder für das Nachtragen ausfüllen.', false);
                 return;
             }
 
@@ -719,41 +699,21 @@
                 return;
             }
 
-            let categoryKey = 'Waschmaschine';
-            if (machineName.includes('Trockner')) categoryKey = 'Trockner';
-            else if (machineName.includes('2-Wochen')) categoryKey = 'Kompressor 2-Wochen';
-            else if (machineName.includes('Jahreswartung')) categoryKey = 'Kompressor Jahreswartung';
-
-            const backdatedProtocol = {
-                id: 'ECB-' + Math.floor(100000 + Math.random() * 900000),
-                category: categoryKey,
-                machine: machineName,
-                employee: technician,
-                runtime: runtimeInput || null,
-                date: maintenanceDate.toLocaleString('de-DE'),
-                timestamp: maintenanceDate.getTime(),
-                points: [
-                    { pointNumber: 1, title: 'Nachträglich erfasste Wartung', status: 'erledigt' },
-                    { pointNumber: 2, title: 'Prüfpunkte vollzogen', status: 'erledigt' }
-                ],
-                remarks: 'Nachträglich durch Administrator erfasst.',
-                photos: [],
-                signature: null
+            // Kontext speichern, damit bei submitProtocol() dieses Datum und dieser Techniker verwendet werden
+            backdateContext = {
+                technician: technician,
+                dateObj: maintenanceDate,
+                dateString: maintenanceDate.toLocaleString('de-DE'),
+                timestamp: maintenanceDate.getTime()
             };
 
-            protocols.unshift(backdatedProtocol);
-            protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-            localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
-
-            try {
-                if (db && userId) {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'), backdatedProtocol);
-                }
-            } catch(e) { console.error("Cloud backdate save error:", e); }
-
-            updateUI();
             closeRegisterModal();
-            showModal('Erfolg', `Wartung für "${machineName}" am ${maintenanceDate.toLocaleDateString('de-DE')} erfolgreich nachträglich eingetragen!`, true);
+
+            // Formular je nach Kategorie öffnen
+            if (categoryKey === 'Waschmaschine') openWashingMachineMenu();
+            else if (categoryKey === 'Trockner') openDryerMenu();
+            else if (categoryKey === 'Kompressor 2-Wochen') openCompressorRoutine();
+            else if (categoryKey === 'Kompressor Jahreswartung') openCompressorAnnual();
         }
 
         function populateBackdateTechnicians() {
@@ -765,19 +725,6 @@
                 html += `<option value="${name}">${name} (${u.user})</option>`;
             });
             selectEl.innerHTML = html;
-        }
-
-        window.handleTemplateUpload = function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                customPdfTemplateBase64 = e.target.result;
-                localStorage.setItem('ecb_custom_pdf_template', customPdfTemplateBase64);
-                document.getElementById('template-status-text').innerText = "Eigene PDF-Vorlage hinterlegt ✔";
-                showModal('Erfolg', 'Eigene PDF-Vorlage erfolgreich hochgeladen und gespeichert!', true);
-            }
-            reader.readAsDataURL(file);
         }
 
         window.toggleUserActive = function(index) {
@@ -992,15 +939,20 @@
         }
 
         function renderCommonHeaderFields() {
-            const currentFullName = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
+            const loggedInName = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
+            // Falls ein Backdate-Kontext aktiv ist, diesen Techniker voreintragen
+            const activeTechnician = backdateContext ? backdateContext.technician : loggedInName;
+            const isBackdating = backdateContext !== null;
+
             return `
                 <div class="p-6 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-4 mb-8 shadow-sm">
                     <div class="flex items-center gap-2 text-ecbDarkGreen font-bold text-sm border-b border-slate-200 pb-3">
                         <i class="fa-solid fa-user-shield text-base"></i> Mitarbeiter-Authentifizierung &amp; Zeitstempel
+                        ${isBackdating ? '<span class="ml-auto bg-sky-100 text-sky-800 px-2.5 py-1 rounded-lg text-xs">Nachtragungsmodus aktiv</span>' : ''}
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-800 mb-1.5">Name des zuständigen Technikers:</label>
-                        <input type="text" id="employee-name" required value="${currentFullName}" readonly class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-slate-100 text-slate-700 shadow-sm font-bold cursor-not-allowed">
+                        <input type="text" id="employee-name" required value="${activeTechnician}" ${isBackdating ? '' : 'readonly'} class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-slate-100 text-slate-700 shadow-sm font-bold ${isBackdating ? 'bg-white' : 'cursor-not-allowed'}">
                     </div>
                 </div>
             `;
@@ -1301,22 +1253,29 @@
                 pointsData.push({ pointNumber: idx + 1, title: titleText, status: r.value });
             });
 
-            const now = new Date();
+            // Wenn Backdate aktiv ist, verwenden wir das gewählte Datum & Techniker
+            const protocolDate = backdateContext ? backdateContext.dateString : new Date().toLocaleString('de-DE');
+            const protocolTimestamp = backdateContext ? backdateContext.timestamp : new Date().getTime();
+
             const protocol = {
                 id: 'ECB-' + Math.floor(100000 + Math.random() * 900000),
                 category: categoryKey,
                 machine: machineName,
                 employee: employeeName,
                 runtime: runtimeHours,
-                date: now.toLocaleString('de-DE'),
-                timestamp: now.getTime(),
+                date: protocolDate,
+                timestamp: protocolTimestamp,
                 points: pointsData,
                 remarks: remarks,
                 photos: [...activePhotos],
                 signature: signaturePadInstance.canvas.toDataURL()
             };
 
+            // Zurücksetzen des Nachtragungsmodus nach erfolgreichem Absenden
+            backdateContext = null;
+
             protocols.unshift(protocol);
+            protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
             localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
 
             try {
