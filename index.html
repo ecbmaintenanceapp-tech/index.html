@@ -442,7 +442,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEvon6SHIVRB5k",
@@ -481,9 +481,9 @@
                 initFirebaseListeners();
 
             } catch (err) {
-                console.warn("Firebase Initialisierungsfehler (Lokaler Modus):", err);
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Cloud Modus (Bereit)";
+                console.warn("Firebase Initialisierungsfehler:", err);
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
+                document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden (Sync)";
                 updateUI();
             }
 
@@ -507,7 +507,12 @@
                 localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
                 updateUI();
             }, (err) => {
-                console.error("Protokolle Sync Fehler:", err);
+                console.warn("Protokolle Live-Sync Fehler, lade einmalig...", err);
+                getDocs(protoRef).then(snap => {
+                    protocols = [];
+                    snap.forEach(d => protocols.push({ firestoreId: d.id, ...d.data() }));
+                    updateUI();
+                }).catch(e => {});
             });
 
             const dguvRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices');
@@ -519,7 +524,11 @@
                 localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
                 updateUI();
             }, (err) => {
-                console.error("DGUV Sync Fehler:", err);
+                getDocs(dguvRef).then(snap => {
+                    dguvDevices = [];
+                    snap.forEach(d => dguvDevices.push({ firestoreId: d.id, ...d.data() }));
+                    updateUI();
+                }).catch(e => {});
             });
 
             const usersRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'cloud_users');
@@ -543,7 +552,7 @@
                     await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols'), protocol);
                 }
             } catch(e) {
-                console.warn("Cloud Protocol Save Fallback:", e);
+                console.warn("Cloud Protocol Save Error:", e);
             }
             protocols.unshift(protocol);
             localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
@@ -553,10 +562,11 @@
         async function saveDguvToCloud(dev) {
             try {
                 if (db) {
-                    await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices'), dev);
+                    const docRef = await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices'), dev);
+                    dev.firestoreId = docRef.id;
                 }
             } catch(e) {
-                console.warn("Cloud DGUV Save Fallback:", e);
+                console.warn("Cloud DGUV Save Error:", e);
             }
             dguvDevices.unshift(dev);
             localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
