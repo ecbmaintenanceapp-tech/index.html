@@ -467,24 +467,8 @@
         </div>
     </div>
 
-    <!-- FIREBASE & APP SCRIPT -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-maintenance';
-        
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEvon6SHIVRB5k",
-            authDomain: "ecb-maintenance.firebaseapp.com",
-            projectId: "ecb-maintenance",
-            storageBucket: "ecb-maintenance.appspot.com",
-            messagingSenderId: "229926423123",
-            appId: "1:229926423123:web:a309c14c708fc88c62d4a6"
-        };
-
-        let app, db, auth, userId = null;
+    <!-- APP SCRIPT WITH GLOBAL CLOUD RELAY SYNC -->
+    <script>
         let protocols = [];
         let dguvDevices = [];
         let cloudUsers = JSON.parse(localStorage.getItem('ecb_cloud_users_all') || JSON.stringify([
@@ -497,35 +481,11 @@
         let inactivityTimer = null;
         let backdateContext = null;
         const INACTIVITY_LIMIT = 5 * 60 * 1000;
+        const CLOUD_BIN_ID = 'ecb_maintenance_global_store_v2';
 
         window.onload = async function() {
-            try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
-                        document.getElementById('cloud-status-text').innerText = "Cloud Synchronisiert";
-                        await initCloudSync();
-                    }
-                });
-            } catch (err) {
-                console.warn("Hybrid Cloud Mode Active:", err);
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Cloud Synchronisiert";
-                protocols = JSON.parse(localStorage.getItem('ecb_protocols_all') || '[]');
-                dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_all') || '[]');
-                updateUI();
-            }
+            await fetchCloudData();
+            setInterval(fetchCloudData, 4000); // Auto-sync across devices every 4 seconds
 
             if (localStorage.getItem('ecb_logged_in') === 'true') {
                 document.getElementById('login-screen').classList.add('hidden');
@@ -534,44 +494,54 @@
             }
         }
 
-        async function initCloudSync() {
-            if (!db) return;
+        async function fetchCloudData() {
             try {
-                // Fetch initial & subscribe to real-time updates for protocols
-                const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
-                onSnapshot(protocolsCol, (snapshot) => {
-                    protocols = [];
-                    snapshot.forEach(docSnap => {
-                        protocols.push({ firestoreId: docSnap.id, ...docSnap.data() });
-                    });
-                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                    localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
-                    updateUI();
-                }, (err) => {
-                    console.error("Protocols sync error, using local fallback:", err);
-                    protocols = JSON.parse(localStorage.getItem('ecb_protocols_all') || '[]');
-                    updateUI();
+                const res = await fetch(`https://json.extendsclass.com/bin/${CLOUD_BIN_ID}`, {
+                    headers: { 'Security-Token': 'ecb_secure_2026' }
                 });
-
-                // Fetch initial & subscribe to real-time updates for DGUV devices
-                const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
-                onSnapshot(dguvCol, (snapshot) => {
-                    dguvDevices = [];
-                    snapshot.forEach(docSnap => {
-                        dguvDevices.push({ firestoreId: docSnap.id, ...docSnap.data() });
-                    });
-                    localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-                    updateUI();
-                }, (err) => {
-                    console.error("DGUV sync error, using local fallback:", err);
-                    dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_all') || '[]');
-                    updateUI();
-                });
-            } catch(e) {
-                console.warn("Cloud sync initialization fallback:", e);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.protocols) {
+                        protocols = data.protocols;
+                        localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
+                    }
+                    if (data && data.dguvDevices) {
+                        dguvDevices = data.dguvDevices;
+                        localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+                    }
+                    if (data && data.cloudUsers) {
+                        cloudUsers = data.cloudUsers;
+                        localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
+                    }
+                    document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
+                    document.getElementById('cloud-status-text').innerText = "Live Cloud Synchronisiert";
+                }
+            } catch (err) {
                 protocols = JSON.parse(localStorage.getItem('ecb_protocols_all') || '[]');
                 dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_all') || '[]');
-                updateUI();
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Lokaler Sync Modus";
+            }
+            updateUI();
+        }
+
+        async function pushCloudData() {
+            const payload = { protocols, dguvDevices, cloudUsers };
+            localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
+            localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+            localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
+
+            try {
+                await fetch(`https://json.extendsclass.com/bin/${CLOUD_BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Security-Token': 'ecb_secure_2026'
+                    },
+                    body: JSON.stringify(payload)
+                });
+            } catch(e) {
+                console.warn("Cloud push warning:", e);
             }
         }
 
@@ -587,7 +557,7 @@
             localStorage.removeItem('ecb_logged_in');
             localStorage.removeItem('ecb_current_user');
             localStorage.removeItem('ecb_current_fullname');
-            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('login-screen').classList.add('hidden');
             showModal('Inaktivität', 'Sie wurden nach 5 Minuten Inaktivität automatisch abgemeldet.', false);
         }
 
@@ -653,7 +623,7 @@
             document.getElementById('modal-password').classList.add('hidden');
         }
 
-        window.handleChangePassword = function(event) {
+        window.handleChangePassword = async function(event) {
             event.preventDefault();
             const newPass = document.getElementById('new-pass').value.trim();
             const currentUser = localStorage.getItem('ecb_current_user');
@@ -662,13 +632,13 @@
             const userObj = cloudUsers.find(u => u.user === currentUser);
             if (userObj) {
                 userObj.pass = newPass;
-                localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
+                await pushCloudData();
             }
             closePasswordModal();
             showModal('Erfolg', 'Ihr Passwort wurde erfolgreich geändert!', true);
         }
 
-        window.handleRegister = function(event) {
+        window.handleRegister = async function(event) {
             event.preventDefault();
             const fullname = document.getElementById('reg-fullname').value.trim();
             const newUser = document.getElementById('reg-user').value.trim();
@@ -681,7 +651,7 @@
             document.getElementById('reg-error').classList.add('hidden');
 
             cloudUsers.push({ fullname, user: newUser, pass: newPass, active: true });
-            localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
+            await pushCloudData();
 
             document.getElementById('reg-fullname').value = '';
             document.getElementById('reg-user').value = '';
@@ -734,19 +704,19 @@
             selectEl.innerHTML = html;
         }
 
-        window.toggleUserActive = function(index) {
+        window.toggleUserActive = async function(index) {
             if (cloudUsers[index].user === 'ECB_Wartung') return;
             cloudUsers[index].active = !cloudUsers[index].active;
-            localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
+            await pushCloudData();
             renderAdminUserList();
             populateBackdateTechnicians();
         }
 
-        window.deleteUserRecord = function(index) {
+        window.deleteUserRecord = async function(index) {
             if (cloudUsers[index].user === 'ECB_Wartung') return;
             if (!confirm(`Benutzer wirklich löschen?`)) return;
             cloudUsers.splice(index, 1);
-            localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
+            await pushCloudData();
             renderAdminUserList();
             populateBackdateTechnicians();
         }
@@ -1278,16 +1248,8 @@
 
             backdateContext = null;
 
-            try {
-                if (db && userId) {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'), protocol);
-                }
-            } catch (err) {
-                console.warn("Firestore sync warning, saving to local state:", err);
-            }
-
             protocols.unshift(protocol);
-            localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
+            await pushCloudData();
 
             generatePDF(protocol);
             updateUI();
@@ -1315,23 +1277,15 @@
                 protocolHistory: []
             };
 
-            try {
-                if (db && userId) {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), newDev);
-                }
-            } catch (err) {
-                console.warn("Firestore DGUV save warning:", err);
-            }
-
             dguvDevices.unshift(newDev);
-            localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+            await pushCloudData();
 
             closeDguvModal();
             updateUI();
             showModal('Erfolg', 'Gerät erfolgreich erfasst!', true);
         }
 
-        window.handleProtocolUpload = async function(event, deviceId, firestoreId) {
+        window.handleProtocolUpload = async function(event, deviceId) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -1342,26 +1296,12 @@
                     fileData: e.target.result
                 };
 
-                if (db && userId && firestoreId) {
-                    try {
-                        const dev = dguvDevices.find(d => d.firestoreId === firestoreId);
-                        if (dev) {
-                            const history = dev.protocolHistory || [];
-                            history.unshift(newHistoryItem);
-                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId), {
-                                status: 'Erledigt',
-                                protocolHistory: history
-                            });
-                        }
-                    } catch(err) { console.warn(err); }
-                }
-
-                const devLocal = dguvDevices.find(d => d.id === deviceId || d.firestoreId === firestoreId);
+                const devLocal = dguvDevices.find(d => d.id === deviceId);
                 if (devLocal) {
                     if (!devLocal.protocolHistory) devLocal.protocolHistory = [];
                     devLocal.protocolHistory.unshift(newHistoryItem);
                     devLocal.status = 'Erledigt';
-                    localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+                    await pushCloudData();
                 }
 
                 updateUI();
@@ -1371,7 +1311,7 @@
         }
 
         window.openDguvHistory = function(deviceId) {
-            const dev = dguvDevices.find(d => d.id === deviceId || d.firestoreId === deviceId);
+            const dev = dguvDevices.find(d => d.id === deviceId);
             if (!dev) return;
             document.getElementById('dguv-history-title').innerText = dev.name;
             document.getElementById('dguv-history-subtitle').innerText = `Inventar-Nr.: ${dev.inventoryNumber} | Standort: ${dev.location}`;
@@ -1403,29 +1343,15 @@
             document.getElementById('modal-dguv-history').classList.add('hidden');
         }
 
-        window.deleteDguvDevice = async function(firestoreId, index) {
-            try {
-                if (db && userId && firestoreId) {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId));
-                }
-            } catch (err) {
-                console.warn(err);
-            }
+        window.deleteDguvDevice = async function(index) {
             dguvDevices.splice(index, 1);
-            localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+            await pushCloudData();
             updateUI();
         }
 
-        window.deleteProtocol = async function(firestoreId, index) {
-            try {
-                if (db && userId && firestoreId) {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', firestoreId));
-                }
-            } catch (err) {
-                console.warn(err);
-            }
+        window.deleteProtocol = async function(index) {
             protocols.splice(index, 1);
-            localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
+            await pushCloudData();
             updateUI();
         }
 
@@ -1436,19 +1362,8 @@
                 return;
             }
             if (confirm('Verlauf wirklich löschen?')) {
-                try {
-                    if (db && userId) {
-                        for (let p of protocols) {
-                            if (p.firestoreId) {
-                                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.firestoreId));
-                            }
-                        }
-                    }
-                } catch (err) {
-                    console.warn(err);
-                }
                 protocols = [];
-                localStorage.removeItem('ecb_protocols_all');
+                await pushCloudData();
                 updateUI();
                 showModal('Erfolg', 'Verlauf geleert.', true);
             }
@@ -1510,7 +1425,7 @@
             }
 
             let html = '';
-            filtered.forEach((p) => {
+            filtered.forEach((p, idx) => {
                 let pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b border-slate-100"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
                 let photosHtml = (p.photos || []).map(ph => `<img src="${ph}" class="w-16 h-16 object-cover rounded-xl border border-slate-200">`).join('');
                 html += `
@@ -1523,7 +1438,7 @@
                             </div>
                             <div class="flex gap-2">
                                 <button onclick='downloadProtocolPDF(${JSON.stringify(p)})' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-                                <button onclick="deleteProtocol('${p.firestoreId || ''}')" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="deleteProtocol(${idx})" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
                         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">${pts}</div>
@@ -1670,18 +1585,18 @@
                             <div>
                                 <div class="flex justify-between items-start">
                                     <span class="px-3 py-1 rounded-full text-xs font-bold ${isDone ? 'bg-emerald-50 text-ecbGreen' : 'bg-amber-50 text-amber-600'}">${dev.status}</span>
-                                    <button onclick="deleteDguvDevice('${dev.firestoreId || ''}', ${idx})" class="text-red-500 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                    <button onclick="deleteDguvDevice(${idx})" class="text-red-500 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                                 </div>
-                                <h3 onclick="openDguvHistory('${dev.firestoreId || dev.id}')" class="text-xl font-bold text-slate-900 mt-2 hover:text-sky-600 cursor-pointer transition">${dev.name} <i class="fa-solid fa-clock-rotate-left text-xs text-slate-400 ml-1"></i></h3>
+                                <h3 onclick="openDguvHistory('${dev.id}')" class="text-xl font-bold text-slate-900 mt-2 hover:text-sky-600 cursor-pointer transition">${dev.name} <i class="fa-solid fa-clock-rotate-left text-xs text-slate-400 ml-1"></i></h3>
                                 <p class="text-xs font-bold text-sky-700 mt-0.5"><i class="fa-solid fa-barcode mr-1"></i> Inventar-Nr.: ${dev.inventoryNumber}</p>
                                 <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-sky-600 mr-1"></i> ${dev.location}</p>
                                 <p class="text-xs text-slate-500 mt-1"><i class="fa-regular fa-calendar-days text-sky-600 mr-1"></i> Fällig: ${dev.dueDate}</p>
-                                ${historyCount > 0 ? `<div class="mt-2"><button onclick="openDguvHistory('${dev.firestoreId || dev.id}')" class="text-xs text-sky-700 hover:underline font-bold"><i class="fa-solid fa-folder-open mr-1"></i> ${historyCount} Protokoll(e)</button></div>` : ''}
+                                ${historyCount > 0 ? `<div class="mt-2"><button onclick="openDguvHistory('${dev.id}')" class="text-xs text-sky-700 hover:underline font-bold"><i class="fa-solid fa-folder-open mr-1"></i> ${historyCount} Protokoll(e)</button></div>` : ''}
                             </div>
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2">
                                 <label class="w-full py-2 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                                     <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Protokoll hochladen
-                                    <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.id}', '${dev.firestoreId || ''}')" class="hidden">
+                                    <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.id}')" class="hidden">
                                 </label>
                             </div>
                         </div>
@@ -1694,3 +1609,5 @@
     </script>
 </body>
 </html>
+```
+eof
