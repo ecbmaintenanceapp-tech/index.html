@@ -461,6 +461,9 @@
         const INACTIVITY_LIMIT = 5 * 60 * 1000;
 
         window.onload = async function() {
+            loadLocalCache();
+            updateUI();
+
             try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
@@ -483,26 +486,24 @@
                 checkAdminNav();
                 resetInactivityTimer();
             }
-            loadLocalCache();
-            updateUI();
         }
 
         function loadLocalCache() {
             try {
-                const savedProtos = localStorage.getItem('ecb_protocols_all_v4');
+                const savedProtos = localStorage.getItem('ecb_protocols_all_v5');
                 if (savedProtos) protocols = JSON.parse(savedProtos);
-                const savedDevs = localStorage.getItem('ecb_dguv_devices_all_v4');
+                const savedDevs = localStorage.getItem('ecb_dguv_devices_all_v5');
                 if (savedDevs) dguvDevices = JSON.parse(savedDevs);
-                const savedUsers = localStorage.getItem('ecb_cloud_users_all_v4');
+                const savedUsers = localStorage.getItem('ecb_cloud_users_all_v5');
                 if (savedUsers) cloudUsers = JSON.parse(savedUsers);
             } catch(e) {}
         }
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_all_v4', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_devices_all_v4', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_cloud_users_all_v4', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_all_v5', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_devices_all_v5', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_cloud_users_all_v5', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
@@ -515,8 +516,14 @@
                     snapshot.forEach(docSnap => {
                         remote.push({ firestoreId: docSnap.id, ...docSnap.data() });
                     });
-                    if (remote.length > 0 || protocols.length === 0) {
-                        protocols = remote;
+                    if (remote.length > 0) {
+                        // Merge intelligent ohne lokale Neuanlagen zu löschen
+                        const existingIds = new Set(protocols.map(p => p.id + p.timestamp));
+                        remote.forEach(r => {
+                            if (!existingIds.has(r.id + r.timestamp)) {
+                                protocols.push(r);
+                            }
+                        });
                         protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                         saveLocalCache();
                         updateUI();
@@ -529,7 +536,7 @@
                     snapshot.forEach(docSnap => {
                         remoteDevs.push({ firestoreId: docSnap.id, ...docSnap.data() });
                     });
-                    if (remoteDevs.length > 0 || dguvDevices.length === 0) {
+                    if (remoteDevs.length > 0) {
                         dguvDevices = remoteDevs;
                         saveLocalCache();
                         updateUI();
@@ -566,7 +573,7 @@
         }
 
         async function saveProtocolToCloud(protocol) {
-            // Sofort lokal einreihen und speichern
+            // Unmittelbar vorne einreihen und lokal abspeichern
             protocols.unshift(protocol);
             saveLocalCache();
             updateUI();
@@ -578,7 +585,7 @@
                     saveLocalCache();
                 }
             } catch(e) {
-                console.warn("Firestore Protokoll Schreibfehler (lokal aktiv):", e);
+                console.warn("Firestore Protokoll Schreibfehler (lokal persistent aktiv):", e);
             }
             updateUI();
         }
@@ -595,7 +602,7 @@
                     saveLocalCache();
                 }
             } catch(e) {
-                console.warn("Firestore DGUV Schreibfehler (lokal aktiv):", e);
+                console.warn("Firestore DGUV Schreibfehler (lokal persistent aktiv):", e);
             }
             updateUI();
         }
@@ -1338,10 +1345,10 @@
 
             backdateContext = null;
 
-            // 1. Zuerst speichern und UI aktualisieren
+            // Sofort lokal und persistent speichern
             await saveProtocolToCloud(protocol);
 
-            // 2. Dann PDF erzeugen und herunterladen
+            // PDF generieren und herunterladen
             generatePDF(protocol);
 
             showModal('Erfolg', 'Wartungsprotokoll erfolgreich gespeichert & PDF erstellt!', true);
