@@ -149,25 +149,6 @@
         </div>
     </div>
 
-    <!-- DGUV HISTORY MODAL -->
-    <div id="modal-dguv-history" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
-        <div class="bg-white rounded-3xl max-w-xl w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-4">
-                <div>
-                    <h3 id="dguv-history-title" class="text-xl font-extrabold text-slate-900">Geräte-Prüfprotokolle</h3>
-                    <p id="dguv-history-subtitle" class="text-xs text-sky-700 font-bold mt-0.5"></p>
-                </div>
-                <button onclick="closeDguvHistoryModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <div class="space-y-4">
-                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-clock-rotate-left mr-1 text-sky-600"></i> Historie aller Messprotokolle</h4>
-                <div id="dguv-history-list" class="space-y-3 max-h-96 overflow-y-auto pr-1"></div>
-            </div>
-        </div>
-    </div>
-
     <!-- HEADER NAVIGATION -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
@@ -184,7 +165,7 @@
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
                         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Verbinde mit Firebase...</span>
+                        <span id="cloud-status-text">Verbinde mit Firebase Cloud...</span>
                     </p>
                 </div>
             </div>
@@ -234,7 +215,6 @@
 
             <!-- Category Cards Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Waschmaschinen -->
                 <div onclick="openWashingMachineMenu()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-ecbGreen hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Waschmaschine" class="absolute top-4 right-4"></div>
                     <div>
@@ -253,7 +233,6 @@
                     </div>
                 </div>
 
-                <!-- Trockner -->
                 <div onclick="openDryerMenu()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-amber-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Trockner" class="absolute top-4 right-4"></div>
                     <div>
@@ -272,7 +251,6 @@
                     </div>
                 </div>
 
-                <!-- Kompressor Routine -->
                 <div onclick="openCompressorRoutine()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-sky-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor 2-Wochen" class="absolute top-4 right-4"></div>
                     <div>
@@ -291,7 +269,6 @@
                     </div>
                 </div>
 
-                <!-- Kompressor Jahreswartung -->
                 <div onclick="openCompressorAnnual()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-purple-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor Jahreswartung" class="absolute top-4 right-4"></div>
                     <div>
@@ -461,13 +438,12 @@
         </div>
     </div>
 
-    <!-- FIREBASE SDK SCRIPTS -->
+    <!-- FIREBASE & APP SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Exakte Firebase-Konfiguration aus Ihren Screenshots (Projekt ecb-maintenance)
         const firebaseConfig = {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEvon6SHIVRB5k",
             authDomain: "ecb-maintenance.firebaseapp.com",
@@ -497,17 +473,11 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
 
-                // Authentifizierung mit Fallback
-                try {
-                    await signInAnonymously(auth);
-                } catch(authErr) {
-                    console.warn("Anonyme Anmeldung fehlgeschlagen:", authErr);
-                }
+                await signInAnonymously(auth);
 
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
-                document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden";
+                document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden (Live Sync)";
 
-                // Echtzeit-Listener für Firestore (Öffentliche Sammlungen)
                 initFirebaseListeners();
 
             } catch (err) {
@@ -527,7 +497,6 @@
         function initFirebaseListeners() {
             if (!db) return;
 
-            // Protokolle Listener
             const protoRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols');
             onSnapshot(protoRef, (snapshot) => {
                 protocols = [];
@@ -542,7 +511,6 @@
                 loadLocalFallback();
             });
 
-            // DGUV Geräte Listener
             const dguvRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices');
             onSnapshot(dguvRef, (snapshot) => {
                 dguvDevices = [];
@@ -555,7 +523,6 @@
                 console.error("DGUV Sync Fehler:", err);
             });
 
-            // Benutzer Listener
             const usersRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'cloud_users');
             onSnapshot(usersRef, (snapshot) => {
                 if (!snapshot.empty) {
@@ -568,7 +535,6 @@
                         localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
                     }
                 } else {
-                    // Initialisiere Standardbenutzer in Firestore falls leer
                     cloudUsers.forEach(async (u) => {
                         try {
                             await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'cloud_users'), u);
@@ -617,7 +583,9 @@
                 if (db && firestoreId) {
                     await deleteDoc(doc(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols', firestoreId));
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.warn("Firestore Protocol Delete Error:", e);
+            }
             protocols.splice(index, 1);
             localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
             updateUI();
@@ -634,7 +602,6 @@
             updateUI();
         }
 
-        // --- INACTIVITY & AUTH LOGIC ---
         function resetInactivityTimer() {
             if (localStorage.getItem('ecb_logged_in') !== 'true') return;
             clearTimeout(inactivityTimer);
@@ -1533,6 +1500,9 @@
 
             let html = '';
             filtered.forEach((p, idx) => {
+                let actualGlobalIndex = protocols.findIndex(item => item.id === p.id && item.timestamp === p.timestamp);
+                if (actualGlobalIndex === -1) actualGlobalIndex = idx;
+
                 let pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b border-slate-100"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
                 let photosHtml = (p.photos || []).map(ph => `<img src="${ph}" class="w-16 h-16 object-cover rounded-xl border border-slate-200">`).join('');
                 html += `
@@ -1545,7 +1515,7 @@
                             </div>
                             <div class="flex gap-2">
                                 <button onclick='downloadProtocolPDF(${JSON.stringify(p)})' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-                                <button onclick="deleteProtocol(${idx})" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="deleteProtocol(${actualGlobalIndex})" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
                         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">${pts}</div>
@@ -1583,7 +1553,7 @@
                 doc.text('Wartungsprotokoll', 48, 23);
 
                 doc.setFillColor(241, 245, 249);
-                doc.roundedRect(15, 43, 180, p.runtime ? 32 : 26, 3, 3, 'F');
+                doc.roundedRect(15, 43, 180, 28, 3, 3, 'F');
                 
                 doc.setTextColor(15, 23, 42);
                 doc.setFont('helvetica', 'bold');
@@ -1602,7 +1572,7 @@
                     doc.text(`Kategorie: ${p.category}`, 20, 64);
                 }
 
-                let startY = p.runtime ? 84 : 78;
+                let startY = 78;
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(10);
                 doc.setTextColor(63, 98, 18);
