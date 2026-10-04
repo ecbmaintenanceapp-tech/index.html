@@ -43,7 +43,6 @@
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
-    <!-- LOGIN SCREEN -->
     <div id="login-screen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 space-y-6 animate-fade-in">
             <div class="text-center space-y-2">
@@ -73,7 +72,6 @@
         </div>
     </div>
 
-    <!-- ADMIN & BACKDATE MODAL -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -130,7 +128,6 @@
         </div>
     </div>
 
-    <!-- PASSWORD CHANGE MODAL -->
     <div id="modal-password" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -149,7 +146,6 @@
         </div>
     </div>
 
-    <!-- HEADER NAVIGATION -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
@@ -165,7 +161,7 @@
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
                         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Cloud Synchronisiert &amp; Aktiv</span>
+                        <span id="cloud-status-text">Firebase Cloud Verbunden (Live Sync)</span>
                     </p>
                 </div>
             </div>
@@ -192,7 +188,6 @@
         </div>
     </header>
 
-    <!-- MAIN CONTAINER -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
 
         <!-- Dashboard Tab -->
@@ -395,7 +390,6 @@
 
     </main>
 
-    <!-- DGUV MODAL -->
     <div id="modal-dguv" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -438,7 +432,6 @@
         </div>
     </div>
 
-    <!-- FIREBASE & CLOUD SYNC ENGINE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -496,20 +489,20 @@
 
         function loadLocalCache() {
             try {
-                const savedProtos = localStorage.getItem('ecb_protocols_all');
+                const savedProtos = localStorage.getItem('ecb_protocols_all_v3');
                 if (savedProtos) protocols = JSON.parse(savedProtos);
-                const savedDevs = localStorage.getItem('ecb_dguv_devices_all');
+                const savedDevs = localStorage.getItem('ecb_dguv_devices_all_v3');
                 if (savedDevs) dguvDevices = JSON.parse(savedDevs);
-                const savedUsers = localStorage.getItem('ecb_cloud_users_all');
+                const savedUsers = localStorage.getItem('ecb_cloud_users_all_v3');
                 if (savedUsers) cloudUsers = JSON.parse(savedUsers);
             } catch(e) {}
         }
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_all_v3', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_devices_all_v3', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_cloud_users_all_v3', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
