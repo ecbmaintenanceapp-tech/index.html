@@ -1377,39 +1377,6 @@
             reader.readAsDataURL(file);
         }
 
-        window.openDguvHistory = function(deviceId) {
-            const dev = dguvDevices.find(d => d.id === deviceId);
-            if (!dev) return;
-            document.getElementById('dguv-history-title').innerText = dev.name;
-            document.getElementById('dguv-history-subtitle').innerText = `Inventar-Nr.: ${dev.inventoryNumber} | Standort: ${dev.location}`;
-
-            const listContainer = document.getElementById('dguv-history-list');
-            let historyHtml = '';
-            if (!dev.protocolHistory || dev.protocolHistory.length === 0) {
-                historyHtml = `<div class="p-4 bg-slate-50 rounded-xl text-center text-xs text-slate-500">Noch keine Messprotokolle hochgeladen.</div>`;
-            } else {
-                dev.protocolHistory.forEach(item => {
-                    historyHtml += `
-                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
-                            <div>
-                                <strong class="text-xs text-slate-800 block"><i class="fa-solid fa-file-pdf text-red-500 mr-1"></i> ${item.fileName}</strong>
-                                <span class="text-[11px] text-slate-500">Hochgeladen am: ${item.date}</span>
-                            </div>
-                            <a href="${item.fileData}" download="${item.fileName}" class="px-3 py-1.5 bg-sky-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5">
-                                <i class="fa-solid fa-download"></i> Herunterladen
-                            </a>
-                        </div>
-                    `;
-                });
-            }
-            listContainer.innerHTML = historyHtml;
-            document.getElementById('modal-dguv-history').classList.remove('hidden');
-        }
-
-        window.closeDguvHistoryModal = function() {
-            document.getElementById('modal-dguv-history').classList.add('hidden');
-        }
-
         window.deleteDguvDevice = async function(index) {
             const dev = dguvDevices[index];
             await removeDguvFromCloud(dev.firestoreId, index);
@@ -1656,7 +1623,6 @@
             } else {
                 dguvDevices.forEach((dev, idx) => {
                     const isDone = dev.status === 'Erledigt';
-                    const historyCount = dev.protocolHistory ? dev.protocolHistory.length : 0;
                     html += `
                         <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-4 shadow-sm flex flex-col justify-between">
                             <div>
@@ -1664,11 +1630,10 @@
                                     <span class="px-3 py-1 rounded-full text-xs font-bold ${isDone ? 'bg-emerald-50 text-ecbGreen' : 'bg-amber-50 text-amber-600'}">${dev.status}</span>
                                     <button onclick="deleteDguvDevice(${idx})" class="text-red-500 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                                 </div>
-                                <h3 onclick="openDguvHistory('${dev.id}')" class="text-xl font-bold text-slate-900 mt-2 hover:text-sky-600 cursor-pointer transition">${dev.name} <i class="fa-solid fa-clock-rotate-left text-xs text-slate-400 ml-1"></i></h3>
+                                <h3 class="text-xl font-bold text-slate-900 mt-2">${dev.name}</h3>
                                 <p class="text-xs font-bold text-sky-700 mt-0.5"><i class="fa-solid fa-barcode mr-1"></i> Inventar-Nr.: ${dev.inventoryNumber}</p>
                                 <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-sky-600 mr-1"></i> ${dev.location}</p>
                                 <p class="text-xs text-slate-500 mt-1"><i class="fa-regular fa-calendar-days text-sky-600 mr-1"></i> Fällig: ${dev.dueDate}</p>
-                                ${historyCount > 0 ? `<div class="mt-2"><button onclick="openDguvHistory('${dev.id}')" class="text-xs text-sky-700 hover:underline font-bold"><i class="fa-solid fa-folder-open mr-1"></i> ${historyCount} Protokoll(e)</button></div>` : ''}
                             </div>
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2">
                                 <label class="w-full py-2 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 flex items-center justify-center gap-2 cursor-pointer shadow-sm">
@@ -1686,3 +1651,5 @@
     </script>
 </body>
 </html>
+```
+eof
