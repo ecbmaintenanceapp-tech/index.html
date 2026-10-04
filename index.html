@@ -497,7 +497,7 @@
         let activePhotos = [];
         let signaturePadInstance = null;
         let inactivityTimer = null;
-        let backdateContext = null; // Speichert gewählten Techniker, Datum und Uhrzeit beim Nachtragen
+        let backdateContext = null;
         const INACTIVITY_LIMIT = 5 * 60 * 1000;
 
         window.onload = async function() {
@@ -537,13 +537,14 @@
         function initFirestoreListeners() {
             if (!db) return;
 
+            // REALTIME CLOUD SYNC FOR PROTOCOLS ACROSS ALL DEVICES
             const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
             onSnapshot(protocolsCol, (snapshot) => {
                 let cloudProtocols = [];
                 snapshot.forEach(docSnap => {
                     cloudProtocols.push({ firestoreId: docSnap.id, ...docSnap.data() });
                 });
-                if (cloudProtocols.length > 0) {
+                if (cloudProtocols.length > 0 || protocols.length === 0) {
                     protocols = cloudProtocols;
                     protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                     localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
@@ -551,13 +552,14 @@
                 updateUI();
             }, (err) => console.error("Protocols listener error:", err));
 
+            // REALTIME CLOUD SYNC FOR DGUV DEVICES ACROSS ALL DEVICES
             const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
             onSnapshot(dguvCol, (snapshot) => {
                 let cloudDevices = [];
                 snapshot.forEach(docSnap => {
                     cloudDevices.push({ firestoreId: docSnap.id, ...docSnap.data() });
                 });
-                if (cloudDevices.length > 0) {
+                if (cloudDevices.length > 0 || dguvDevices.length === 0) {
                     dguvDevices = cloudDevices;
                     localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
                 }
@@ -681,7 +683,6 @@
             showModal('Erfolg', `Mitarbeiter "${newUser}" (${fullname}) erfolgreich angelegt!`, true);
         }
 
-        // STARTET DAS VOLLE WARTUNGSFORMULAR FÜR NACHTRÄGLICHE ERFASSUNG MIT TECHNIKER & DATUM
         window.startBackdateForm = function(event) {
             event.preventDefault();
             const categoryKey = document.getElementById('backdate-category').value;
@@ -699,7 +700,6 @@
                 return;
             }
 
-            // Kontext speichern, damit bei submitProtocol() dieses Datum und dieser Techniker verwendet werden
             backdateContext = {
                 technician: technician,
                 dateObj: maintenanceDate,
@@ -709,7 +709,6 @@
 
             closeRegisterModal();
 
-            // Formular je nach Kategorie öffnen, sodass Checklisten & Fotos befüllt werden können
             if (categoryKey === 'Waschmaschine') openWashingMachineMenu();
             else if (categoryKey === 'Trockner') openDryerMenu();
             else if (categoryKey === 'Kompressor 2-Wochen') openCompressorRoutine();
@@ -940,7 +939,6 @@
 
         function renderCommonHeaderFields() {
             const loggedInName = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
-            // Falls ein Backdate-Kontext aktiv ist, diesen Techniker voreintragen
             const activeTechnician = backdateContext ? backdateContext.technician : loggedInName;
             const isBackdating = backdateContext !== null;
 
@@ -1253,7 +1251,6 @@
                 pointsData.push({ pointNumber: idx + 1, title: titleText, status: r.value });
             });
 
-            // Wenn Backdate aktiv ist, verwenden wir das gewählte Datum & Techniker
             const protocolDate = backdateContext ? backdateContext.dateString : new Date().toLocaleString('de-DE');
             const protocolTimestamp = backdateContext ? backdateContext.timestamp : new Date().getTime();
 
@@ -1271,7 +1268,6 @@
                 signature: signaturePadInstance.canvas.toDataURL()
             };
 
-            // Zurücksetzen des Nachtragungsmodus nach erfolgreichem Absenden
             backdateContext = null;
 
             protocols.unshift(protocol);
