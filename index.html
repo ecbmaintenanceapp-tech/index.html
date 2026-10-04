@@ -188,7 +188,7 @@
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
                         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Cloud Synchronisiert</span>
+                        <span id="cloud-status-text">Live Cloud Synchronisiert</span>
                     </p>
                 </div>
             </div>
@@ -495,10 +495,10 @@
                 resetInactivityTimer();
             }
 
-            // Poll server every 10 seconds for real-time multi-device sync
+            // Poll server every 6 seconds for real-time multi-device sync
             setInterval(async () => {
                 await loadDataFromServer(true);
-            }, 10000);
+            }, 6000);
         }
 
         async function loadDataFromServer(silent = false) {
@@ -1633,3 +1633,5 @@
     </script>
 </body>
 </html>
+```
+eof
