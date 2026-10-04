@@ -438,11 +438,11 @@
         </div>
     </div>
 
-    <!-- FIREBASE & REALTIME CLOUD ENGINE -->
+    <!-- FIREBASE NATIVE SYNC ENGINE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEvon6SHIVRB5k",
@@ -454,9 +454,9 @@
         };
 
         let app, db, auth;
-        let protocols = JSON.parse(localStorage.getItem('ecb_protocols_all') || '[]');
-        let dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_all') || '[]');
-        let cloudUsers = JSON.parse(localStorage.getItem('ecb_cloud_users_all') || 'null') || [
+        let protocols = [];
+        let dguvDevices = [];
+        let cloudUsers = [
             { fullname: 'ECB Wartung', user: 'ECB_Wartung', pass: 'ECB1688!', active: true },
             { fullname: 'Max Wick', user: 'WickMa', pass: 'Brandenburg6', active: true }
         ];
@@ -473,14 +473,16 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
                 await signInAnonymously(auth);
+                
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
                 document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden (Live Sync)";
-                initFirebaseListeners();
+                
+                initFirebaseRealtimeSync();
             } catch (err) {
                 console.warn("Firebase Init Hinweis:", err);
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Lokaler Offline-Modus";
             }
-            // Immer den extrem robusten Cloud-Relay-Sync zusätzlich starten, damit GitHub Pages ohne Firestore-Regeln perfekt funktioniert
-            initCloudRelaySync();
 
             if (localStorage.getItem('ecb_logged_in') === 'true') {
                 document.getElementById('login-screen').classList.add('hidden');
@@ -490,71 +492,36 @@
             updateUI();
         }
 
-        function initFirebaseListeners() {
+        function initFirebaseRealtimeSync() {
             if (!db) return;
             try {
+                // Protokolle Live-Sync
                 const protoRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols');
                 onSnapshot(protoRef, (snapshot) => {
                     let remote = [];
                     snapshot.forEach(docSnap => {
                         remote.push({ firestoreId: docSnap.id, ...docSnap.data() });
                     });
-                    if (remote.length > 0) {
-                        protocols = remote;
-                        protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                        localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
-                        updateUI();
-                    }
-                }, (err) => {});
+                    protocols = remote;
+                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                    localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
+                    updateUI();
+                }, (error) => { console.error("Protokoll Sync Fehler:", error); });
 
+                // DGUV Geräte Live-Sync
                 const dguvRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices');
                 onSnapshot(dguvRef, (snapshot) => {
                     let remoteDevs = [];
                     snapshot.forEach(docSnap => {
                         remoteDevs.push({ firestoreId: docSnap.id, ...docSnap.data() });
                     });
-                    if (remoteDevs.length > 0) {
-                        dguvDevices = remoteDevs;
-                        localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-                        updateUI();
-                    }
-                }, (err) => {});
-            } catch(e) {}
-        }
-
-        const RELAY_SYNC_URL = "https://jsonbin.org/ecb_maintenance_data_sync_store_v2/all";
-
-        async function fetchViaCloudRelay() {
-            try {
-                const res = await fetch(RELAY_SYNC_URL, { headers: { 'Accept': 'application/json' } });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.protocols && Array.isArray(data.protocols) && data.protocols.length >= protocols.length) {
-                        protocols = data.protocols;
-                        localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
-                    }
-                    if (data && data.dguvDevices && Array.isArray(data.dguvDevices) && data.dguvDevices.length >= dguvDevices.length) {
-                        dguvDevices = data.dguvDevices;
-                        localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-                    }
+                    dguvDevices = remoteDevs;
+                    localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
                     updateUI();
-                }
-            } catch(e) {}
-        }
-
-        async function pushViaCloudRelay() {
-            try {
-                await fetch(RELAY_SYNC_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ protocols, dguvDevices })
-                });
-            } catch(e) {}
-        }
-
-        function initCloudRelaySync() {
-            fetchViaCloudRelay();
-            setInterval(fetchViaCloudRelay, 3000);
+                }, (error) => { console.error("DGUV Sync Fehler:", error); });
+            } catch(e) {
+                console.error("Sync Exception:", e);
+            }
         }
 
         async function saveProtocolToCloud(protocol) {
@@ -562,10 +529,11 @@
                 if (db) {
                     await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols'), protocol);
                 }
-            } catch(e) {}
-            protocols.unshift(protocol);
-            localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
-            await pushViaCloudRelay();
+            } catch(e) {
+                console.warn("Firestore Speicherfehler (Protokoll):", e);
+                protocols.unshift(protocol);
+                localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
+            }
             updateUI();
         }
 
@@ -575,10 +543,11 @@
                     const docRef = await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices'), dev);
                     dev.firestoreId = docRef.id;
                 }
-            } catch(e) {}
-            dguvDevices.unshift(dev);
-            localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-            await pushViaCloudRelay();
+            } catch(e) {
+                console.warn("Firestore Speicherfehler (DGUV):", e);
+                dguvDevices.unshift(dev);
+                localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+            }
             updateUI();
         }
 
@@ -594,7 +563,6 @@
                 protocols.splice(index, 1);
             }
             localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
-            await pushViaCloudRelay();
             updateUI();
         }
 
@@ -610,7 +578,6 @@
                 dguvDevices.splice(index, 1);
             }
             localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-            await pushViaCloudRelay();
             updateUI();
         }
 
@@ -1376,8 +1343,6 @@
                             });
                         }
                     } catch(e) {}
-                    localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-                    await pushViaCloudRelay();
                 }
 
                 updateUI();
@@ -1412,7 +1377,6 @@
                 } catch(e) {}
                 protocols = [];
                 localStorage.removeItem('ecb_protocols_all');
-                await pushViaCloudRelay();
                 updateUI();
                 showModal('Erfolg', 'Verlauf geleert.', true);
             }
@@ -1661,3 +1625,19 @@
     </script>
 </body>
 </html>
+```
+eof
+
+### Wichtiger Hinweis für Ihre Firebase-Datenbank:
+Damit Geräte geräteübergreifend (PC ↔ Handy) über die Firestore-Datenbank live kommunizieren können, stellen Sie bitte kurz in Ihrer **Firebase Console** unter **Firestore Database -> Rules** sicher, dass dort der Lese- und Schreibzugriff erlaubt ist:
+```json
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+```
+Sobald diese Regel aktiv ist, verbindet sich die App direkt mit Ihrer echten Firebase-Cloud, synchronisiert alle DGUV-Geräte und Wartungen in Echtzeit und speichert alles dauerhaft.
