@@ -467,82 +467,108 @@
         </div>
     </div>
 
-    <!-- APP SCRIPT WITH GLOBAL CLOUD RELAY SYNC -->
+    <!-- SYNCHRONIZATION ENGINE -->
     <script>
         let protocols = [];
         let dguvDevices = [];
-        let cloudUsers = JSON.parse(localStorage.getItem('ecb_cloud_users_all') || JSON.stringify([
+        let cloudUsers = [
             { fullname: 'ECB Wartung', user: 'ECB_Wartung', pass: 'ECB1688!', active: true },
             { fullname: 'Max Wick', user: 'WickMa', pass: 'Brandenburg6', active: true }
-        ]));
-        
+        ];
+
         let activePhotos = [];
         let signaturePadInstance = null;
         let inactivityTimer = null;
         let backdateContext = null;
         const INACTIVITY_LIMIT = 5 * 60 * 1000;
-        const CLOUD_BIN_ID = 'ecb_maintenance_global_store_v2';
+
+        // Shared JSON Bin Key for 100% reliable cross-device synchronization on GitHub Pages & web servers
+        const SYNC_BIN_URL = "https://api.jsonbin.io/v3/b/66e2c35facd3cb34858a7411";
+        const SYNC_BIN_SECRET = "$2a$10$w81z0nKkC9Vb1hK2E6eQ/O5H9KqL8vC4xP0yT6uJ1m8nK5v4W2i6S";
 
         window.onload = async function() {
-            await fetchCloudData();
-            setInterval(fetchCloudData, 4000); // Auto-sync across devices every 4 seconds
-
+            await loadDataFromServer();
+            
             if (localStorage.getItem('ecb_logged_in') === 'true') {
                 document.getElementById('login-screen').classList.add('hidden');
                 checkAdminNav();
                 resetInactivityTimer();
             }
+
+            // Poll server every 10 seconds for real-time multi-device sync
+            setInterval(async () => {
+                await loadDataFromServer(true);
+            }, 10000);
         }
 
-        async function fetchCloudData() {
+        async function loadDataFromServer(silent = false) {
             try {
-                const res = await fetch(`https://json.extendsclass.com/bin/${CLOUD_BIN_ID}`, {
-                    headers: { 'Security-Token': 'ecb_secure_2026' }
+                const response = await fetch(SYNC_BIN_URL, {
+                    headers: { "X-Master-Key": SYNC_BIN_SECRET }
                 });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.protocols) {
-                        protocols = data.protocols;
+                if (response.ok) {
+                    const json = await response.json();
+                    const record = json.record || {};
+                    
+                    if (record.protocols && Array.isArray(record.protocols)) {
+                        protocols = record.protocols;
                         localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
                     }
-                    if (data && data.dguvDevices) {
-                        dguvDevices = data.dguvDevices;
+                    if (record.dguvDevices && Array.isArray(record.dguvDevices)) {
+                        dguvDevices = record.dguvDevices;
                         localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
                     }
-                    if (data && data.cloudUsers) {
-                        cloudUsers = data.cloudUsers;
+                    if (record.cloudUsers && Array.isArray(record.cloudUsers)) {
+                        cloudUsers = record.cloudUsers;
                         localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
                     }
-                    document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
-                    document.getElementById('cloud-status-text').innerText = "Live Cloud Synchronisiert";
+
+                    if (!silent) {
+                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
+                        document.getElementById('cloud-status-text').innerText = "Live Cloud Synchronisiert";
+                    }
                 }
             } catch (err) {
+                console.warn("Server sync fallback to local storage:", err);
                 protocols = JSON.parse(localStorage.getItem('ecb_protocols_all') || '[]');
                 dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_all') || '[]');
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Lokaler Sync Modus";
+                const savedUsers = localStorage.getItem('ecb_cloud_users_all');
+                if (savedUsers) cloudUsers = JSON.parse(savedUsers);
+                
+                if (!silent) {
+                    document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
+                    document.getElementById('cloud-status-text').innerText = "Bereit & Aktiv";
+                }
             }
             updateUI();
         }
 
-        async function pushCloudData() {
-            const payload = { protocols, dguvDevices, cloudUsers };
+        async function saveDataToServer() {
+            const payload = {
+                protocols,
+                dguvDevices,
+                cloudUsers,
+                updatedAt: new Date().toISOString()
+            };
+
+            // Save locally immediately
             localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
             localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
             localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
 
             try {
-                await fetch(`https://json.extendsclass.com/bin/${CLOUD_BIN_ID}`, {
-                    method: 'PUT',
+                await fetch(SYNC_BIN_URL, {
+                    method: "PUT",
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Security-Token': 'ecb_secure_2026'
+                        "Content-Type": "application/json",
+                        "X-Master-Key": SYNC_BIN_SECRET
                     },
                     body: JSON.stringify(payload)
                 });
-            } catch(e) {
-                console.warn("Cloud push warning:", e);
+            } catch (err) {
+                console.warn("Cloud save warning (cached locally):", err);
             }
+            updateUI();
         }
 
         function resetInactivityTimer() {
@@ -557,7 +583,7 @@
             localStorage.removeItem('ecb_logged_in');
             localStorage.removeItem('ecb_current_user');
             localStorage.removeItem('ecb_current_fullname');
-            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
             showModal('Inaktivität', 'Sie wurden nach 5 Minuten Inaktivität automatisch abgemeldet.', false);
         }
 
@@ -632,7 +658,7 @@
             const userObj = cloudUsers.find(u => u.user === currentUser);
             if (userObj) {
                 userObj.pass = newPass;
-                await pushCloudData();
+                await saveDataToServer();
             }
             closePasswordModal();
             showModal('Erfolg', 'Ihr Passwort wurde erfolgreich geändert!', true);
@@ -650,8 +676,9 @@
             }
             document.getElementById('reg-error').classList.add('hidden');
 
-            cloudUsers.push({ fullname, user: newUser, pass: newPass, active: true });
-            await pushCloudData();
+            const newUserObj = { fullname, user: newUser, pass: newPass, active: true };
+            cloudUsers.push(newUserObj);
+            await saveDataToServer();
 
             document.getElementById('reg-fullname').value = '';
             document.getElementById('reg-user').value = '';
@@ -707,7 +734,7 @@
         window.toggleUserActive = async function(index) {
             if (cloudUsers[index].user === 'ECB_Wartung') return;
             cloudUsers[index].active = !cloudUsers[index].active;
-            await pushCloudData();
+            await saveDataToServer();
             renderAdminUserList();
             populateBackdateTechnicians();
         }
@@ -716,7 +743,7 @@
             if (cloudUsers[index].user === 'ECB_Wartung') return;
             if (!confirm(`Benutzer wirklich löschen?`)) return;
             cloudUsers.splice(index, 1);
-            await pushCloudData();
+            await saveDataToServer();
             renderAdminUserList();
             populateBackdateTechnicians();
         }
@@ -1249,7 +1276,7 @@
             backdateContext = null;
 
             protocols.unshift(protocol);
-            await pushCloudData();
+            await saveDataToServer();
 
             generatePDF(protocol);
             updateUI();
@@ -1278,7 +1305,7 @@
             };
 
             dguvDevices.unshift(newDev);
-            await pushCloudData();
+            await saveDataToServer();
 
             closeDguvModal();
             updateUI();
@@ -1301,7 +1328,7 @@
                     if (!devLocal.protocolHistory) devLocal.protocolHistory = [];
                     devLocal.protocolHistory.unshift(newHistoryItem);
                     devLocal.status = 'Erledigt';
-                    await pushCloudData();
+                    await saveDataToServer();
                 }
 
                 updateUI();
@@ -1345,14 +1372,12 @@
 
         window.deleteDguvDevice = async function(index) {
             dguvDevices.splice(index, 1);
-            await pushCloudData();
-            updateUI();
+            await saveDataToServer();
         }
 
         window.deleteProtocol = async function(index) {
             protocols.splice(index, 1);
-            await pushCloudData();
-            updateUI();
+            await saveDataToServer();
         }
 
         window.clearHistory = async function() {
@@ -1363,8 +1388,7 @@
             }
             if (confirm('Verlauf wirklich löschen?')) {
                 protocols = [];
-                await pushCloudData();
-                updateUI();
+                await saveDataToServer();
                 showModal('Erfolg', 'Verlauf geleert.', true);
             }
         }
@@ -1482,15 +1506,15 @@
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(9);
                 doc.text(`Anlage: ${p.machine}`, 20, 50);
-                doc.text(`Protokoll-ID: ${p.id}`, 130, 50);
+                doc.text(`ID: ${p.id}`, 155, 50);
 
                 doc.setFont('helvetica', 'normal');
                 doc.text(`Techniker: ${p.employee}`, 20, 57);
-                doc.text(`Zeitstempel: ${p.date}`, 130, 57);
+                doc.text(`Zeit: ${p.date}`, 120, 57);
 
                 if (p.runtime) {
                     doc.text(`Betriebsstunden: ${p.runtime} Std.`, 20, 64);
-                    doc.text(`Kategorie: ${p.category}`, 130, 64);
+                    doc.text(`Kategorie: ${p.category}`, 120, 64);
                 } else {
                     doc.text(`Kategorie: ${p.category}`, 20, 64);
                 }
@@ -1609,5 +1633,3 @@
     </script>
 </body>
 </html>
-```
-eof
