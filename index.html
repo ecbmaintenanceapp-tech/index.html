@@ -516,7 +516,6 @@
         async function initFirebaseRealtimeSync() {
             if (!db) return;
             try {
-                // Protokolle Live-Sync
                 const protoRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols');
                 onSnapshot(protoRef, (snapshot) => {
                     let remote = [];
@@ -531,7 +530,6 @@
                     }
                 }, (error) => { console.warn("Protokoll Sync Warnung:", error); });
 
-                // DGUV Geräte Live-Sync
                 const dguvRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices');
                 onSnapshot(dguvRef, (snapshot) => {
                     let remoteDevs = [];
@@ -550,7 +548,6 @@
         }
 
         function initHybridCloudFallback() {
-            // Polling fallback to keep devices in sync if direct sockets are restricted
             setInterval(async () => {
                 if (db) {
                     try {
@@ -572,7 +569,7 @@
                         updateUI();
                     } catch(e) {}
                 }
-            }, 5000);
+            }, 3000);
         }
 
         async function saveProtocolToCloud(protocol) {
@@ -580,7 +577,9 @@
             saveLocalCache();
             try {
                 if (db) {
-                    await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols'), protocol);
+                    const docRef = await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols'), protocol);
+                    protocol.firestoreId = docRef.id;
+                    saveLocalCache();
                 }
             } catch(e) {
                 console.warn("Firestore Protokoll Schreibfehler:", e);
