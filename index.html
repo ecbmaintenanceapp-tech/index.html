@@ -73,7 +73,7 @@
         </div>
     </div>
 
-    <!-- ADMIN USER MANAGEMENT & BACKDATE MODAL -->
+    <!-- ADMIN & BACKDATE MODAL -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -83,7 +83,6 @@
                 </button>
             </div>
             
-            <!-- MITARBEITER ANLEGEN -->
             <form onsubmit="handleRegister(event)" class="space-y-4 pb-6 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-user-plus mr-1 text-ecbGreen"></i> Neuen Mitarbeiter anlegen</h4>
                 <div>
@@ -102,7 +101,6 @@
                 <button type="submit" class="w-full py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Mitarbeiter anlegen</button>
             </form>
 
-            <!-- WARTUNG NACHTRAGEN (STARTET DAS VOLLSTÄNDIGE FORMULAR MIT CHECKLISTEN & FOTOS) -->
             <form onsubmit="startBackdateForm(event)" class="space-y-4 pb-6 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-calendar-plus mr-1 text-sky-600"></i> Vollständige Wartung nachtragen (mit Prüfpunkten &amp; Fotos)</h4>
                 <div>
@@ -116,9 +114,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Zuständiger Techniker:</label>
-                    <select id="backdate-technician" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50 cursor-pointer">
-                        <!-- Wird dynamisch mit angelegten Mitarbeitern gefüllt -->
-                    </select>
+                    <select id="backdate-technician" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50 cursor-pointer"></select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Durchführungsdatum (Datum &amp; Uhrzeit):</label>
@@ -172,7 +168,7 @@
         </div>
     </div>
 
-    <!-- HEADER -->
+    <!-- HEADER NAVIGATION -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
@@ -187,8 +183,8 @@
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Live Cloud Synchronisiert</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse"></span>
+                        <span id="cloud-status-text">Verbinde mit Firebase...</span>
                     </p>
                 </div>
             </div>
@@ -215,9 +211,10 @@
         </div>
     </header>
 
+    <!-- MAIN CONTAINER -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
 
-        <!-- DASHBOARD TAB -->
+        <!-- Dashboard Tab -->
         <div id="tab-dashboard" class="space-y-8 animate-fade-in">
             <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
                 <div class="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-ecbLightGreen/40 rounded-full blur-3xl pointer-events-none"></div>
@@ -225,10 +222,9 @@
                     <div>
                         <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                         <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen-, Maschinen- &amp; DGUV-Wartung</h2>
-                        <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen. Fälligkeitstermine werden vollautomatisch aus der Historie berechnet.</p>
+                        <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen. Fälligkeitstermine werden vollautomatisch berechnet.</p>
                     </div>
                 </div>
-                <!-- ADMIN BUTTON ON DASHBOARD -->
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden">
                     <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Wartung nachtragen
@@ -236,7 +232,7 @@
                 </div>
             </div>
 
-            <!-- CATEGORY CARDS GRID -->
+            <!-- Category Cards Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Waschmaschinen -->
                 <div onclick="openWashingMachineMenu()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-ecbGreen hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
@@ -315,7 +311,7 @@
                 </div>
             </div>
 
-            <!-- DGUV V3 SEKTION -->
+            <!-- DGUV V3 Section -->
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-100 pb-5">
                     <div>
@@ -330,7 +326,7 @@
             </div>
         </div>
 
-        <!-- WARTUNGSKALENDER TAB -->
+        <!-- Wartungskalender Tab -->
         <div id="tab-calendar" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
                 <div>
@@ -353,7 +349,7 @@
             </div>
         </div>
 
-        <!-- DGUV V3 TAB -->
+        <!-- DGUV V3 Tab -->
         <div id="tab-dguv" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
                 <div>
@@ -367,7 +363,7 @@
             <div id="dguv-devices-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- HISTORY TAB -->
+        <!-- History Tab -->
         <div id="tab-history" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
                 <div>
@@ -380,7 +376,6 @@
                 </div>
             </div>
             
-            <!-- FILTER CONTROLS -->
             <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-4">
                 <div class="flex-grow sm:flex-grow-0">
                     <label class="block text-xs font-bold text-slate-600 mb-1">Jahr filtern:</label>
@@ -410,11 +405,10 @@
                 </div>
             </div>
 
-            <!-- PROTOCOLS LIST CONTAINER -->
             <div id="protocols-container" class="space-y-4"></div>
         </div>
 
-        <!-- FORM VIEW -->
+        <!-- Form View -->
         <div id="form-view" class="hidden space-y-6 animate-fade-in">
             <button onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 transition shadow-sm flex items-center gap-2 cursor-pointer">
                 <i class="fa-solid fa-arrow-left"></i> Zurück zur Übersicht
@@ -424,7 +418,7 @@
 
     </main>
 
-    <!-- DGUV DEVICE MODAL -->
+    <!-- DGUV MODAL -->
     <div id="modal-dguv" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -453,7 +447,7 @@
         </div>
     </div>
 
-    <!-- GENERAL MESSAGE MODAL -->
+    <!-- MESSAGE MODAL -->
     <div id="modal-message" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl border border-slate-100 text-center">
             <div id="modal-icon" class="w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner">
@@ -467,8 +461,23 @@
         </div>
     </div>
 
-    <!-- SYNCHRONIZATION ENGINE -->
-    <script>
+    <!-- FIREBASE SDK SCRIPTS -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Exakte Firebase-Konfiguration aus Ihren Screenshots (Projekt ecb-maintenance)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEvon6SHIVRB5k",
+            authDomain: "ecb-maintenance.firebaseapp.com",
+            projectId: "ecb-maintenance",
+            storageBucket: "ecb-maintenance.appspot.com",
+            messagingSenderId: "229926423123",
+            appId: "1:229926423123:web:a309c14c708fc88c62d4a6"
+        };
+
+        let app, db, auth;
         let protocols = [];
         let dguvDevices = [];
         let cloudUsers = [
@@ -482,95 +491,150 @@
         let backdateContext = null;
         const INACTIVITY_LIMIT = 5 * 60 * 1000;
 
-        // Shared JSON Bin Key for 100% reliable cross-device synchronization on GitHub Pages & web servers
-        const SYNC_BIN_URL = "https://api.jsonbin.io/v3/b/66e2c35facd3cb34858a7411";
-        const SYNC_BIN_SECRET = "$2a$10$w81z0nKkC9Vb1hK2E6eQ/O5H9KqL8vC4xP0yT6uJ1m8nK5v4W2i6S";
-
         window.onload = async function() {
-            await loadDataFromServer();
-            
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Authentifizierung mit Fallback
+                try {
+                    await signInAnonymously(auth);
+                } catch(authErr) {
+                    console.warn("Anonyme Anmeldung fehlgeschlagen:", authErr);
+                }
+
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
+                document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden";
+
+                // Echtzeit-Listener für Firestore (Öffentliche Sammlungen)
+                initFirebaseListeners();
+
+            } catch (err) {
+                console.warn("Firebase Initialisierungsfehler:", err);
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Lokaler Modus (Offline)";
+                loadLocalFallback();
+            }
+
             if (localStorage.getItem('ecb_logged_in') === 'true') {
                 document.getElementById('login-screen').classList.add('hidden');
                 checkAdminNav();
                 resetInactivityTimer();
             }
-
-            // Poll server every 6 seconds for real-time multi-device sync
-            setInterval(async () => {
-                await loadDataFromServer(true);
-            }, 6000);
         }
 
-        async function loadDataFromServer(silent = false) {
-            try {
-                const response = await fetch(SYNC_BIN_URL, {
-                    headers: { "X-Master-Key": SYNC_BIN_SECRET }
+        function initFirebaseListeners() {
+            if (!db) return;
+
+            // Protokolle Listener
+            const protoRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols');
+            onSnapshot(protoRef, (snapshot) => {
+                protocols = [];
+                snapshot.forEach(docSnap => {
+                    protocols.push({ firestoreId: docSnap.id, ...docSnap.data() });
                 });
-                if (response.ok) {
-                    const json = await response.json();
-                    const record = json.record || {};
-                    
-                    if (record.protocols && Array.isArray(record.protocols)) {
-                        protocols = record.protocols;
-                        localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
-                    }
-                    if (record.dguvDevices && Array.isArray(record.dguvDevices)) {
-                        dguvDevices = record.dguvDevices;
-                        localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-                    }
-                    if (record.cloudUsers && Array.isArray(record.cloudUsers)) {
-                        cloudUsers = record.cloudUsers;
+                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
+                updateUI();
+            }, (err) => {
+                console.error("Protokolle Sync Fehler:", err);
+                loadLocalFallback();
+            });
+
+            // DGUV Geräte Listener
+            const dguvRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices');
+            onSnapshot(dguvRef, (snapshot) => {
+                dguvDevices = [];
+                snapshot.forEach(docSnap => {
+                    dguvDevices.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                });
+                localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+                updateUI();
+            }, (err) => {
+                console.error("DGUV Sync Fehler:", err);
+            });
+
+            // Benutzer Listener
+            const usersRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'cloud_users');
+            onSnapshot(usersRef, (snapshot) => {
+                if (!snapshot.empty) {
+                    let remoteUsers = [];
+                    snapshot.forEach(docSnap => {
+                        remoteUsers.push(docSnap.data());
+                    });
+                    if (remoteUsers.length > 0) {
+                        cloudUsers = remoteUsers;
                         localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
                     }
+                } else {
+                    // Initialisiere Standardbenutzer in Firestore falls leer
+                    cloudUsers.forEach(async (u) => {
+                        try {
+                            await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'cloud_users'), u);
+                        } catch(e) {}
+                    });
+                }
+            }, (err) => {});
+        }
 
-                    if (!silent) {
-                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
-                        document.getElementById('cloud-status-text').innerText = "Live Cloud Synchronisiert";
-                    }
-                }
-            } catch (err) {
-                console.warn("Server sync fallback to local storage:", err);
-                protocols = JSON.parse(localStorage.getItem('ecb_protocols_all') || '[]');
-                dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_all') || '[]');
-                const savedUsers = localStorage.getItem('ecb_cloud_users_all');
-                if (savedUsers) cloudUsers = JSON.parse(savedUsers);
-                
-                if (!silent) {
-                    document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                    document.getElementById('cloud-status-text').innerText = "Bereit & Aktiv";
-                }
-            }
+        function loadLocalFallback() {
+            protocols = JSON.parse(localStorage.getItem('ecb_protocols_all') || '[]');
+            dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_all') || '[]');
+            const savedUsers = localStorage.getItem('ecb_cloud_users_all');
+            if (savedUsers) cloudUsers = JSON.parse(savedUsers);
             updateUI();
         }
 
-        async function saveDataToServer() {
-            const payload = {
-                protocols,
-                dguvDevices,
-                cloudUsers,
-                updatedAt: new Date().toISOString()
-            };
-
-            // Save locally immediately
-            localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
-            localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-            localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
-
+        async function saveProtocolToCloud(protocol) {
             try {
-                await fetch(SYNC_BIN_URL, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-Master-Key": SYNC_BIN_SECRET
-                    },
-                    body: JSON.stringify(payload)
-                });
-            } catch (err) {
-                console.warn("Cloud save warning (cached locally):", err);
+                if (db) {
+                    await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols'), protocol);
+                }
+            } catch(e) {
+                console.warn("Cloud Protocol Save Fallback:", e);
             }
+            protocols.unshift(protocol);
+            localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
             updateUI();
         }
 
+        async function saveDguvToCloud(dev) {
+            try {
+                if (db) {
+                    await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices'), dev);
+                }
+            } catch(e) {
+                console.warn("Cloud DGUV Save Fallback:", e);
+            }
+            dguvDevices.unshift(dev);
+            localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+            updateUI();
+        }
+
+        async function removeProtocolFromCloud(firestoreId, index) {
+            try {
+                if (db && firestoreId) {
+                    await deleteDoc(doc(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols', firestoreId));
+                }
+            } catch(e) {}
+            protocols.splice(index, 1);
+            localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
+            updateUI();
+        }
+
+        async function removeDguvFromCloud(firestoreId, index) {
+            try {
+                if (db && firestoreId) {
+                    await deleteDoc(doc(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices', firestoreId));
+                }
+            } catch(e) {}
+            dguvDevices.splice(index, 1);
+            localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+            updateUI();
+        }
+
+        // --- INACTIVITY & AUTH LOGIC ---
         function resetInactivityTimer() {
             if (localStorage.getItem('ecb_logged_in') !== 'true') return;
             clearTimeout(inactivityTimer);
@@ -658,7 +722,7 @@
             const userObj = cloudUsers.find(u => u.user === currentUser);
             if (userObj) {
                 userObj.pass = newPass;
-                await saveDataToServer();
+                localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
             }
             closePasswordModal();
             showModal('Erfolg', 'Ihr Passwort wurde erfolgreich geändert!', true);
@@ -678,7 +742,11 @@
 
             const newUserObj = { fullname, user: newUser, pass: newPass, active: true };
             cloudUsers.push(newUserObj);
-            await saveDataToServer();
+            localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
+            
+            try {
+                if (db) await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'cloud_users'), newUserObj);
+            } catch(e) {}
 
             document.getElementById('reg-fullname').value = '';
             document.getElementById('reg-user').value = '';
@@ -731,19 +799,19 @@
             selectEl.innerHTML = html;
         }
 
-        window.toggleUserActive = async function(index) {
+        window.toggleUserActive = function(index) {
             if (cloudUsers[index].user === 'ECB_Wartung') return;
             cloudUsers[index].active = !cloudUsers[index].active;
-            await saveDataToServer();
+            localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
             renderAdminUserList();
             populateBackdateTechnicians();
         }
 
-        window.deleteUserRecord = async function(index) {
+        window.deleteUserRecord = function(index) {
             if (cloudUsers[index].user === 'ECB_Wartung') return;
             if (!confirm(`Benutzer wirklich löschen?`)) return;
             cloudUsers.splice(index, 1);
-            await saveDataToServer();
+            localStorage.setItem('ecb_cloud_users_all', JSON.stringify(cloudUsers));
             renderAdminUserList();
             populateBackdateTechnicians();
         }
@@ -1275,9 +1343,7 @@
 
             backdateContext = null;
 
-            protocols.unshift(protocol);
-            await saveDataToServer();
-
+            await saveProtocolToCloud(protocol);
             generatePDF(protocol);
             updateUI();
             showModal('Erfolg', 'Wartungsprotokoll erfolgreich gespeichert & PDF erstellt!', true);
@@ -1304,9 +1370,7 @@
                 protocolHistory: []
             };
 
-            dguvDevices.unshift(newDev);
-            await saveDataToServer();
-
+            await saveDguvToCloud(newDev);
             closeDguvModal();
             updateUI();
             showModal('Erfolg', 'Gerät erfolgreich erfasst!', true);
@@ -1328,7 +1392,16 @@
                     if (!devLocal.protocolHistory) devLocal.protocolHistory = [];
                     devLocal.protocolHistory.unshift(newHistoryItem);
                     devLocal.status = 'Erledigt';
-                    await saveDataToServer();
+                    
+                    try {
+                        if (db && devLocal.firestoreId) {
+                            await updateDoc(doc(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices', devLocal.firestoreId), {
+                                status: 'Erledigt',
+                                protocolHistory: devLocal.protocolHistory
+                            });
+                        }
+                    } catch(e) {}
+                    localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
                 }
 
                 updateUI();
@@ -1371,13 +1444,13 @@
         }
 
         window.deleteDguvDevice = async function(index) {
-            dguvDevices.splice(index, 1);
-            await saveDataToServer();
+            const dev = dguvDevices[index];
+            await removeDguvFromCloud(dev.firestoreId, index);
         }
 
         window.deleteProtocol = async function(index) {
-            protocols.splice(index, 1);
-            await saveDataToServer();
+            const p = protocols[index];
+            await removeProtocolFromCloud(p.firestoreId, index);
         }
 
         window.clearHistory = async function() {
@@ -1387,8 +1460,18 @@
                 return;
             }
             if (confirm('Verlauf wirklich löschen?')) {
+                try {
+                    if (db) {
+                        for (let p of protocols) {
+                            if (p.firestoreId) {
+                                await deleteDoc(doc(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols', p.firestoreId));
+                            }
+                        }
+                    }
+                } catch(e) {}
                 protocols = [];
-                await saveDataToServer();
+                localStorage.removeItem('ecb_protocols_all');
+                updateUI();
                 showModal('Erfolg', 'Verlauf geleert.', true);
             }
         }
@@ -1493,7 +1576,7 @@
                 doc.text('ecb', 18, 20);
 
                 doc.setFont('helvetica', 'bold');
-                doc.setFontSize(16);
+                doc.setFontSize(15);
                 doc.text('E.C.B. REINIGUNGSSYSTEME GMBH', 48, 16);
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(10);
@@ -1633,5 +1716,3 @@
     </script>
 </body>
 </html>
-```
-eof
