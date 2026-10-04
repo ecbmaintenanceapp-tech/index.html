@@ -102,7 +102,7 @@
                 <button type="submit" class="w-full py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Mitarbeiter anlegen</button>
             </form>
 
-            <!-- WARTUNG NACHTRAGEN (STARTET VOLLES FORMULAR MIT PRÜFPUNKTEN & BILDERN) -->
+            <!-- WARTUNG NACHTRAGEN (STARTET VOLLSTÄNDIGES FORMULAR MIT PRÜFPUNKTEN & BILDERN) -->
             <form onsubmit="startBackdateForm(event)" class="space-y-4 pb-6 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-calendar-plus mr-1 text-sky-600"></i> Vollständige Wartung nachtragen (mit Prüfpunkten &amp; Fotos)</h4>
                 <div>
@@ -187,8 +187,8 @@
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                        <span id="cloud-status-text">Cloud Live Synchronisiert</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                        <span id="cloud-status-text">Firebase Cloud Verbunden</span>
                     </p>
                 </div>
             </div>
@@ -474,8 +474,10 @@
         import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-maintenance';
+        
+        // Official Firebase configuration matching user instructions
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k",
+            apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEvon6SHIVRB5k",
             authDomain: "ecb-maintenance.firebaseapp.com",
             projectId: "ecb-maintenance",
             storageBucket: "ecb-maintenance.appspot.com",
@@ -483,12 +485,9 @@
             appId: "1:229926423123:web:a309c14c708fc88c62d4a6"
         };
 
-        let db = null;
-        let auth = null;
-        let userId = null;
-
-        let protocols = JSON.parse(localStorage.getItem('ecb_protocols_all') || '[]');
-        let dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_all') || '[]');
+        let app, db, auth, userId = null;
+        let protocols = [];
+        let dguvDevices = [];
         let cloudUsers = JSON.parse(localStorage.getItem('ecb_cloud_users_all') || JSON.stringify([
             { fullname: 'ECB Wartung', user: 'ECB_Wartung', pass: 'ECB1688!', active: true },
             { fullname: 'Max Wick', user: 'WickMa', pass: 'Brandenburg6', active: true }
@@ -502,7 +501,7 @@
 
         window.onload = async function() {
             try {
-                const app = initializeApp(firebaseConfig);
+                app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
 
@@ -515,15 +514,17 @@
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
-                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                        document.getElementById('cloud-status-text').innerText = "Cloud Live Synchronisiert";
+                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
+                        document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden";
                         initFirestoreListeners();
                     }
                 });
             } catch (err) {
-                console.warn("Hybrid / Local fallback active:", err);
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Cloud Live Synchronisiert";
+                console.warn("Firebase Init Fallback (Offline/Local mode):", err);
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Lokaler Modus";
+                protocols = JSON.parse(localStorage.getItem('ecb_protocols_all') || '[]');
+                dguvDevices = JSON.parse(localStorage.getItem('ecb_dguv_devices_all') || '[]');
                 updateUI();
             }
 
@@ -537,32 +538,22 @@
         function initFirestoreListeners() {
             if (!db) return;
 
-            // REALTIME CLOUD SYNC FOR PROTOCOLS ACROSS ALL DEVICES
             const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
             onSnapshot(protocolsCol, (snapshot) => {
-                let cloudProtocols = [];
+                protocols = [];
                 snapshot.forEach(docSnap => {
-                    cloudProtocols.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                    protocols.push({ firestoreId: docSnap.id, ...docSnap.data() });
                 });
-                if (cloudProtocols.length > 0 || protocols.length === 0) {
-                    protocols = cloudProtocols;
-                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                    localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
-                }
+                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                 updateUI();
             }, (err) => console.error("Protocols listener error:", err));
 
-            // REALTIME CLOUD SYNC FOR DGUV DEVICES ACROSS ALL DEVICES
             const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
             onSnapshot(dguvCol, (snapshot) => {
-                let cloudDevices = [];
+                dguvDevices = [];
                 snapshot.forEach(docSnap => {
-                    cloudDevices.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                    dguvDevices.push({ firestoreId: docSnap.id, ...docSnap.data() });
                 });
-                if (cloudDevices.length > 0 || dguvDevices.length === 0) {
-                    dguvDevices = cloudDevices;
-                    localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-                }
                 updateUI();
             }, (err) => console.error("DGUV listener error:", err));
         }
@@ -1270,15 +1261,18 @@
 
             backdateContext = null;
 
-            protocols.unshift(protocol);
-            protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-            localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
-
             try {
                 if (db && userId) {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'), protocol);
+                } else {
+                    protocols.unshift(protocol);
+                    localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
                 }
-            } catch(e) { console.error("Cloud save error:", e); }
+            } catch (err) {
+                console.error("Firestore save error:", err);
+                protocols.unshift(protocol);
+                localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
+            }
 
             generatePDF(protocol);
             updateUI();
@@ -1306,44 +1300,54 @@
                 protocolHistory: []
             };
 
-            dguvDevices.unshift(newDev);
-            localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-
             try {
                 if (db && userId) {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), newDev);
+                } else {
+                    dguvDevices.unshift(newDev);
+                    localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
                 }
-            } catch(e) {}
+            } catch (err) {
+                console.error("Firestore DGUV save error:", err);
+                dguvDevices.unshift(newDev);
+                localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+            }
 
             closeDguvModal();
             updateUI();
             showModal('Erfolg', 'Gerät erfolgreich erfasst!', true);
         }
 
-        window.handleProtocolUpload = async function(event, deviceId) {
+        window.handleProtocolUpload = async function(event, deviceId, firestoreId) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = async function(e) {
-                const dev = dguvDevices.find(d => d.id === deviceId || d.firestoreId === deviceId);
-                if (!dev) return;
-                if (!dev.protocolHistory) dev.protocolHistory = [];
-                dev.protocolHistory.unshift({
+                const newHistoryItem = {
                     date: new Date().toLocaleString('de-DE'),
                     fileName: file.name,
                     fileData: e.target.result
-                });
-                dev.status = 'Erledigt';
-                localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+                };
 
-                try {
-                    if (db && userId && dev.firestoreId) {
-                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', dev.firestoreId), {
-                            status: dev.status,
-                            protocolHistory: dev.protocolHistory
+                if (db && userId && firestoreId) {
+                    const dev = dguvDevices.find(d => d.firestoreId === firestoreId);
+                    if (dev) {
+                        const history = dev.protocolHistory || [];
+                        history.unshift(newHistoryItem);
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId), {
+                            status: 'Erledigt',
+                            protocolHistory: history
                         });
                     }
-                } catch(err) {}
+                } else {
+                    const dev = dguvDevices.find(d => d.id === deviceId);
+                    if (dev) {
+                        if (!dev.protocolHistory) dev.protocolHistory = [];
+                        dev.protocolHistory.unshift(newHistoryItem);
+                        dev.status = 'Erledigt';
+                        localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+                    }
+                }
 
                 updateUI();
                 showModal('Erfolg', 'Messprotokoll hochgeladen!', true);
@@ -1384,28 +1388,32 @@
             document.getElementById('modal-dguv-history').classList.add('hidden');
         }
 
-        window.deleteDguvDevice = async function(index) {
-            const dev = dguvDevices[index];
-            dguvDevices.splice(index, 1);
-            localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+        window.deleteDguvDevice = async function(firestoreId, index) {
             try {
-                if (db && userId && dev.firestoreId) {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', dev.firestoreId));
+                if (db && userId && firestoreId) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId));
+                } else {
+                    dguvDevices.splice(index, 1);
+                    localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
                 }
-            } catch(e) {}
-            updateUI();
+                updateUI();
+            } catch (err) {
+                console.error("Delete DGUV error:", err);
+            }
         }
 
-        window.deleteProtocol = async function(index) {
-            const p = protocols[index];
-            protocols.splice(index, 1);
-            localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
+        window.deleteProtocol = async function(firestoreId, index) {
             try {
-                if (db && userId && p.firestoreId) {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.firestoreId));
+                if (db && userId && firestoreId) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', firestoreId));
+                } else {
+                    protocols.splice(index, 1);
+                    localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
                 }
-            } catch(e) {}
-            updateUI();
+                updateUI();
+            } catch (err) {
+                console.error("Delete protocol error:", err);
+            }
         }
 
         window.clearHistory = async function() {
@@ -1415,10 +1423,22 @@
                 return;
             }
             if (confirm('Verlauf wirklich löschen?')) {
-                protocols = [];
-                localStorage.removeItem('ecb_protocols_all');
-                updateUI();
-                showModal('Erfolg', 'Verlauf geleert.', true);
+                try {
+                    if (db && userId) {
+                        for (let p of protocols) {
+                            if (p.firestoreId) {
+                                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.firestoreId));
+                            }
+                        }
+                    } else {
+                        protocols = [];
+                        localStorage.removeItem('ecb_protocols_all');
+                    }
+                    updateUI();
+                    showModal('Erfolg', 'Verlauf geleert.', true);
+                } catch (err) {
+                    console.error("Clear history error:", err);
+                }
             }
         }
 
@@ -1479,7 +1499,6 @@
 
             let html = '';
             filtered.forEach((p) => {
-                let originalIdx = protocols.findIndex(item => item.id === p.id);
                 let pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b border-slate-100"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
                 let photosHtml = (p.photos || []).map(ph => `<img src="${ph}" class="w-16 h-16 object-cover rounded-xl border border-slate-200">`).join('');
                 html += `
@@ -1491,8 +1510,8 @@
                                 <p class="text-xs text-slate-500 mt-1">${p.date} | Techniker: <strong>${p.employee}</strong> ${p.runtime ? `| Std: <strong>${p.runtime}</strong>` : ''} | ID: ${p.id}</p>
                             </div>
                             <div class="flex gap-2">
-                                <button onclick="downloadProtocolPDF(${originalIdx})" class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-                                <button onclick="deleteProtocol(${originalIdx})" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick='downloadProtocolPDF(${JSON.stringify(p)})' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                                <button onclick="deleteProtocol('${p.firestoreId || ''}')" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
                         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">${pts}</div>
@@ -1505,7 +1524,7 @@
             container.innerHTML = html;
         }
 
-        window.downloadProtocolPDF = function(index) { generatePDF(protocols[index]); }
+        window.downloadProtocolPDF = function(p) { generatePDF(p); }
 
         function generatePDF(p) {
             try {
@@ -1639,7 +1658,7 @@
                             <div>
                                 <div class="flex justify-between items-start">
                                     <span class="px-3 py-1 rounded-full text-xs font-bold ${isDone ? 'bg-emerald-50 text-ecbGreen' : 'bg-amber-50 text-amber-600'}">${dev.status}</span>
-                                    <button onclick="deleteDguvDevice(${idx})" class="text-red-500 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                    <button onclick="deleteDguvDevice('${dev.firestoreId || ''}', ${idx})" class="text-red-500 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                                 </div>
                                 <h3 onclick="openDguvHistory('${dev.firestoreId || dev.id}')" class="text-xl font-bold text-slate-900 mt-2 hover:text-sky-600 cursor-pointer transition">${dev.name} <i class="fa-solid fa-clock-rotate-left text-xs text-slate-400 ml-1"></i></h3>
                                 <p class="text-xs font-bold text-sky-700 mt-0.5"><i class="fa-solid fa-barcode mr-1"></i> Inventar-Nr.: ${dev.inventoryNumber}</p>
@@ -1650,7 +1669,7 @@
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2">
                                 <label class="w-full py-2 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                                     <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Protokoll hochladen
-                                    <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.firestoreId || dev.id}')" class="hidden">
+                                    <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.id}', '${dev.firestoreId || ''}')" class="hidden">
                                 </label>
                             </div>
                         </div>
