@@ -478,10 +478,9 @@
                 initFirebaseListeners();
             } catch (err) {
                 console.warn("Firebase Init Hinweis:", err);
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
-                document.getElementById('cloud-status-text').innerText = "Cloud Sync Aktiv (Relay)";
-                initCloudRelaySync();
             }
+            // Immer den extrem robusten Cloud-Relay-Sync zusätzlich starten, damit GitHub Pages ohne Firestore-Regeln perfekt funktioniert
+            initCloudRelaySync();
 
             if (localStorage.getItem('ecb_logged_in') === 'true') {
                 document.getElementById('login-screen').classList.add('hidden');
@@ -493,32 +492,34 @@
 
         function initFirebaseListeners() {
             if (!db) return;
-            const protoRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols');
-            onSnapshot(protoRef, (snapshot) => {
-                let remote = [];
-                snapshot.forEach(docSnap => {
-                    remote.push({ firestoreId: docSnap.id, ...docSnap.data() });
-                });
-                if (remote.length > 0 || protocols.length === 0) {
-                    protocols = remote;
-                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                    localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
-                    updateUI();
-                }
-            }, (err) => { fetchViaCloudRelay(); });
+            try {
+                const protoRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols');
+                onSnapshot(protoRef, (snapshot) => {
+                    let remote = [];
+                    snapshot.forEach(docSnap => {
+                        remote.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                    });
+                    if (remote.length > 0) {
+                        protocols = remote;
+                        protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                        localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
+                        updateUI();
+                    }
+                }, (err) => {});
 
-            const dguvRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices');
-            onSnapshot(dguvRef, (snapshot) => {
-                let remoteDevs = [];
-                snapshot.forEach(docSnap => {
-                    remoteDevs.push({ firestoreId: docSnap.id, ...docSnap.data() });
-                });
-                if (remoteDevs.length > 0 || dguvDevices.length === 0) {
-                    dguvDevices = remoteDevs;
-                    localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-                    updateUI();
-                }
-            }, (err) => {});
+                const dguvRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices');
+                onSnapshot(dguvRef, (snapshot) => {
+                    let remoteDevs = [];
+                    snapshot.forEach(docSnap => {
+                        remoteDevs.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                    });
+                    if (remoteDevs.length > 0) {
+                        dguvDevices = remoteDevs;
+                        localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
+                        updateUI();
+                    }
+                }, (err) => {});
+            } catch(e) {}
         }
 
         const RELAY_SYNC_URL = "https://jsonbin.org/ecb_maintenance_data_sync_store_v2/all";
@@ -528,11 +529,11 @@
                 const res = await fetch(RELAY_SYNC_URL, { headers: { 'Accept': 'application/json' } });
                 if (res.ok) {
                     const data = await res.json();
-                    if (data && data.protocols && data.protocols.length > 0) {
+                    if (data && data.protocols && Array.isArray(data.protocols) && data.protocols.length >= protocols.length) {
                         protocols = data.protocols;
                         localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
                     }
-                    if (data && data.dguvDevices && data.dguvDevices.length > 0) {
+                    if (data && data.dguvDevices && Array.isArray(data.dguvDevices) && data.dguvDevices.length >= dguvDevices.length) {
                         dguvDevices = data.dguvDevices;
                         localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
                     }
@@ -553,7 +554,7 @@
 
         function initCloudRelaySync() {
             fetchViaCloudRelay();
-            setInterval(fetchViaCloudRelay, 4000);
+            setInterval(fetchViaCloudRelay, 3000);
         }
 
         async function saveProtocolToCloud(protocol) {
@@ -564,7 +565,7 @@
             } catch(e) {}
             protocols.unshift(protocol);
             localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
-            pushViaCloudRelay();
+            await pushViaCloudRelay();
             updateUI();
         }
 
@@ -577,7 +578,7 @@
             } catch(e) {}
             dguvDevices.unshift(dev);
             localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-            pushViaCloudRelay();
+            await pushViaCloudRelay();
             updateUI();
         }
 
@@ -593,7 +594,7 @@
                 protocols.splice(index, 1);
             }
             localStorage.setItem('ecb_protocols_all', JSON.stringify(protocols));
-            pushViaCloudRelay();
+            await pushViaCloudRelay();
             updateUI();
         }
 
@@ -609,7 +610,7 @@
                 dguvDevices.splice(index, 1);
             }
             localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-            pushViaCloudRelay();
+            await pushViaCloudRelay();
             updateUI();
         }
 
@@ -1376,7 +1377,7 @@
                         }
                     } catch(e) {}
                     localStorage.setItem('ecb_dguv_devices_all', JSON.stringify(dguvDevices));
-                    pushViaCloudRelay();
+                    await pushViaCloudRelay();
                 }
 
                 updateUI();
@@ -1411,7 +1412,7 @@
                 } catch(e) {}
                 protocols = [];
                 localStorage.removeItem('ecb_protocols_all');
-                pushViaCloudRelay();
+                await pushViaCloudRelay();
                 updateUI();
                 showModal('Erfolg', 'Verlauf geleert.', true);
             }
