@@ -461,6 +461,7 @@
         const INACTIVITY_LIMIT = 5 * 60 * 1000;
 
         window.onload = async function() {
+            // Absolute Priorität für lokalen Speicher beim Start
             loadLocalCache();
             updateUI();
 
@@ -490,15 +491,24 @@
 
         function loadLocalCache() {
             try {
-                const savedProtos = localStorage.getItem('ecb_protocols_permanent_v8');
+                const savedProtos = localStorage.getItem('ecb_protocols_permanent_v9');
                 if (savedProtos) {
                     protocols = JSON.parse(savedProtos);
+                } else {
+                    // Fallback auf älteren Key
+                    const oldProtos = localStorage.getItem('ecb_protocols_permanent_v8');
+                    if (oldProtos) protocols = JSON.parse(oldProtos);
                 }
-                const savedDevs = localStorage.getItem('ecb_dguv_devices_permanent_v8');
+
+                const savedDevs = localStorage.getItem('ecb_dguv_devices_permanent_v9');
                 if (savedDevs) {
                     dguvDevices = JSON.parse(savedDevs);
+                } else {
+                    const oldDevs = localStorage.getItem('ecb_dguv_devices_permanent_v8');
+                    if (oldDevs) dguvDevices = JSON.parse(oldDevs);
                 }
-                const savedUsers = localStorage.getItem('ecb_cloud_users_permanent_v8');
+
+                const savedUsers = localStorage.getItem('ecb_cloud_users_permanent_v9');
                 if (savedUsers) {
                     cloudUsers = JSON.parse(savedUsers);
                 }
@@ -507,9 +517,9 @@
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_permanent_v8', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_devices_permanent_v8', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_cloud_users_permanent_v8', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_permanent_v9', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_devices_permanent_v9', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_cloud_users_permanent_v9', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
@@ -519,6 +529,7 @@
                 const protoRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols');
                 onSnapshot(protoRef, (snapshot) => {
                     let remoteMap = new Map();
+                    // Lokale Daten als Basis beibehalten
                     protocols.forEach(p => {
                         const k = p.id || String(p.timestamp);
                         remoteMap.set(k, p);
@@ -527,7 +538,9 @@
                     snapshot.forEach(docSnap => {
                         const data = docSnap.data();
                         const key = data.id || docSnap.id;
-                        remoteMap.set(key, { firestoreId: docSnap.id, ...data });
+                        if (!remoteMap.has(key)) {
+                            remoteMap.set(key, { firestoreId: docSnap.id, ...data });
+                        }
                     });
 
                     protocols = Array.from(remoteMap.values());
@@ -542,7 +555,10 @@
                     dguvDevices.forEach(d => remoteDevsMap.set(d.id, d));
                     snapshot.forEach(docSnap => {
                         const data = docSnap.data();
-                        remoteDevsMap.set(data.id || docSnap.id, { firestoreId: docSnap.id, ...data });
+                        const key = data.id || docSnap.id;
+                        if (!remoteDevsMap.has(key)) {
+                            remoteDevsMap.set(key, { firestoreId: docSnap.id, ...data });
+                        }
                     });
                     dguvDevices = Array.from(remoteDevsMap.values());
                     saveLocalCache();
@@ -562,7 +578,10 @@
                         protocols.forEach(p => remoteMap.set(p.id, p));
                         protoSnapshot.forEach(d => {
                             const data = d.data();
-                            remoteMap.set(data.id || d.id, { firestoreId: d.id, ...data });
+                            const key = data.id || d.id;
+                            if (!remoteMap.has(key)) {
+                                remoteMap.set(key, { firestoreId: d.id, ...data });
+                            }
                         });
                         protocols = Array.from(remoteMap.values());
                         protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
@@ -572,7 +591,10 @@
                         dguvDevices.forEach(d => remoteDevsMap.set(d.id, d));
                         dguvSnapshot.forEach(d => {
                             const data = d.data();
-                            remoteDevsMap.set(data.id || d.id, { firestoreId: d.id, ...data });
+                            const key = data.id || d.id;
+                            if (!remoteDevsMap.has(key)) {
+                                remoteDevsMap.set(key, { firestoreId: d.id, ...data });
+                            }
                         });
                         dguvDevices = Array.from(remoteDevsMap.values());
 
@@ -580,11 +602,11 @@
                         updateUI();
                     } catch(e) {}
                 }
-            }, 5000);
+            }, 6000);
         }
 
         async function saveProtocolToCloud(protocol) {
-            // Garantierte Sofort-Speicherung im lokalen Array und Cache
+            // Sofortiges Einfügen in das lokale Array und dauerhafte Sicherung
             const existsIndex = protocols.findIndex(p => p.id === protocol.id);
             if (existsIndex >= 0) {
                 protocols[existsIndex] = protocol;
