@@ -13,7 +13,7 @@
     <!-- jsPDF for professional PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- Firebase App (v8 compatibility mode for 100% reliable sandbox & web compatibility) -->
+    <!-- Firebase v8 compatibility mode (Reliable CDN Loading) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -49,6 +49,7 @@
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
+    <!-- Login Screen -->
     <div id="login-screen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 space-y-6 animate-fade-in">
             <div class="text-center space-y-2">
@@ -78,6 +79,7 @@
         </div>
     </div>
 
+    <!-- Admin & Backdate Modal -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -134,6 +136,7 @@
         </div>
     </div>
 
+    <!-- Password Change Modal -->
     <div id="modal-password" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -152,6 +155,7 @@
         </div>
     </div>
 
+    <!-- Header -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
@@ -167,7 +171,7 @@
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
                         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Verbunden mit Firebase Cloud</span>
+                        <span id="cloud-status-text">Verbinde mit Firebase Cloud...</span>
                     </p>
                 </div>
             </div>
@@ -194,6 +198,7 @@
         </div>
     </header>
 
+    <!-- Main Body -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
 
         <!-- Dashboard Tab -->
@@ -997,7 +1002,7 @@
                     ${renderCheckPoint(2, 'Reinigen der Maschine')}
                     ${renderCheckPoint(3, 'Mängelfreiheit prüfen')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl">Protokoll speichern &amp; PDF</button>
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl shadow-lg cursor-pointer">Protokoll speichern &amp; PDF</button>
                 </form>
             `;
             activePhotos = []; switchTab('form');
@@ -1012,7 +1017,7 @@
                     ${renderCheckPoint(1, 'Gründliche Reinigung')}
                     ${renderCheckPoint(2, 'Prüfung auf Mängel')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl">Protokoll speichern &amp; PDF</button>
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl shadow-lg cursor-pointer">Protokoll speichern &amp; PDF</button>
                 </form>
             `;
             activePhotos = []; switchTab('form');
@@ -1024,12 +1029,12 @@
                 <form onsubmit="submitProtocol(event, 'Kompressor 2-Wochen')" class="space-y-6">
                     ${renderCommonHeaderFields()}
                     <input type="hidden" id="machine-select" value="Kompressor (2-Wochen)">
-                    <input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm" placeholder="Betriebsstunden">
+                    <div class="space-y-1"><label class="block font-bold text-sm">Betriebsstunden:</label><input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm" placeholder="Betriebsstunden"></div>
                     ${renderCheckPoint(1, 'Ölstand prüfen')}
                     ${renderCheckPoint(2, 'Ansaugfilter prüfen')}
                     ${renderCheckPoint(3, 'Kompressor reinigen')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl">Protokoll speichern &amp; PDF</button>
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl shadow-lg cursor-pointer">Protokoll speichern &amp; PDF</button>
                 </form>
             `;
             activePhotos = []; switchTab('form');
@@ -1041,26 +1046,46 @@
                 <form onsubmit="submitProtocol(event, 'Kompressor Jahreswartung')" class="space-y-6">
                     ${renderCommonHeaderFields()}
                     <input type="hidden" id="machine-select" value="Kompressor (Jahreswartung)">
-                    <input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm" placeholder="Betriebsstunden">
+                    <div class="space-y-1"><label class="block font-bold text-sm">Betriebsstunden:</label><input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm" placeholder="Betriebsstunden"></div>
                     ${renderCheckPoint(1, 'Ölwechsel')}
                     ${renderCheckPoint(2, 'Ölfilter wechseln')}
                     ${renderCheckPoint(3, 'Luftfilter wechseln')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl">Protokoll speichern &amp; PDF</button>
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl shadow-lg cursor-pointer">Protokoll speichern &amp; PDF</button>
                 </form>
             `;
             activePhotos = []; switchTab('form');
         };
 
         function renderCheckPoint(i, title) {
-            return `<div class="p-4 bg-slate-50 rounded-xl border" data-title="${title}"><div class="font-bold text-sm mb-2">${i}. ${title}</div><div class="flex gap-4"><label><input type="radio" name="point_${i}" value="erledigt" checked> OK</label><label><input type="radio" name="point_${i}" value="nicht in Ordnung"> Mangel</label></div></div>`;
+            return `<div class="p-4 bg-slate-50 rounded-xl border" data-title="${title}"><div class="font-bold text-sm mb-2">${i}. ${title}</div><div class="flex gap-4"><label class="cursor-pointer font-medium"><input type="radio" name="point_${i}" value="erledigt" checked class="mr-1"> OK</label><label class="cursor-pointer font-medium"><input type="radio" name="point_${i}" value="nicht in Ordnung" class="mr-1"> Mangel</label></div></div>`;
         }
+
         function renderPhotoSection() {
-            return `<div class="space-y-2"><label class="block font-bold text-sm">Fotos:</label><input type="file" accept="image/*" multiple onchange="handlePhotoCapture(event)"><div id="photo-preview-grid" class="grid grid-cols-4 gap-2"></div></div>`;
+            return `
+                <div class="p-5 bg-slate-50 rounded-2xl border space-y-3">
+                    <label class="block font-bold text-sm text-slate-800"><i class="fa-solid fa-camera mr-1.5 text-ecbDarkGreen"></i> Fotos hinzufügen / aufnehmen:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label class="flex items-center justify-center gap-2 p-3.5 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-xs cursor-pointer shadow transition">
+                            <i class="fa-solid fa-camera text-base"></i> Foto mit Kamera machen
+                            <input type="file" accept="image/*" capture="environment" onchange="handlePhotoCapture(event)" class="hidden">
+                        </label>
+                        <label class="flex items-center justify-center gap-2 p-3.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold text-xs cursor-pointer transition">
+                            <i class="fa-solid fa-images text-base"></i> Aus Galerie auswählen
+                            <input type="file" accept="image/*" multiple onchange="handlePhotoCapture(event)" class="hidden">
+                        </label>
+                    </div>
+                    <div id="photo-preview-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-2"></div>
+                </div>
+            `;
         }
-        function renderRemarksSection() { return `<textarea id="remarks-input" class="w-full border rounded-xl p-3 text-sm" placeholder="Bemerkungen..."></textarea>`; }
+
+        function renderRemarksSection() {
+            return `<div class="space-y-1"><label class="block font-bold text-sm">Bemerkungen / Feststellungen:</label><textarea id="remarks-input" class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Zusätzliche Notizen oder Mängel..."></textarea></div>`;
+        }
+
         function renderSignatureSection() {
-            return `<div><div class="flex justify-between"><label class="font-bold text-sm">Unterschrift:</label><button type="button" onclick="clearSignature()" class="text-xs text-red-600">Löschen</button></div><canvas id="signature-canvas" class="signature-canvas w-full h-36 border rounded-xl bg-white"></canvas></div>`;
+            return `<div class="space-y-1"><div class="flex justify-between items-center"><label class="font-bold text-sm">Unterschrift des Technikers:</label><button type="button" onclick="clearSignature()" class="text-xs font-bold text-red-600 hover:underline">Unterschrift löschen</button></div><canvas id="signature-canvas" class="signature-canvas w-full h-36 border rounded-xl bg-white shadow-inner"></canvas></div>`;
         }
 
         window.handlePhotoCapture = function(e) {
@@ -1069,10 +1094,24 @@
                 r.onload = (evt) => { activePhotos.push(evt.target.result); updatePhotoPreview(); };
                 r.readAsDataURL(f);
             });
+            e.target.value = ''; // Reset input to allow same photo re-selection
         };
+
         function updatePhotoPreview() {
-            document.getElementById('photo-preview-grid').innerHTML = activePhotos.map((p, i) => `<img src="${p}" class="w-full h-20 object-cover rounded-lg">`).join('');
+            const grid = document.getElementById('photo-preview-grid');
+            if (!grid) return;
+            grid.innerHTML = activePhotos.map((p, i) => `
+                <div class="relative group">
+                    <img src="${p}" class="w-full h-20 object-cover rounded-xl border shadow-sm">
+                    <button type="button" onclick="removePhoto(${i})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow hover:bg-red-700">&times;</button>
+                </div>
+            `).join('');
         }
+
+        window.removePhoto = function(index) {
+            activePhotos.splice(index, 1);
+            updatePhotoPreview();
+        };
 
         function initSignaturePad() {
             const canvas = document.getElementById('signature-canvas');
@@ -1123,6 +1162,7 @@
             container.innerHTML = filtered.map((p, idx) => {
                 const globalIdx = protocols.findIndex(item => item.id === p.id);
                 const pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
+                const photosHtml = (p.photos && p.photos.length > 0) ? `<div class="flex gap-2 overflow-x-auto py-2">${p.photos.map(pho => `<img src="${pho}" class="w-16 h-16 object-cover rounded-lg border">`).join('')}</div>` : '';
                 return `
                     <div class="bg-white rounded-3xl p-6 border shadow-sm space-y-4">
                         <div class="flex justify-between items-start">
@@ -1132,11 +1172,13 @@
                                 <p class="text-xs text-slate-500 mt-1">${p.date} | ${p.employee} ${p.runtime ? `| ${p.runtime} Std.` : ''}</p>
                             </div>
                             <div class="flex gap-2">
-                                <button onclick='generatePDF(${JSON.stringify(p)})' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold">PDF</button>
-                                <button onclick="deleteProtocol('${p.firestoreId || ''}', ${globalIdx})" class="text-red-500 p-2"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick='generatePDF(${JSON.stringify(p)})' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer">PDF</button>
+                                <button onclick="deleteProtocol('${p.firestoreId || ''}', ${globalIdx})" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
-                        <div class="bg-slate-50 p-4 rounded-xl">${pts}</div>
+                        <div class="bg-slate-50 p-4 rounded-xl space-y-2">${pts}</div>
+                        ${photosHtml}
+                        ${p.remarks ? `<p class="text-xs text-slate-600 bg-amber-50/50 p-3 rounded-xl border border-amber-100"><strong>Bemerkung:</strong> ${p.remarks}</p>` : ''}
                     </div>
                 `;
             }).join('');
@@ -1154,12 +1196,12 @@
             const html = dguvDevices.map((d, i) => `
                 <div class="bg-white rounded-3xl p-6 border shadow-sm flex flex-col justify-between">
                     <div>
-                        <div class="flex justify-between"><span class="px-3 py-1 rounded-full text-xs font-bold ${d.status==='Erledigt'?'bg-emerald-50 text-ecbGreen':'bg-amber-50 text-amber-600'}">${d.status}</span><button onclick="deleteDguvDevice('${d.firestoreId||''}', ${i})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></div>
+                        <div class="flex justify-between"><span class="px-3 py-1 rounded-full text-xs font-bold ${d.status==='Erledigt'?'bg-emerald-50 text-ecbGreen':'bg-amber-50 text-amber-600'}">${d.status}</span><button onclick="deleteDguvDevice('${d.firestoreId||''}', ${i})" class="text-red-500 cursor-pointer"><i class="fa-solid fa-trash"></i></button></div>
                         <h3 class="text-xl font-bold mt-2">${d.name}</h3>
                         <p class="text-xs text-sky-700 mt-1">Nr.: ${d.inventoryNumber} | ${d.location}</p>
                         <p class="text-xs text-slate-500 mt-1">Fällig: ${d.dueDate}</p>
                     </div>
-                    <label class="mt-4 py-2 bg-slate-50 border rounded-xl text-xs font-bold text-center cursor-pointer block">Protokoll hochladen<input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${d.id}')" class="hidden"></label>
+                    <label class="mt-4 py-2.5 bg-slate-50 hover:bg-slate-100 border rounded-xl text-xs font-bold text-center cursor-pointer block transition">Messprotokoll hochladen<input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${d.id}')" class="hidden"></label>
                 </div>
             `).join('');
             container.innerHTML = html;
@@ -1184,6 +1226,9 @@
             (p.points || []).forEach(pt => {
                 doc.text(`${pt.title}: ${pt.status.toUpperCase()}`, 15, y); y += 8;
             });
+            if (p.remarks) {
+                y += 5; doc.text(`Bemerkung: ${p.remarks}`, 15, y);
+            }
             doc.save(`ECB_Protokoll_${p.id}.pdf`);
         }
     </script>
