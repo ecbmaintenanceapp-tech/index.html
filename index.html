@@ -43,7 +43,6 @@
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
-    <!-- Login Screen -->
     <div id="login-screen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 space-y-6 animate-fade-in">
             <div class="text-center space-y-2">
@@ -73,7 +72,6 @@
         </div>
     </div>
 
-    <!-- Admin & Backdate Modal -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -149,7 +147,6 @@
         </div>
     </div>
 
-    <!-- Header -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
@@ -192,7 +189,6 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
 
         <!-- Dashboard Tab -->
@@ -438,11 +434,11 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs (Compat v10) & App Logic -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEvon6SHIVRB5k",
             authDomain: "ecb-maintenance.firebaseapp.com",
@@ -452,7 +448,7 @@
             appId: "1:229926423123:web:a309c14c708fc88c62d4a6"
         };
 
-        let db = null;
+        let app, db, auth;
         let protocols = [];
         let dguvDevices = [];
         let cloudUsers = [
@@ -471,20 +467,20 @@
             updateUI();
 
             try {
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(firebaseConfig);
-                }
-                db = firebase.firestore();
-                await firebase.auth().signInAnonymously();
-                
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                await signInAnonymously(auth);
+
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
                 document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden (Live Sync)";
-                
-                initFirebaseRealtimeSync();
+
+                await fetchCloudData();
+                initFirebaseListeners();
             } catch (err) {
                 console.warn("Firebase Init Hinweis:", err);
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Lokaler Modus Aktiv";
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Lokaler Modus (Cloud Backup aktiv)";
             }
 
             if (localStorage.getItem('ecb_logged_in') === 'true') {
@@ -492,795 +488,102 @@
                 checkAdminNav();
                 resetInactivityTimer();
             }
-        }
+        };
 
         function loadLocalCache() {
             try {
-                const savedProtos = localStorage.getItem('ecb_protocols_permanent_v12');
-                if (savedProtos) protocols = JSON.parse(savedProtos);
+                const savedProtos = localStorage.getItem('ecb_protocols_permanent_v9');
+                if (savedProtos) {
+                    const parsed = JSON.parse(savedProtos);
+                    if (Array.isArray(parsed) && parsed.length > 0) protocols = parsed;
+                }
 
-                const savedDevs = localStorage.getItem('ecb_dguv_devices_permanent_v12');
-                if (savedDevs) dguvDevices = JSON.parse(savedDevs);
+                const savedDevs = localStorage.getItem('ecb_dguv_v13');
+                if (savedDevs) {
+                    const parsed = JSON.parse(savedDevs);
+                    if (Array.isArray(parsed) && parsed.length > 0) dguvDevices = parsed;
+                }
 
-                const savedUsers = localStorage.getItem('ecb_cloud_users_permanent_v12');
-                if (savedUsers) cloudUsers = JSON.parse(savedUsers);
+                const savedUsers = localStorage.getItem('ecb_users_v13');
+                if (savedUsers) {
+                    const parsed = JSON.parse(savedUsers);
+                    if (Array.isArray(parsed) && parsed.length > 0) cloudUsers = parsed;
+                }
             } catch(e) {}
         }
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_permanent_v12', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_devices_permanent_v12', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_cloud_users_permanent_v12', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_permanent_v9', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v13', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v13', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
-        function initFirebaseRealtimeSync() {
+        async function fetchCloudData() {
             if (!db) return;
             try {
-                db.collection('protocols').onSnapshot((snapshot) => {
-                    let remoteMap = new Map();
-                    protocols.forEach(p => remoteMap.set(p.id, p));
+                const protoSnap = await getDocs(collection(db, 'protocols'));
+                let map = new Map();
+                protocols.forEach(p => map.set(p.id || p.firestoreId, p));
+                
+                protoSnap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const key = data.id || docSnap.id;
+                    map.set(key, { firestoreId: docSnap.id, ...data });
+                });
+                protocols = Array.from(map.values());
+                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+
+                const dguvSnap = await getDocs(collection(db, 'dguv_devices'));
+                let devMap = new Map();
+                dguvDevices.forEach(d => devMap.set(d.id || d.firestoreId, d));
+
+                dguvSnap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const key = data.id || docSnap.id;
+                    devMap.set(key, { firestoreId: docSnap.id, ...data });
+                });
+                dguvDevices = Array.from(devMap.values());
+
+                saveLocalCache();
+                updateUI();
+            } catch (e) {
+                console.warn("Fehler beim Abrufen der Cloud-Daten:", e);
+            }
+        }
+
+        function initFirebaseListeners() {
+            if (!db) return;
+            try {
+                onSnapshot(collection(db, 'protocols'), (snapshot) => {
+                    let map = new Map();
+                    protocols.forEach(p => map.set(p.id || p.firestoreId, p));
                     snapshot.forEach(docSnap => {
                         const data = docSnap.data();
                         const key = data.id || docSnap.id;
-                        remoteMap.set(key, { firestoreId: docSnap.id, ...data });
+                        map.set(key, { firestoreId: docSnap.id, ...data });
                     });
-                    protocols = Array.from(remoteMap.values());
+                    protocols = Array.from(map.values());
                     protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                     saveLocalCache();
                     updateUI();
                 }, err => console.warn("Protocol snapshot err:", err));
 
-                db.collection('dguv_devices').onSnapshot((snapshot) => {
-                    let remoteDevsMap = new Map();
-                    dguvDevices.forEach(d => remoteDevsMap.set(d.id, d));
+                onSnapshot(collection(db, 'dguv_devices'), (snapshot) => {
+                    let map = new Map();
+                    dguvDevices.forEach(d => map.set(d.id || d.firestoreId, d));
                     snapshot.forEach(docSnap => {
                         const data = docSnap.data();
                         const key = data.id || docSnap.id;
-                        remoteDevsMap.set(key, { firestoreId: docSnap.id, ...data });
+                        map.set(key, { firestoreId: docSnap.id, ...data });
                     });
-                    dguvDevices = Array.from(remoteDevsMap.values());
+                    dguvDevices = Array.from(map.values());
                     saveLocalCache();
                     updateUI();
                 }, err => console.warn("DGUV snapshot err:", err));
             } catch(e) {
-                console.warn("Firebase Sync Hinweis:", e);
-            }
-        }
-
-        async function saveProtocolToCloud(protocol) {
-            const existsIndex = protocols.findIndex(p => p.id === protocol.id);
-            if (existsIndex >= 0) {
-                protocols[existsIndex] = protocol;
-            } else {
-                protocols.unshift(protocol);
-            }
-            saveLocalCache();
-            updateUI();
-
-            if (db) {
-                try {
-                    const docRef = await db.collection('protocols').add(protocol);
-                    protocol.firestoreId = docRef.id;
-                    saveLocalCache();
-                } catch(e) {
-                    console.warn("Firestore Schreibfehler Protocols:", e);
-                }
-            }
-        }
-
-        async function saveDguvToCloud(dev) {
-            dguvDevices.unshift(dev);
-            saveLocalCache();
-            updateUI();
-
-            if (db) {
-                try {
-                    const docRef = await db.collection('dguv_devices').add(dev);
-                    dev.firestoreId = docRef.id;
-                    saveLocalCache();
-                } catch(e) {
-                    console.warn("Firestore Schreibfehler DGUV:", e);
-                }
-            }
-        }
-
-        async function removeProtocolFromCloud(firestoreId, index, protocolId) {
-            if (firestoreId) {
-                protocols = protocols.filter(p => p.firestoreId !== firestoreId && p.id !== protocolId);
-            } else if (index !== undefined && index >= 0) {
-                protocols.splice(index, 1);
-            }
-            saveLocalCache();
-            updateUI();
-
-            if (db && firestoreId) {
-                try {
-                    await db.collection('protocols').doc(firestoreId).delete();
-                } catch(e) {}
-            }
-        }
-
-        async function removeDguvFromCloud(firestoreId, index, devId) {
-            if (firestoreId) {
-                dguvDevices = dguvDevices.filter(d => d.firestoreId !== firestoreId && d.id !== devId);
-            } else if (index !== undefined && index >= 0) {
-                dguvDevices.splice(index, 1);
-            }
-            saveLocalCache();
-            updateUI();
-
-            if (db && firestoreId) {
-                try {
-                    await db.collection('dguv_devices').doc(firestoreId).delete();
-                } catch(e) {}
-            }
-        }
-
-        function resetInactivityTimer() {
-            if (localStorage.getItem('ecb_logged_in') !== 'true') return;
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(() => {
-                handleLogoutDueToInactivity();
-            }, INACTIVITY_LIMIT);
-        }
-
-        function handleLogoutDueToInactivity() {
-            localStorage.removeItem('ecb_logged_in');
-            localStorage.removeItem('ecb_current_user');
-            localStorage.removeItem('ecb_current_fullname');
-            document.getElementById('login-screen').classList.remove('hidden');
-            showModal('Inaktivität', 'Sie wurden nach 5 Minuten Inaktivität automatisch abgemeldet.', false);
-        }
-
-        ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll'].forEach(evt => {
-            window.addEventListener(evt, resetInactivityTimer, true);
-        });
-
-        function checkAdminNav() {
-            const currentUser = localStorage.getItem('ecb_current_user');
-            if (currentUser === 'ECB_Wartung') {
-                document.getElementById('dashboard-admin-btn-container').classList.remove('hidden');
-                document.getElementById('history-admin-clear-container').classList.remove('hidden');
-            } else {
-                document.getElementById('dashboard-admin-btn-container').classList.add('hidden');
-                document.getElementById('history-admin-clear-container').classList.add('hidden');
-            }
-        }
-
-        window.handleLogin = function(event) {
-            event.preventDefault();
-            const user = document.getElementById('login-user').value.trim();
-            const pass = document.getElementById('login-pass').value.trim();
-
-            const found = cloudUsers.find(u => u.user === user && u.pass === pass);
-            if (found) {
-                if (found.active === false) {
-                    showModal('Zugriff verwehrt', 'Ihr Benutzerkonto wurde vom Administrator deaktiviert.', false);
-                    return;
-                }
-                localStorage.setItem('ecb_logged_in', 'true');
-                localStorage.setItem('ecb_current_user', user);
-                localStorage.setItem('ecb_current_fullname', found.fullname || user);
-
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('login-user').value = '';
-                document.getElementById('login-pass').value = '';
-                document.getElementById('login-error').classList.add('hidden');
-
-                checkAdminNav();
-                resetInactivityTimer();
-                updateUI();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        }
-
-        window.openRegisterModal = function() {
-            renderAdminUserList();
-            populateBackdateTechnicians();
-            document.getElementById('modal-register').classList.remove('hidden');
-        }
-
-        window.closeRegisterModal = function() {
-            document.getElementById('modal-register').classList.add('hidden');
-        }
-
-        window.openPasswordModal = function() {
-            document.getElementById('new-pass').value = '';
-            document.getElementById('modal-password').classList.remove('hidden');
-        }
-
-        window.closePasswordModal = function() {
-            document.getElementById('modal-password').classList.add('hidden');
-        }
-
-        window.handleChangePassword = async function(event) {
-            event.preventDefault();
-            const newPass = document.getElementById('new-pass').value.trim();
-            const currentUser = localStorage.getItem('ecb_current_user');
-            if (!currentUser || !newPass) return;
-
-            const userObj = cloudUsers.find(u => u.user === currentUser);
-            if (userObj) {
-                userObj.pass = newPass;
-                saveLocalCache();
-            }
-            closePasswordModal();
-            showModal('Erfolg', 'Ihr Passwort wurde erfolgreich geändert!', true);
-        }
-
-        window.handleRegister = async function(event) {
-            event.preventDefault();
-            const fullname = document.getElementById('reg-fullname').value.trim();
-            const newUser = document.getElementById('reg-user').value.trim();
-            const newPass = document.getElementById('reg-pass').value.trim();
-
-            if (cloudUsers.some(u => u.user === newUser)) {
-                document.getElementById('reg-error').classList.remove('hidden');
-                return;
-            }
-            document.getElementById('reg-error').classList.add('hidden');
-
-            const newUserObj = { fullname, user: newUser, pass: newPass, active: true };
-            cloudUsers.push(newUserObj);
-            saveLocalCache();
-            
-            document.getElementById('reg-fullname').value = '';
-            document.getElementById('reg-user').value = '';
-            document.getElementById('reg-pass').value = '';
-            renderAdminUserList();
-            populateBackdateTechnicians();
-            showModal('Erfolg', `Mitarbeiter "${newUser}" (${fullname}) erfolgreich angelegt!`, true);
-        }
-
-        window.startBackdateForm = function(event) {
-            event.preventDefault();
-            const categoryKey = document.getElementById('backdate-category').value;
-            const technician = document.getElementById('backdate-technician').value;
-            const datetimeInput = document.getElementById('backdate-datetime').value;
-
-            if (!categoryKey || !technician || !datetimeInput) {
-                showModal('Fehler', 'Bitte alle Felder für das Nachtragen ausfüllen.', false);
-                return;
-            }
-
-            const maintenanceDate = new Date(datetimeInput);
-            if (isNaN(maintenanceDate.getTime())) {
-                showModal('Fehler', 'Ungültiges Datum.', false);
-                return;
-            }
-
-            backdateContext = {
-                technician: technician,
-                dateObj: maintenanceDate,
-                dateString: maintenanceDate.toLocaleString('de-DE'),
-                timestamp: maintenanceDate.getTime()
-            };
-
-            closeRegisterModal();
-
-            if (categoryKey === 'Waschmaschine') openWashingMachineMenu();
-            else if (categoryKey === 'Trockner') openDryerMenu();
-            else if (categoryKey === 'Kompressor 2-Wochen') openCompressorRoutine();
-            else if (categoryKey === 'Kompressor Jahreswartung') openCompressorAnnual();
-        }
-
-        function populateBackdateTechnicians() {
-            const selectEl = document.getElementById('backdate-technician');
-            if (!selectEl) return;
-            let html = '';
-            cloudUsers.forEach(u => {
-                const name = u.fullname || u.user;
-                html += `<option value="${name}">${name} (${u.user})</option>`;
-            });
-            selectEl.innerHTML = html;
-        }
-
-        window.toggleUserActive = function(index) {
-            if (cloudUsers[index].user === 'ECB_Wartung') return;
-            cloudUsers[index].active = !cloudUsers[index].active;
-            saveLocalCache();
-            renderAdminUserList();
-            populateBackdateTechnicians();
-        }
-
-        window.deleteUserRecord = function(index) {
-            if (cloudUsers[index].user === 'ECB_Wartung') return;
-            if (!confirm(`Benutzer wirklich löschen?`)) return;
-            cloudUsers.splice(index, 1);
-            saveLocalCache();
-            renderAdminUserList();
-            populateBackdateTechnicians();
-        }
-
-        function renderAdminUserList() {
-            const container = document.getElementById('admin-user-list');
-            if (!container) return;
-            let html = '';
-            cloudUsers.forEach((u, index) => {
-                const isAdmin = u.user === 'ECB_Wartung';
-                html += `
-                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
-                        <div>
-                            <strong class="text-sm text-slate-800">${u.fullname || u.user}</strong> <span class="text-xs text-slate-400">(${u.user})</span>
-                            <div class="text-[11px] ${u.active !== false ? 'text-emerald-600 font-bold' : 'text-red-500 font-bold'}">${u.active !== false ? 'Aktiv' : 'Deaktiviert'}</div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            ${!isAdmin ? `
-                                <button type="button" onclick="toggleUserActive(${index})" class="px-2.5 py-1.5 rounded-lg text-xs font-bold ${u.active !== false ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'} cursor-pointer">
-                                    ${u.active !== false ? 'Deaktivieren' : 'Aktivieren'}
-                                </button>
-                                <button type="button" onclick="deleteUserRecord(${index})" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 cursor-pointer">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            ` : `<span class="text-xs text-slate-400 font-semibold italic">Haupt-Admin</span>`}
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
-        window.handleLogout = function() {
-            localStorage.removeItem('ecb_logged_in');
-            localStorage.removeItem('ecb_current_user');
-            localStorage.removeItem('ecb_current_fullname');
-            document.getElementById('login-screen').classList.remove('hidden');
-        }
-
-        window.switchTab = function(tabId) {
-            document.getElementById('tab-dashboard').classList.add('hidden');
-            document.getElementById('tab-calendar').classList.add('hidden');
-            document.getElementById('tab-dguv').classList.add('hidden');
-            document.getElementById('tab-history').classList.add('hidden');
-            document.getElementById('form-view').classList.add('hidden');
-
-            if (tabId === 'dashboard') {
-                document.getElementById('tab-dashboard').classList.remove('hidden');
-                updateDashboardDueDates();
-            } else if (tabId === 'calendar') {
-                document.getElementById('tab-calendar').classList.remove('hidden');
-                renderMaintenanceCalendar();
-            } else if (tabId === 'dguv') {
-                document.getElementById('tab-dguv').classList.remove('hidden');
-                renderDguvDevices();
-            } else if (tabId === 'history') {
-                document.getElementById('tab-history').classList.remove('hidden');
-                populateYearFilter();
-                renderHistory();
-            } else if (tabId === 'form') {
-                document.getElementById('form-view').classList.remove('hidden');
-                setTimeout(() => initSignaturePad(), 200);
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        window.showModal = function(title, text, isSuccess = true) {
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-text').innerText = text;
-            const iconDiv = document.getElementById('modal-icon');
-            if (isSuccess) {
-                iconDiv.className = "w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner";
-                iconDiv.innerHTML = '<i class="fa-solid fa-check"></i>';
-            } else {
-                iconDiv.className = "w-16 h-16 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl mx-auto shadow-inner";
-                iconDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-            }
-            document.getElementById('modal-message').classList.remove('hidden');
-        }
-
-        window.closeModal = function() {
-            document.getElementById('modal-message').classList.add('hidden');
-        }
-
-        function updateUI() {
-            updateProtocolCount();
-            updateDguvCount();
-            renderHistory();
-            renderDguvDevices();
-            updateDashboardDueDates();
-            renderMaintenanceCalendar();
-        }
-
-        function parseProtocolDate(dateStr) {
-            if (!dateStr) return null;
-            const cleanStr = String(dateStr).split(',')[0].trim();
-            const parts = cleanStr.split('.');
-            if (parts.length === 3) {
-                const day = parseInt(parts[0], 10);
-                const month = parseInt(parts[1], 10) - 1;
-                const year = parseInt(parts[2], 10);
-                const d = new Date(year, month, day);
-                if (!isNaN(d.getTime())) return d;
-            }
-            const fallback = new Date(dateStr);
-            return !isNaN(fallback.getTime()) ? fallback : null;
-        }
-
-        function updateDashboardDueDates() {
-            const categories = [
-                { key: 'Waschmaschine', days: 14, name: 'Waschmaschinen' },
-                { key: 'Trockner', days: 14, name: 'Trockner' },
-                { key: 'Kompressor 2-Wochen', days: 14, name: 'Kompressor Wartung' },
-                { key: 'Kompressor Jahreswartung', days: 180, name: 'Kompressor Jahreswartung' }
-            ];
-
-            const now = new Date();
-            now.setHours(0,0,0,0);
-
-            categories.forEach(cat => {
-                const matching = protocols.filter(p => p.category === cat.key);
-                const dueEl = document.getElementById(`due-${cat.key}`);
-                const badgeEl = document.getElementById(`badge-${cat.key}`);
-                if (!dueEl || !badgeEl) return;
-
-                if (matching.length === 0) {
-                    dueEl.innerHTML = `<i class="fa-regular fa-clock text-amber-600 mr-1"></i> Noch keine Wartung erfolgt`;
-                    badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-[10px] font-extrabold uppercase">Kein Protokoll</span>`;
-                } else {
-                    const latest = matching.reduce((prev, curr) => (Number(curr.timestamp || 0) > Number(prev.timestamp || 0)) ? curr : prev);
-                    const lastDate = parseProtocolDate(latest.date) || new Date(Number(latest.timestamp || Date.now()));
-                    const nextDueDate = new Date(lastDate.getTime() + (cat.days * 24 * 60 * 60 * 1000));
-                    nextDueDate.setHours(0,0,0,0);
-                    
-                    const isOverdue = now.getTime() > nextDueDate.getTime();
-                    const formattedDate = !isNaN(nextDueDate.getTime()) ? nextDueDate.toLocaleDateString('de-DE') : 'Ungültig';
-
-                    dueEl.innerHTML = `<i class="fa-regular fa-calendar-days text-ecbGreen mr-1"></i> Nächster Termin: <strong>${formattedDate}</strong>`;
-                    if (isOverdue) {
-                        badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-red-600 text-white rounded-full text-[10px] font-extrabold uppercase animate-pulse shadow-sm">WARTUNG ÜBERFÄLLIG</span>`;
-                    } else {
-                        badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-extrabold uppercase">Termin eingehalten</span>`;
-                    }
-                }
-            });
-        }
-
-        function renderMaintenanceCalendar() {
-            const tableBody = document.getElementById('calendar-table-body');
-            if (!tableBody) return;
-
-            const categories = [
-                { key: 'Waschmaschine', days: 14, name: 'Waschmaschinen' },
-                { key: 'Trockner', days: 14, name: 'Trockner' },
-                { key: 'Kompressor 2-Wochen', days: 14, name: 'Kompressor Wartung (2-Wochen)' },
-                { key: 'Kompressor Jahreswartung', days: 180, name: 'Kompressor Jahreswartung' }
-            ];
-
-            const now = new Date();
-            now.setHours(0,0,0,0);
-            let html = '';
-
-            categories.forEach(cat => {
-                const matching = protocols.filter(p => p.category === cat.key);
-                if (matching.length === 0) {
-                    html += `
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="py-4 px-4 font-bold text-slate-800">${cat.name}</td>
-                            <td class="py-4 px-4 text-slate-500 italic">Keine Wartung erfasst</td>
-                            <td class="py-4 px-4 text-slate-500 font-semibold">Sofort fällig</td>
-                            <td class="py-4 px-4"><span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-extrabold uppercase">Offen</span></td>
-                        </tr>
-                    `;
-                } else {
-                    const latest = matching.reduce((prev, curr) => (Number(curr.timestamp || 0) > Number(prev.timestamp || 0)) ? curr : prev);
-                    const lastDateObj = parseProtocolDate(latest.date) || new Date(Number(latest.timestamp || Date.now()));
-                    const lastDateStr = !isNaN(lastDateObj.getTime()) ? lastDateObj.toLocaleDateString('de-DE') : '-';
-                    
-                    const nextDueDate = new Date(lastDateObj.getTime() + (cat.days * 24 * 60 * 60 * 1000));
-                    nextDueDate.setHours(0,0,0,0);
-                    const nextDueDateStr = !isNaN(nextDueDate.getTime()) ? nextDueDate.toLocaleDateString('de-DE') : '-';
-                    const isOverdue = now.getTime() > nextDueDate.getTime();
-
-                    html += `
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="py-4 px-4 font-bold text-slate-800">${cat.name}</td>
-                            <td class="py-4 px-4 text-slate-600 font-medium">${lastDateStr}</td>
-                            <td class="py-4 px-4 text-slate-800 font-bold">${nextDueDateStr}</td>
-                            <td class="py-4 px-4">
-                                ${isOverdue ? '<span class="px-2.5 py-1 bg-red-600 text-white rounded-full text-xs font-extrabold uppercase">Überfällig</span>' : '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-extrabold uppercase">Eingehalten</span>'}
-                            </td>
-                        </tr>
-                    `;
-                }
-            });
-            tableBody.innerHTML = html;
-        }
-
-        function renderCommonHeaderFields() {
-            const loggedInName = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
-            const activeTechnician = backdateContext ? backdateContext.technician : loggedInName;
-            const isBackdating = backdateContext !== null;
-
-            return `
-                <div class="p-6 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-4 mb-8 shadow-sm">
-                    <div class="flex items-center gap-2 text-ecbDarkGreen font-bold text-sm border-b border-slate-200 pb-3">
-                        <i class="fa-solid fa-user-shield text-base"></i> Mitarbeiter-Authentifizierung &amp; Zeitstempel
-                        ${isBackdating ? '<span class="ml-auto bg-sky-100 text-sky-800 px-2.5 py-1 rounded-lg text-xs">Nachtragungsmodus aktiv</span>' : ''}
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-800 mb-1.5">Name des zuständigen Technikers:</label>
-                        <input type="text" id="employee-name" required value="${activeTechnician}" ${isBackdating ? '' : 'readonly'} class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-slate-100 text-slate-700 shadow-sm font-bold ${isBackdating ? 'bg-white' : 'cursor-not-allowed'}">
-                    </div>
-                </div>
-            `;
-        }
-
-        window.openWashingMachineMenu = function() {
-            const container = document.getElementById('dynamic-form-content');
-            container.innerHTML = `
-                <div class="border-b border-slate-200 pb-6 mb-8 flex flex-wrap justify-between items-center gap-4">
-                    <div>
-                        <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Waschmaschinen</span>
-                        <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungsprotokoll: Waschmaschinen (Milnor)</h2>
-                    </div>
-                </div>
-                <form id="maintenance-form" onsubmit="submitProtocol(event, 'Waschmaschine')" class="space-y-8">
-                    ${renderCommonHeaderFields()}
-                    <div>
-                        <label class="block text-sm font-bold text-slate-800 mb-2">Maschine auswählen:</label>
-                        <select id="machine-select" class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-ecbGreen bg-white shadow-sm font-medium">
-                            <option value="Waschmaschine 1 (Milnor)">Waschmaschine 1 - Milnor</option>
-                            <option value="Waschmaschine 2 (Milnor)">Waschmaschine 2 - Milnor</option>
-                            <option value="Waschmaschine 3 (Milnor)">Waschmaschine 3 - Milnor</option>
-                            <option value="Waschmaschine 4 (Milnor)">Waschmaschine 4 - Milnor</option>
-                        </select>
-                    </div>
-                    <div class="space-y-4">
-                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Prüfpunkte</h3>
-                        ${renderCheckPoint(1, 'Schmieren der Maschine', true)}
-                        ${renderCheckPoint(2, 'Reinigen der Maschine', true)}
-                        ${renderCheckPoint(3, 'Maschine auf Mängelfreiheit prüfen', true)}
-                        ${renderCheckPoint(4, 'Wassertank gereinigt', true)}
-                    </div>
-                    ${renderPhotoSection()}
-                    ${renderRemarksSection()}
-                    ${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-extrabold shadow-xl transition cursor-pointer">Protokoll speichern &amp; PDF erstellen</button>
-                </form>
-            `;
-            activePhotos = [];
-            switchTab('form');
-        }
-
-        window.openDryerMenu = function() {
-            const container = document.getElementById('dynamic-form-content');
-            container.innerHTML = `
-                <div class="border-b border-slate-200 pb-6 mb-8">
-                    <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold uppercase">Trockner</span>
-                    <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungsprotokoll: Trockner</h2>
-                </div>
-                <form id="maintenance-form" onsubmit="submitProtocol(event, 'Trockner')" class="space-y-8">
-                    ${renderCommonHeaderFields()}
-                    <div>
-                        <label class="block text-sm font-bold text-slate-800 mb-2">Trockner auswählen:</label>
-                        <select id="machine-select" class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-white shadow-sm font-medium">
-                            <option value="Trockner 1">Trockner 1</option>
-                            <option value="Trockner 2">Trockner 2</option>
-                            <option value="Trockner 3">Trockner 3</option>
-                            <option value="Trockner 4">Trockner 4</option>
-                        </select>
-                    </div>
-                    <div class="space-y-4">
-                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Prüfpunkte</h3>
-                        ${renderCheckPoint(1, 'Gründliche Reinigung des Trockners', true)}
-                        ${renderCheckPoint(2, 'Trockner ohne Mängel geprüft', true)}
-                    </div>
-                    ${renderPhotoSection()}
-                    ${renderRemarksSection()}
-                    ${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-extrabold shadow-xl transition cursor-pointer">Protokoll speichern &amp; PDF erstellen</button>
-                </form>
-            `;
-            activePhotos = [];
-            switchTab('form');
-        }
-
-        window.openCompressorRoutine = function() {
-            const container = document.getElementById('dynamic-form-content');
-            container.innerHTML = `
-                <div class="border-b border-slate-200 pb-6 mb-8">
-                    <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase">Kompressor</span>
-                    <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Kompressor Wartung (2-Wochen-Intervall)</h2>
-                </div>
-                <form id="maintenance-form" onsubmit="submitProtocol(event, 'Kompressor 2-Wochen')" class="space-y-8">
-                    ${renderCommonHeaderFields()}
-                    <input type="hidden" id="machine-select" value="Kompressor (2-Wochen-Wartung)">
-                    <div class="p-6 bg-sky-50 rounded-2xl border border-sky-100 space-y-2">
-                        <label class="block text-sm font-bold text-sky-900">Laufleistung / Betriebsstunden: <span class="text-red-500">*</span></label>
-                        <input type="number" id="runtime-hours" required class="w-full border border-sky-300 rounded-xl p-3.5 text-sm bg-white font-medium" placeholder="z. B. 4850 Std.">
-                    </div>
-                    <div class="space-y-4">
-                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Prüfpunkte</h3>
-                        ${renderCheckPoint(1, 'Ölstand prüfen und nachfüllen', true)}
-                        ${renderCheckPoint(2, 'Ansaugfilter prüfen, gegebenenfalls wechseln', true)}
-                        ${renderCheckPoint(3, 'Kompressor reinigen', true)}
-                        ${renderCheckPoint(4, 'Keilriemen prüfen', true)}
-                        ${renderCheckPoint(5, 'Lufttrockner reinigen', true)}
-                        ${renderCheckPoint(6, 'Ölabscheidebehälter kontrollieren, gegebenenfalls leeren', true)}
-                    </div>
-                    ${renderPhotoSection()}
-                    ${renderRemarksSection()}
-                    ${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-extrabold shadow-xl transition cursor-pointer">Protokoll speichern &amp; PDF erstellen</button>
-                </form>
-            `;
-            activePhotos = [];
-            switchTab('form');
-        }
-
-        window.openCompressorAnnual = function() {
-            const container = document.getElementById('dynamic-form-content');
-            container.innerHTML = `
-                <div class="border-b border-slate-200 pb-6 mb-8">
-                    <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold uppercase">Kompressor</span>
-                    <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Kompressor Jahreswartung</h2>
-                </div>
-                <form id="maintenance-form" onsubmit="submitProtocol(event, 'Kompressor Jahreswartung')" class="space-y-8">
-                    ${renderCommonHeaderFields()}
-                    <input type="hidden" id="machine-select" value="Kompressor (Jahreswartung)">
-                    <div class="p-6 bg-purple-50 rounded-2xl border border-purple-100 space-y-2">
-                        <label class="block text-sm font-bold text-purple-900">Laufleistung / Betriebsstunden: <span class="text-red-500">*</span></label>
-                        <input type="number" id="runtime-hours" required class="w-full border border-purple-300 rounded-xl p-3.5 text-sm bg-white font-medium" placeholder="z. B. 6000 Std.">
-                    </div>
-                    <div class="space-y-4">
-                        <h3 class="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">Prüfpunkte</h3>
-                        ${renderCheckPoint(1, 'Ölwechsel', true)}
-                        ${renderCheckPoint(2, 'Ölfilter wechseln', true)}
-                        ${renderCheckPoint(3, 'Luftfilter wechseln', true)}
-                        ${renderCheckPoint(4, 'Ölabscheiderpatrone wechseln', true)}
-                        ${renderCheckPoint(5, 'Ansaugfilter wechseln', true)}
-                        ${renderCheckPoint(6, 'Kompressor reinigen', true)}
-                        ${renderCheckPoint(7, 'Sichtkontrolle auf Fälligkeiten', true)}
-                        ${renderCheckPoint(8, 'Druckbehälter kontrollieren und Wasser ablassen', true)}
-                    </div>
-                    ${renderPhotoSection()}
-                    ${renderRemarksSection()}
-                    ${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-extrabold shadow-xl transition cursor-pointer">Protokoll speichern &amp; PDF erstellen</button>
-                </form>
-            `;
-            activePhotos = [];
-            switchTab('form');
-        }
-
-        function renderCheckPoint(index, title, allowFaultOption = true) {
-            return `
-                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3" data-title="${title}">
-                    <div class="font-bold text-slate-900 text-sm flex items-center justify-between">
-                        <span>${index}. ${title}</span>
-                    </div>
-                    <div class="flex flex-wrap gap-6 pt-1">
-                        <label class="flex items-center space-x-2 text-sm cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
-                            <input type="radio" name="point_${index}" value="erledigt" checked class="text-ecbGreen w-4 h-4">
-                            <span class="text-slate-800 font-bold">Erledigt (OK)</span>
-                        </label>
-                        ${allowFaultOption ? `
-                        <label class="flex items-center space-x-2 text-sm cursor-pointer bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
-                            <input type="radio" name="point_${index}" value="nicht in Ordnung" class="text-red-500 w-4 h-4">
-                            <span class="text-red-600 font-bold">Nicht in Ordnung</span>
-                        </label>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderPhotoSection() {
-            return `
-                <div class="space-y-3 pt-2">
-                    <label class="block text-sm font-bold text-slate-800">Fotodokumentation:</label>
-                    <div class="flex flex-wrap items-center gap-3">
-                        <label class="px-5 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm cursor-pointer shadow-md hover:bg-slate-800 transition flex items-center gap-2">
-                            <i class="fa-solid fa-camera"></i> Foto aufnehmen
-                            <input type="file" accept="image/*" capture="environment" onchange="handlePhotoCapture(event)" class="hidden">
-                        </label>
-                        <label class="px-5 py-3 bg-sky-700 text-white rounded-xl font-bold text-sm cursor-pointer shadow-md hover:bg-sky-800 transition flex items-center gap-2">
-                            <i class="fa-solid fa-images"></i> Aus Galerie auswählen
-                            <input type="file" accept="image/*" multiple onchange="handlePhotoCapture(event)" class="hidden">
-                        </label>
-                        <span id="photo-counter" class="text-xs text-slate-500">0 Fotos</span>
-                    </div>
-                    <div id="photo-preview-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2"></div>
-                </div>
-            `;
-        }
-
-        function renderRemarksSection() {
-            return `
-                <div class="space-y-2 pt-2">
-                    <label class="block text-sm font-bold text-slate-800">Bemerkungen:</label>
-                    <textarea id="remarks-input" rows="3" class="w-full border border-slate-300 rounded-2xl p-4 text-sm font-medium" placeholder="Notizen..."></textarea>
-                </div>
-            `;
-        }
-
-        function renderSignatureSection() {
-            return `
-                <div class="space-y-3 pt-2">
-                    <div class="flex justify-between items-center">
-                        <label class="block text-sm font-bold text-slate-800">Digitale Unterschrift: <span class="text-red-500">*</span></label>
-                        <button type="button" onclick="clearSignature()" class="text-xs text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 cursor-pointer">Zurücksetzen</button>
-                    </div>
-                    <div class="border-2 border-dashed border-slate-300 rounded-2xl overflow-hidden bg-white">
-                        <canvas id="signature-canvas" class="signature-canvas w-full h-44 block"></canvas>
-                    </div>
-                </div>
-            `;
-        }
-
-        window.handlePhotoCapture = function(event) {
-            const files = event.target.files;
-            if (!files || files.length === 0) return;
-            for (let i = 0; i < files.length; i++) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    activePhotos.push(e.target.result);
-                    updatePhotoPreview();
-                }
-                reader.readAsDataURL(files[i]);
-            }
-        }
-
-        function updatePhotoPreview() {
-            const grid = document.getElementById('photo-preview-grid');
-            const counter = document.getElementById('photo-counter');
-            if (!grid || !counter) return;
-            counter.innerText = `${activePhotos.length} Fotos`;
-            grid.innerHTML = '';
-            activePhotos.forEach((photo, idx) => {
-                grid.innerHTML += `
-                    <div class="relative rounded-xl overflow-hidden h-24 border border-slate-200">
-                        <img src="${photo}" class="w-full h-full object-cover">
-                        <button type="button" onclick="removePhoto(${idx})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                    </div>
-                `;
-            });
-        }
-
-        window.removePhoto = function(index) {
-            activePhotos.splice(index, 1);
-            updatePhotoPreview();
-        }
-
-        function initSignaturePad() {
-            const canvas = document.getElementById('signature-canvas');
-            if (!canvas) return;
-            canvas.width = canvas.parentElement.clientWidth || 400;
-            canvas.height = 176;
-            const ctx = canvas.getContext('2d');
-            ctx.strokeStyle = '#0f172a';
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
-
-            let drawing = false;
-            function pos(e) {
-                const r = canvas.getBoundingClientRect();
-                const x = (e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0)) - r.left;
-                const y = (e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0)) - r.top;
-                return {x, y};
-            }
-
-            canvas.onmousedown = (e) => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
-            canvas.onmousemove = (e) => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); signaturePadInstance.hasSigned = true; };
-            canvas.onmouseup = () => drawing = false;
-            canvas.onmouseleave = () => drawing = false;
-
-            canvas.ontouchstart = (e) => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); };
-            canvas.ontouchmove = (e) => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); signaturePadInstance.hasSigned = true; e.preventDefault(); };
-            canvas.ontouchend = () => drawing = false;
-
-            signaturePadInstance = { canvas, ctx, hasSigned: false };
-        }
-
-        window.clearSignature = function() {
-            if (signaturePadInstance) {
-                signaturePadInstance.ctx.clearRect(0, 0, signaturePadInstance.canvas.width, signaturePadInstance.canvas.height);
-                signaturePadInstance.hasSigned = false;
+                console.warn("Listener Setup Fehler:", e);
             }
         }
 
@@ -1322,15 +625,24 @@
 
             backdateContext = null;
 
-            await saveProtocolToCloud(protocol);
-            generatePDF(protocol);
+            protocols.unshift(protocol);
+            saveLocalCache();
+            updateUI();
 
+            if (db) {
+                try {
+                    const docRef = await addDoc(collection(db, 'protocols'), protocol);
+                    protocol.firestoreId = docRef.id;
+                    saveLocalCache();
+                } catch(e) {
+                    console.warn("Firestore Schreibfehler Protocol:", e);
+                }
+            }
+
+            generatePDF(protocol);
             showModal('Erfolg', 'Wartungsprotokoll erfolgreich gespeichert & PDF erstellt!', true);
             switchTab('history');
-        }
-
-        window.openDguvModal = function() { document.getElementById('modal-dguv').classList.remove('hidden'); }
-        window.closeDguvModal = function() { document.getElementById('modal-dguv').classList.add('hidden'); }
+        };
 
         window.saveDguvDevice = async function(event) {
             event.preventDefault();
@@ -1349,11 +661,46 @@
                 protocolHistory: []
             };
 
-            await saveDguvToCloud(newDev);
+            dguvDevices.unshift(newDev);
+            saveLocalCache();
+            updateUI();
+
+            if (db) {
+                try {
+                    const docRef = await addDoc(collection(db, 'dguv_devices'), newDev);
+                    newDev.firestoreId = docRef.id;
+                    saveLocalCache();
+                } catch(e) {
+                    console.warn("Firestore Schreibfehler DGUV:", e);
+                }
+            }
+
             closeDguvModal();
             updateUI();
             showModal('Erfolg', 'Gerät erfolgreich erfasst!', true);
-        }
+        };
+
+        window.deleteProtocol = async function(firestoreId, index) {
+            if (firestoreId && db) {
+                try {
+                    await deleteDoc(doc(db, 'protocols', firestoreId));
+                } catch(e) {}
+            }
+            protocols.splice(index, 1);
+            saveLocalCache();
+            updateUI();
+        };
+
+        window.deleteDguvDevice = async function(firestoreId, index) {
+            if (firestoreId && db) {
+                try {
+                    await deleteDoc(doc(db, 'dguv_devices', firestoreId));
+                } catch(e) {}
+            }
+            dguvDevices.splice(index, 1);
+            saveLocalCache();
+            updateUI();
+        };
 
         window.handleProtocolUpload = async function(event, deviceId) {
             const file = event.target.files[0];
@@ -1372,295 +719,468 @@
                     devLocal.protocolHistory.unshift(newHistoryItem);
                     devLocal.status = 'Erledigt';
                     saveLocalCache();
-                    
+
                     if (db && devLocal.firestoreId) {
                         try {
-                            await db.collection('dguv_devices').doc(devLocal.firestoreId).update({
+                            await updateDoc(doc(db, 'dguv_devices', devLocal.firestoreId), {
                                 status: 'Erledigt',
                                 protocolHistory: devLocal.protocolHistory
                             });
                         } catch(e) {}
                     }
                 }
-
                 updateUI();
                 showModal('Erfolg', 'Messprotokoll hochgeladen!', true);
             };
             reader.readAsDataURL(file);
-        }
+        };
 
-        window.deleteDguvDevice = async function(firestoreId, index) {
-            const dev = dguvDevices[index];
-            await removeDguvFromCloud(firestoreId, index, dev ? dev.id : null);
-        }
-
-        window.deleteProtocol = async function(firestoreId, index) {
-            const proto = protocols[index];
-            await removeProtocolFromCloud(firestoreId, index, proto ? proto.id : null);
-        }
-
-        window.clearHistory = async function() {
-            const currentUser = localStorage.getItem('ecb_current_user');
-            if (currentUser !== 'ECB_Wartung') {
-                showModal('Zugriff verwehrt', 'Nur der Administrator kann den Verlauf leeren.', false);
-                return;
-            }
-            if (confirm('Ver Verlauf wirklich löschen?')) {
-                if (db) {
-                    try {
-                        for (let p of protocols) {
-                            if (p.firestoreId) {
-                                await db.collection('protocols').doc(p.firestoreId).delete();
-                            }
-                        }
-                    } catch(e) {}
+        window.handleLogin = function(event) {
+            event.preventDefault();
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+            const found = cloudUsers.find(u => u.user === user && u.pass === pass);
+            if (found) {
+                if (found.active === false) {
+                    showModal('Zugriff verwehrt', 'Ihr Konto wurde deaktiviert.', false);
+                    return;
                 }
-                protocols = [];
-                saveLocalCache();
+                localStorage.setItem('ecb_logged_in', 'true');
+                localStorage.setItem('ecb_current_user', user);
+                localStorage.setItem('ecb_current_fullname', found.fullname || user);
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('login-error').classList.add('hidden');
+                checkAdminNav();
+                resetInactivityTimer();
                 updateUI();
-                showModal('Erfolg', 'Verlauf geleert.', true);
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
             }
-        }
+        };
 
-        function updateProtocolCount() {
-            const el = document.getElementById('protocol-count');
-            if (el) el.innerText = protocols.length;
-        }
+        window.handleLogout = function() {
+            localStorage.removeItem('ecb_logged_in');
+            localStorage.removeItem('ecb_current_user');
+            document.getElementById('login-screen').classList.remove('hidden');
+        };
 
-        function updateDguvCount() {
-            const el = document.getElementById('dguv-count');
-            if (el) el.innerText = dguvDevices.length;
-        }
+        window.switchTab = function(tabId) {
+            document.getElementById('tab-dashboard').classList.add('hidden');
+            document.getElementById('tab-calendar').classList.add('hidden');
+            document.getElementById('tab-dguv').classList.add('hidden');
+            document.getElementById('tab-history').classList.add('hidden');
+            document.getElementById('form-view').classList.add('hidden');
 
-        function populateYearFilter() {
-            const yearSelect = document.getElementById('filter-year');
-            if (!yearSelect) return;
-            const years = new Set();
-            protocols.forEach(p => {
-                if (p.date) {
-                    const match = p.date.match(/\b(20\d{2})\b/);
-                    if (match) years.add(match[1]);
-                }
-            });
-            let html = '<option value="all">Alle Jahre</option>';
-            Array.from(years).sort().reverse().forEach(y => {
-                html += `<option value="${y}">${y}</option>`;
-            });
-            yearSelect.innerHTML = html;
-        }
+            if (tabId === 'dashboard') {
+                document.getElementById('tab-dashboard').classList.remove('hidden');
+                updateDashboardDueDates();
+            } else if (tabId === 'calendar') {
+                document.getElementById('tab-calendar').classList.remove('hidden');
+                renderMaintenanceCalendar();
+            } else if (tabId === 'dguv') {
+                document.getElementById('tab-dguv').classList.remove('hidden');
+                renderDguvDevices();
+            } else if (tabId === 'history') {
+                document.getElementById('tab-history').classList.remove('hidden');
+                populateYearFilter();
+                renderHistory();
+            } else if (tabId === 'form') {
+                document.getElementById('form-view').classList.remove('hidden');
+                setTimeout(() => initSignaturePad(), 200);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
 
-        window.renderHistory = function() {
-            const container = document.getElementById('protocols-container');
-            if (!container) return;
+        window.showModal = function(title, text, isSuccess = true) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-text').innerText = text;
+            const iconDiv = document.getElementById('modal-icon');
+            if (isSuccess) {
+                iconDiv.className = "w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner";
+                iconDiv.innerHTML = '<i class="fa-solid fa-check"></i>';
+            } else {
+                iconDiv.className = "w-16 h-16 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl mx-auto shadow-inner";
+                iconDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            }
+            document.getElementById('modal-message').classList.remove('hidden');
+        };
 
-            checkAdminNav();
+        window.closeModal = function() { document.getElementById('modal-message').classList.add('hidden'); };
+        window.openDguvModal = function() { document.getElementById('modal-dguv').classList.remove('hidden'); };
+        window.closeDguvModal = function() { document.getElementById('modal-dguv').classList.add('hidden'); };
+        window.openRegisterModal = function() { renderAdminUserList(); populateBackdateTechnicians(); document.getElementById('modal-register').classList.remove('hidden'); };
+        window.closeRegisterModal = function() { document.getElementById('modal-register').classList.add('hidden'); };
+        window.openPasswordModal = function() { document.getElementById('new-pass').value = ''; document.getElementById('modal-password').classList.remove('hidden'); };
+        window.closePasswordModal = function() { document.getElementById('modal-password').classList.add('hidden'); };
 
-            const filterYear = document.getElementById('filter-year').value;
-            const filterMonth = document.getElementById('filter-month').value;
-            const filterCategory = document.getElementById('filter-category').value;
+        window.handleChangePassword = async function(event) {
+            event.preventDefault();
+            const newPass = document.getElementById('new-pass').value.trim();
+            const currentUser = localStorage.getItem('ecb_current_user');
+            const userObj = cloudUsers.find(u => u.user === currentUser);
+            if (userObj) { userObj.pass = newPass; saveLocalCache(); }
+            closePasswordModal();
+            showModal('Erfolg', 'Passwort erfolgreich geändert!', true);
+        };
 
-            const filtered = protocols.filter(p => {
-                let matches = true;
-                if (filterCategory !== 'all' && p.category !== filterCategory) matches = false;
-                if (p.date) {
-                    if (filterYear !== 'all' && !p.date.includes(filterYear)) matches = false;
-                    if (filterMonth !== 'all') {
-                        const parts = p.date.split('.');
-                        if (parts.length >= 2 && parts[1].padStart(2, '0') !== filterMonth) matches = false;
-                    }
-                }
-                return matches;
-            });
-
-            if (filtered.length === 0) {
-                container.innerHTML = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200">Keine Protokolle gefunden.</div>';
+        window.handleRegister = async function(event) {
+            event.preventDefault();
+            const fullname = document.getElementById('reg-fullname').value.trim();
+            const newUser = document.getElementById('reg-user').value.trim();
+            const newPass = document.getElementById('reg-pass').value.trim();
+            if (cloudUsers.some(u => u.user === newUser)) {
+                document.getElementById('reg-error').classList.remove('hidden');
                 return;
             }
+            cloudUsers.push({ fullname, user: newUser, pass: newPass, active: true });
+            saveLocalCache();
+            document.getElementById('reg-fullname').value = '';
+            document.getElementById('reg-user').value = '';
+            document.getElementById('reg-pass').value = '';
+            renderAdminUserList();
+            populateBackdateTechnicians();
+            showModal('Erfolg', `Mitarbeiter "${newUser}" angelegt!`, true);
+        };
 
+        window.startBackdateForm = function(event) {
+            event.preventDefault();
+            const categoryKey = document.getElementById('backdate-category').value;
+            const technician = document.getElementById('backdate-technician').value;
+            const datetimeInput = document.getElementById('backdate-datetime').value;
+            const maintenanceDate = new Date(datetimeInput);
+            backdateContext = { technician, dateObj: maintenanceDate, dateString: maintenanceDate.toLocaleString('de-DE'), timestamp: maintenanceDate.getTime() };
+            closeRegisterModal();
+            if (categoryKey === 'Waschmaschine') openWashingMachineMenu();
+            else if (categoryKey === 'Trockner') openDryerMenu();
+            else if (categoryKey === 'Kompressor 2-Wochen') openCompressorRoutine();
+            else if (categoryKey === 'Kompressor Jahreswartung') openCompressorAnnual();
+        };
+
+        function populateBackdateTechnicians() {
+            const selectEl = document.getElementById('backdate-technician');
+            if (!selectEl) return;
             let html = '';
-            filtered.forEach((p, idx) => {
-                let actualGlobalIndex = protocols.findIndex(item => item.id === p.id);
-                if (actualGlobalIndex === -1) actualGlobalIndex = idx;
-                let targetId = p.firestoreId || '';
+            cloudUsers.forEach(u => { const name = u.fullname || u.user; html += `<option value="${name}">${name}</option>`; });
+            selectEl.innerHTML = html;
+        }
 
-                let pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b border-slate-100"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
-                let photosHtml = (p.photos || []).map(ph => `<img src="${ph}" class="w-16 h-16 object-cover rounded-xl border border-slate-200">`).join('');
+        window.toggleUserActive = function(index) {
+            if (cloudUsers[index].user === 'ECB_Wartung') return;
+            cloudUsers[index].active = !cloudUsers[index].active;
+            saveLocalCache();
+            renderAdminUserList();
+        };
+
+        function renderAdminUserList() {
+            const container = document.getElementById('admin-user-list');
+            if (!container) return;
+            let html = '';
+            cloudUsers.forEach((u, index) => {
+                const isAdmin = u.user === 'ECB_Wartung';
                 html += `
-                    <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-4 shadow-sm">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold">${p.category}</span>
-                                <h3 class="text-xl font-bold text-slate-900 mt-2">${p.machine}</h3>
-                                <p class="text-xs text-slate-500 mt-1">${p.date} | Techniker: <strong>${p.employee}</strong> ${p.runtime ? `| Std: <strong>${p.runtime}</strong>` : ''} | ID: ${p.id}</p>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick='downloadProtocolPDF(${JSON.stringify(p)})' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-                                <button onclick="deleteProtocol('${targetId}', ${actualGlobalIndex})" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
-                            </div>
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <div><strong class="text-sm">${u.fullname || u.user}</strong> <span class="text-xs text-slate-400">(${u.user})</span></div>
+                        <div class="flex items-center gap-2">
+                            ${!isAdmin ? `<button type="button" onclick="toggleUserActive(${index})" class="px-2.5 py-1.5 rounded-lg text-xs font-bold ${u.active !== false ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}">${u.active !== false ? 'Deaktivieren' : 'Aktivieren'}</button>` : ''}
                         </div>
-                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">${pts}</div>
-                        ${p.runtime ? `<div class="text-xs text-sky-800 bg-sky-50 p-3 rounded-xl"><strong>Betriebsstunden:</strong> ${p.runtime} Std.</div>` : ''}
-                        ${p.remarks ? `<div class="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl"><strong>Bemerkungen:</strong> ${p.remarks}</div>` : ''}
-                        ${photosHtml ? `<div class="flex flex-wrap gap-2 pt-2">${photosHtml}</div>` : ''}
                     </div>
                 `;
             });
             container.innerHTML = html;
         }
 
-        window.downloadProtocolPDF = function(p) { generatePDF(p); }
-
-        function generatePDF(p) {
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('p', 'mm', 'a4');
-
-                doc.setFillColor(63, 98, 18);
-                doc.rect(0, 0, 210, 38, 'F');
-
-                doc.setFillColor(101, 163, 13);
-                doc.roundedRect(15, 6, 26, 26, 4, 4, 'F');
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(16);
-                doc.setTextColor(255, 255, 255);
-                doc.text('ecb', 18, 20);
-
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(15);
-                doc.text('E.C.B. REINIGUNGSSYSTEME GMBH', 48, 16);
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(10);
-                doc.text('Wartungsprotokoll', 48, 23);
-
-                doc.setFillColor(241, 245, 249);
-                doc.roundedRect(15, 43, 180, 28, 3, 3, 'F');
-                
-                doc.setTextColor(15, 23, 42);
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(9);
-                doc.text(`Anlage: ${p.machine}`, 20, 50);
-                doc.text(`ID: ${p.id}`, 155, 50);
-
-                doc.setFont('helvetica', 'normal');
-                doc.text(`Techniker: ${p.employee}`, 20, 57);
-                doc.text(`Zeit: ${p.date}`, 120, 57);
-
-                if (p.runtime) {
-                    doc.text(`Betriebsstunden: ${p.runtime} Std.`, 20, 64);
-                    doc.text(`Kategorie: ${p.category}`, 120, 64);
-                } else {
-                    doc.text(`Kategorie: ${p.category}`, 20, 64);
-                }
-
-                let startY = 78;
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(10);
-                doc.setTextColor(63, 98, 18);
-                doc.text('Prüfpunkt-Auswertung:', 15, startY);
-                startY += 6;
-
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(9);
-                (p.points || []).forEach(pt => {
-                    const isOk = pt.status === 'erledigt';
-                    doc.setTextColor(15, 23, 42);
-                    doc.text(`${pt.pointNumber}. ${pt.title}`, 20, startY);
-                    doc.setFont('helvetica', 'bold');
-                    if (isOk) {
-                        doc.setTextColor(46, 125, 50);
-                        doc.text('ERLEDIGT (OK)', 150, startY);
-                    } else {
-                        doc.setTextColor(211, 47, 47);
-                        doc.text('NICHT IN ORDNUNG', 140, startY);
-                    }
-                    doc.setFont('helvetica', 'normal');
-                    startY += 7;
-                });
-
-                startY += 4;
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(63, 98, 18);
-                doc.text('Bemerkungen:', 15, startY);
-                startY += 6;
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(15, 23, 42);
-                const remarksText = p.remarks || 'Keine Bemerkungen.';
-                const splitRemarks = doc.splitTextToSize(remarksText, 175);
-                doc.text(splitRemarks, 20, startY);
-                startY += (splitRemarks.length * 5) + 6;
-
-                if (p.photos && p.photos.length > 0) {
-                    if (startY > 190) { doc.addPage(); startY = 20; }
-                    doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(63, 98, 18);
-                    doc.text(`Fotodokumentation (${p.photos.length} Fotos):`, 15, startY);
-                    startY += 6;
-                    let xPos = 15;
-                    let yPos = startY;
-                    p.photos.forEach(ph => {
-                        try {
-                            doc.addImage(ph, 'JPEG', xPos, yPos, 40, 30);
-                            xPos += 45;
-                            if (xPos > 150) { xPos = 15; yPos += 34; }
-                        } catch(e) {}
-                    });
-                    startY = yPos + 36;
-                }
-
-                if (p.signature) {
-                    if (startY > 210) { doc.addPage(); startY = 20; }
-                    doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(63, 98, 18);
-                    doc.text('Digitale Unterschrift des Technikers:', 15, startY);
-                    startY += 6;
-                    doc.addImage(p.signature, 'PNG', 15, startY, 55, 20);
-                    startY += 23;
-                    doc.setFont('helvetica', 'italic');
-                    doc.setFontSize(8);
-                    doc.setTextColor(100, 100, 100);
-                    doc.text('Digital signiert via App', 15, startY);
-                }
-
-                doc.save(`ECB_Wartungsprotokoll_${p.id}.pdf`);
-            } catch(e) {}
+        function checkAdminNav() {
+            const currentUser = localStorage.getItem('ecb_current_user');
+            if (currentUser === 'ECB_Wartung') {
+                document.getElementById('dashboard-admin-btn-container').classList.remove('hidden');
+                document.getElementById('history-admin-clear-container').classList.remove('hidden');
+            } else {
+                document.getElementById('dashboard-admin-btn-container').classList.add('hidden');
+                document.getElementById('history-admin-clear-container').classList.add('hidden');
+            }
         }
 
-        function renderDguvDevices() {
-            const container = document.getElementById('dguv-devices-container');
-            const dashContainer = document.getElementById('dashboard-dguv-container');
-            if (!container) return;
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                localStorage.removeItem('ecb_logged_in');
+                document.getElementById('login-screen').classList.remove('hidden');
+            }, INACTIVITY_LIMIT);
+        }
+        ['mousemove', 'mousedown', 'keypress', 'touchstart'].forEach(evt => window.addEventListener(evt, resetInactivityTimer, true));
 
+        function updateUI() {
+            document.getElementById('protocol-count').innerText = protocols.length;
+            document.getElementById('dguv-count').innerText = dguvDevices.length;
+            renderHistory();
+            renderDguvDevices();
+            updateDashboardDueDates();
+            renderMaintenanceCalendar();
+        }
+
+        function updateDashboardDueDates() {
+            const cats = [
+                { key: 'Waschmaschine', days: 14 },
+                { key: 'Trockner', days: 14 },
+                { key: 'Kompressor 2-Wochen', days: 14 },
+                { key: 'Kompressor Jahreswartung', days: 180 }
+            ];
+            const now = new Date(); now.setHours(0,0,0,0);
+            cats.forEach(cat => {
+                const matching = protocols.filter(p => p.category === cat.key);
+                const dueEl = document.getElementById(`due-${cat.key}`);
+                const badgeEl = document.getElementById(`badge-${cat.key}`);
+                if (!dueEl || !badgeEl) return;
+                if (matching.length === 0) {
+                    dueEl.innerHTML = `Noch keine Wartung`;
+                    badgeEl.innerHTML = `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold">Kein Protokoll</span>`;
+                } else {
+                    const latest = matching.reduce((prev, curr) => (Number(curr.timestamp || 0) > Number(prev.timestamp || 0)) ? curr : prev);
+                    const lastDate = new Date(Number(latest.timestamp || Date.now()));
+                    const nextDueDate = new Date(lastDate.getTime() + (cat.days * 24 * 60 * 60 * 1000));
+                    nextDueDate.setHours(0,0,0,0);
+                    const isOverdue = now.getTime() > nextDueDate.getTime();
+                    dueEl.innerHTML = `Nächster Termin: <strong>${nextDueDate.toLocaleDateString('de-DE')}</strong>`;
+                    badgeEl.innerHTML = isOverdue ? `<span class="px-2 py-0.5 bg-red-600 text-white rounded-full text-[10px] font-bold animate-pulse">ÜBERFÄLLIG</span>` : `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold">Eingehalten</span>`;
+                }
+            });
+        }
+
+        function renderMaintenanceCalendar() {
+            const tableBody = document.getElementById('calendar-table-body');
+            if (!tableBody) return;
+            const cats = [
+                { key: 'Waschmaschine', days: 14, name: 'Waschmaschinen' },
+                { key: 'Trockner', days: 14, name: 'Trockner' },
+                { key: 'Kompressor 2-Wochen', days: 14, name: 'Kompressor Wartung (2-Wochen)' },
+                { key: 'Kompressor Jahreswartung', days: 180, name: 'Kompressor Jahreswartung' }
+            ];
             let html = '';
-            if (dguvDevices.length === 0) {
-                html = '<div class="col-span-full bg-white rounded-3xl p-12 text-center text-slate-500 border border-slate-200">Keine DGUV V3 Geräte erfasst.</div>';
-            } else {
-                dguvDevices.forEach((dev, idx) => {
-                    const isDone = dev.status === 'Erledigt';
-                    let targetId = dev.firestoreId || '';
-                    html += `
-                        <div class="bg-white rounded-3xl p-6 border border-slate-200 space-y-4 shadow-sm flex flex-col justify-between">
+            const now = new Date(); now.setHours(0,0,0,0);
+            cats.forEach(cat => {
+                const matching = protocols.filter(p => p.category === cat.key);
+                if (matching.length === 0) {
+                    html += `<tr class="border-b"><td class="py-3 px-4 font-bold">${cat.name}</td><td class="py-3 px-4 text-slate-400">Keine</td><td class="py-3 px-4 text-amber-600 font-bold">Sofort fällig</td><td><span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">Offen</span></td></tr>`;
+                } else {
+                    const latest = matching.reduce((prev, curr) => (Number(curr.timestamp || 0) > Number(prev.timestamp || 0)) ? curr : prev);
+                    const lastDate = new Date(Number(latest.timestamp || Date.now()));
+                    const nextDueDate = new Date(lastDate.getTime() + (cat.days * 24 * 60 * 60 * 1000));
+                    const isOverdue = now.getTime() > nextDueDate.getTime();
+                    html += `<tr class="border-b"><td class="py-3 px-4 font-bold">${cat.name}</td><td class="py-3 px-4">${lastDate.toLocaleDateString('de-DE')}</td><td class="py-3 px-4 font-bold">${nextDueDate.toLocaleDateString('de-DE')}</td><td>${isOverdue ? '<span class="bg-red-600 text-white text-xs px-2 py-1 rounded-full">Überfällig</span>' : '<span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full">OK</span>'}</td></tr>`;
+                }
+            });
+            tableBody.innerHTML = html;
+        }
+
+        function renderCommonHeaderFields() {
+            const loggedInName = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
+            const activeTechnician = backdateContext ? backdateContext.technician : loggedInName;
+            return `
+                <div class="p-6 bg-slate-50 rounded-2xl border space-y-4 mb-8">
+                    <div class="font-bold text-sm text-ecbDarkGreen"><i class="fa-solid fa-user mr-1"></i> Techniker &amp; Zeitstempel</div>
+                    <input type="text" id="employee-name" required value="${activeTechnician}" class="w-full border rounded-xl p-3 text-sm font-bold bg-slate-100" readonly>
+                </div>
+            `;
+        }
+
+        window.openWashingMachineMenu = function() {
+            document.getElementById('dynamic-form-content').innerHTML = `
+                <h2 class="text-2xl font-extrabold mb-6">Waschmaschinen Wartung</h2>
+                <form onsubmit="submitProtocol(event, 'Waschmaschine')" class="space-y-6">
+                    ${renderCommonHeaderFields()}
+                    <select id="machine-select" class="w-full border rounded-xl p-3 text-sm"><option value="Waschmaschine 1 (Milnor)">Waschmaschine 1</option><option value="Waschmaschine 2 (Milnor)">Waschmaschine 2</option></select>
+                    ${renderCheckPoint(1, 'Schmieren der Maschine')}
+                    ${renderCheckPoint(2, 'Reinigen der Maschine')}
+                    ${renderCheckPoint(3, 'Mängelfreiheit prüfen')}
+                    ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl">Protokoll speichern &amp; PDF</button>
+                </form>
+            `;
+            activePhotos = []; switchTab('form');
+        };
+
+        window.openDryerMenu = function() {
+            document.getElementById('dynamic-form-content').innerHTML = `
+                <h2 class="text-2xl font-extrabold mb-6">Trockner Wartung</h2>
+                <form onsubmit="submitProtocol(event, 'Trockner')" class="space-y-6">
+                    ${renderCommonHeaderFields()}
+                    <select id="machine-select" class="w-full border rounded-xl p-3 text-sm"><option value="Trockner 1">Trockner 1</option><option value="Trockner 2">Trockner 2</option></select>
+                    ${renderCheckPoint(1, 'Gründliche Reinigung')}
+                    ${renderCheckPoint(2, 'Prüfung auf Mängel')}
+                    ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl">Protokoll speichern &amp; PDF</button>
+                </form>
+            `;
+            activePhotos = []; switchTab('form');
+        };
+
+        window.openCompressorRoutine = function() {
+            document.getElementById('dynamic-form-content').innerHTML = `
+                <h2 class="text-2xl font-extrabold mb-6">Kompressor Wartung (2-Wochen)</h2>
+                <form onsubmit="submitProtocol(event, 'Kompressor 2-Wochen')" class="space-y-6">
+                    ${renderCommonHeaderFields()}
+                    <input type="hidden" id="machine-select" value="Kompressor (2-Wochen)">
+                    <input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm" placeholder="Betriebsstunden">
+                    ${renderCheckPoint(1, 'Ölstand prüfen')}
+                    ${renderCheckPoint(2, 'Ansaugfilter prüfen')}
+                    ${renderCheckPoint(3, 'Kompressor reinigen')}
+                    ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl">Protokoll speichern &amp; PDF</button>
+                </form>
+            `;
+            activePhotos = []; switchTab('form');
+        };
+
+        window.openCompressorAnnual = function() {
+            document.getElementById('dynamic-form-content').innerHTML = `
+                <h2 class="text-2xl font-extrabold mb-6">Kompressor Jahreswartung</h2>
+                <form onsubmit="submitProtocol(event, 'Kompressor Jahreswartung')" class="space-y-6">
+                    ${renderCommonHeaderFields()}
+                    <input type="hidden" id="machine-select" value="Kompressor (Jahreswartung)">
+                    <input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm" placeholder="Betriebsstunden">
+                    ${renderCheckPoint(1, 'Ölwechsel')}
+                    ${renderCheckPoint(2, 'Ölfilter wechseln')}
+                    ${renderCheckPoint(3, 'Luftfilter wechseln')}
+                    ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl">Protokoll speichern &amp; PDF</button>
+                </form>
+            `;
+            activePhotos = []; switchTab('form');
+        };
+
+        function renderCheckPoint(i, title) {
+            return `<div class="p-4 bg-slate-50 rounded-xl border" data-title="${title}"><div class="font-bold text-sm mb-2">${i}. ${title}</div><div class="flex gap-4"><label><input type="radio" name="point_${i}" value="erledigt" checked> OK</label><label><input type="radio" name="point_${i}" value="nicht in Ordnung"> Mangel</label></div></div>`;
+        }
+        function renderPhotoSection() {
+            return `<div class="space-y-2"><label class="block font-bold text-sm">Fotos:</label><input type="file" accept="image/*" multiple onchange="handlePhotoCapture(event)"><div id="photo-preview-grid" class="grid grid-cols-4 gap-2"></div></div>`;
+        }
+        function renderRemarksSection() { return `<textarea id="remarks-input" class="w-full border rounded-xl p-3 text-sm" placeholder="Bemerkungen..."></textarea>`; }
+        function renderSignatureSection() {
+            return `<div><div class="flex justify-between"><label class="font-bold text-sm">Unterschrift:</label><button type="button" onclick="clearSignature()" class="text-xs text-red-600">Löschen</button></div><canvas id="signature-canvas" class="signature-canvas w-full h-36 border rounded-xl bg-white"></canvas></div>`;
+        }
+
+        window.handlePhotoCapture = function(e) {
+            Array.from(e.target.files).forEach(f => {
+                const r = new FileReader();
+                r.onload = (evt) => { activePhotos.push(evt.target.result); updatePhotoPreview(); };
+                r.readAsDataURL(f);
+            });
+        };
+        function updatePhotoPreview() {
+            document.getElementById('photo-preview-grid').innerHTML = activePhotos.map((p, i) => `<img src="${p}" class="w-full h-20 object-cover rounded-lg">`).join('');
+        }
+
+        function initSignaturePad() {
+            const canvas = document.getElementById('signature-canvas');
+            if (!canvas) return;
+            canvas.width = canvas.parentElement.clientWidth || 400; canvas.height = 144;
+            const ctx = canvas.getContext('2d'); ctx.lineWidth = 3; ctx.lineCap = 'round';
+            let drawing = false;
+            const pos = (e) => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX || e.touches[0].clientX) - r.left, y: (e.clientY || e.touches[0].clientY) - r.top }; };
+            canvas.onmousedown = (e) => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+            canvas.onmousemove = (e) => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); signaturePadInstance.hasSigned = true; };
+            canvas.onmouseup = () => drawing = false;
+            canvas.ontouchstart = (e) => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+            canvas.ontouchmove = (e) => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); signaturePadInstance.hasSigned = true; };
+            canvas.ontouchend = () => drawing = false;
+            signaturePadInstance = { canvas, ctx, hasSigned: false };
+        }
+        window.clearSignature = function() {
+            if (signaturePadInstance) { signaturePadInstance.ctx.clearRect(0, 0, signaturePadInstance.canvas.width, signaturePadInstance.canvas.height); signaturePadInstance.hasSigned = false; }
+        };
+
+        function populateYearFilter() {
+            const sel = document.getElementById('filter-year');
+            const years = new Set();
+            protocols.forEach(p => { const m = p.date?.match(/\b(20\d{2})\b/); if (m) years.add(m[1]); });
+            sel.innerHTML = '<option value="all">Alle Jahre</option>' + Array.from(years).sort().reverse().map(y => `<option value="${y}">${y}</option>`).join('');
+        }
+
+        window.renderHistory = function() {
+            const container = document.getElementById('protocols-container');
+            if (!container) return;
+            checkAdminNav();
+            const fY = document.getElementById('filter-year')?.value || 'all';
+            const fM = document.getElementById('filter-month')?.value || 'all';
+            const fC = document.getElementById('filter-category')?.value || 'all';
+
+            const filtered = protocols.filter(p => {
+                if (fC !== 'all' && p.category !== fC) return false;
+                if (fY !== 'all' && !p.date?.includes(fY)) return false;
+                if (fM !== 'all' && p.date?.split('.')[1]?.padStart(2, '0') !== fM) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500 border">Keine Protokolle gefunden.</div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map((p, idx) => {
+                const globalIdx = protocols.findIndex(item => item.id === p.id);
+                const pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
+                return `
+                    <div class="bg-white rounded-3xl p-6 border shadow-sm space-y-4">
+                        <div class="flex justify-between items-start">
                             <div>
-                                <div class="flex justify-between items-start">
-                                    <span class="px-3 py-1 rounded-full text-xs font-bold ${isDone ? 'bg-emerald-50 text-ecbGreen' : 'bg-amber-50 text-amber-600'}">${dev.status}</span>
-                                    <button onclick="deleteDguvDevice('${targetId}', ${idx})" class="text-red-500 text-sm cursor-pointer"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                                <h3 class="text-xl font-bold text-slate-900 mt-2">${dev.name}</h3>
-                                <p class="text-xs font-bold text-sky-700 mt-0.5"><i class="fa-solid fa-barcode mr-1"></i> Inventar-Nr.: ${dev.inventoryNumber}</p>
-                                <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-sky-600 mr-1"></i> ${dev.location}</p>
-                                <p class="text-xs text-slate-500 mt-1"><i class="fa-regular fa-calendar-days text-sky-600 mr-1"></i> Fällig: ${dev.dueDate}</p>
+                                <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold">${p.category}</span>
+                                <h3 class="text-xl font-bold mt-2">${p.machine}</h3>
+                                <p class="text-xs text-slate-500 mt-1">${p.date} | ${p.employee} ${p.runtime ? `| ${p.runtime} Std.` : ''}</p>
                             </div>
-                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2">
-                                <label class="w-full py-2 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                                    <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Protokoll hochladen
-                                    <input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${dev.id}')" class="hidden">
-                                </label>
+                            <div class="flex gap-2">
+                                <button onclick='generatePDF(${JSON.stringify(p)})' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold">PDF</button>
+                                <button onclick="deleteProtocol('${p.firestoreId || ''}', ${globalIdx})" class="text-red-500 p-2"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
-                    `;
-                });
+                        <div class="bg-slate-50 p-4 rounded-xl">${pts}</div>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        window.renderDguvDevices = function() {
+            const container = document.getElementById('dguv-devices-container');
+            const dash = document.getElementById('dashboard-dguv-container');
+            if (!container) return;
+            if (dguvDevices.length === 0) {
+                container.innerHTML = '<div class="col-span-full bg-white rounded-3xl p-12 text-center text-slate-500 border">Keine DGUV Geräte.</div>';
+                if (dash) dash.innerHTML = container.innerHTML;
+                return;
             }
+            const html = dguvDevices.map((d, i) => `
+                <div class="bg-white rounded-3xl p-6 border shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between"><span class="px-3 py-1 rounded-full text-xs font-bold ${d.status==='Erledigt'?'bg-emerald-50 text-ecbGreen':'bg-amber-50 text-amber-600'}">${d.status}</span><button onclick="deleteDguvDevice('${d.firestoreId||''}', ${i})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></div>
+                        <h3 class="text-xl font-bold mt-2">${d.name}</h3>
+                        <p class="text-xs text-sky-700 mt-1">Nr.: ${d.inventoryNumber} | ${d.location}</p>
+                        <p class="text-xs text-slate-500 mt-1">Fällig: ${d.dueDate}</p>
+                    </div>
+                    <label class="mt-4 py-2 bg-slate-50 border rounded-xl text-xs font-bold text-center cursor-pointer block">Protokoll hochladen<input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${d.id}')" class="hidden"></label>
+                </div>
+            `).join('');
             container.innerHTML = html;
-            if (dashContainer) dashContainer.innerHTML = html;
+            if (dash) dash.innerHTML = html;
+        };
+
+        window.clearHistory = async function() {
+            if (confirm('Verlauf wirklich löschen?')) {
+                protocols = []; saveLocalCache(); updateUI();
+                showModal('Erfolg', 'Verlauf geleert.', true);
+            }
+        };
+
+        function generatePDF(p) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            doc.setFillColor(63, 98, 18); doc.rect(0, 0, 210, 35, 'F');
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(255, 255, 255);
+            doc.text('E.C.B. REINIGUNGSSYSTEME - Wartungsprotokoll', 15, 20);
+            doc.setFontSize(10); doc.text(`Anlage: ${p.machine} | Datum: ${p.date} | Techniker: ${p.employee}`, 15, 45);
+            let y = 60;
+            (p.points || []).forEach(pt => {
+                doc.text(`${pt.title}: ${pt.status.toUpperCase()}`, 15, y); y += 8;
+            });
+            doc.save(`ECB_Protokoll_${p.id}.pdf`);
         }
     </script>
 </body>
