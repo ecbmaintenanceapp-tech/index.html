@@ -12,6 +12,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- jsPDF for professional PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Firebase App (v8 compatibility mode for 100% reliable sandbox & web compatibility) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -128,7 +134,6 @@
         </div>
     </div>
 
-    <!-- Password Modal -->
     <div id="modal-password" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -434,11 +439,7 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEvon6SHIVRB5k",
             authDomain: "ecb-maintenance.firebaseapp.com",
@@ -448,7 +449,8 @@
             appId: "1:229926423123:web:a309c14c708fc88c62d4a6"
         };
 
-        let app, db, auth;
+        let db = null;
+        let auth = null;
         let protocols = [];
         let dguvDevices = [];
         let cloudUsers = [
@@ -462,21 +464,29 @@
         let backdateContext = null;
         const INACTIVITY_LIMIT = 5 * 60 * 1000;
 
-        window.onload = async function() {
+        window.onload = function() {
             loadLocalCache();
             updateUI();
 
             try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                await signInAnonymously(auth);
+                if (typeof firebase !== 'undefined') {
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(firebaseConfig);
+                    }
+                    auth = firebase.auth();
+                    db = firebase.firestore();
 
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
-                document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden (Live Sync)";
-
-                await fetchCloudData();
-                initFirebaseListeners();
+                    auth.signInAnonymously().then(() => {
+                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
+                        document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden (Live Sync)";
+                        fetchCloudData();
+                        initFirebaseListeners();
+                    }).catch(err => {
+                        console.warn("Auth Anonym Error:", err);
+                        // Even if auth fails, try reading directly if rules allow public read/write
+                        fetchCloudData();
+                    });
+                }
             } catch (err) {
                 console.warn("Firebase Init Hinweis:", err);
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
@@ -495,13 +505,13 @@
                 const savedProtos = localStorage.getItem('ecb_protocols_permanent_v9');
                 if (savedProtos) {
                     const parsed = JSON.parse(savedProtos);
-                    if (Array.isArray(parsed) && parsed.length > 0) protocols = parsed;
+                    if (Array.isArray(parsed)) protocols = parsed;
                 }
 
                 const savedDevs = localStorage.getItem('ecb_dguv_v13');
                 if (savedDevs) {
                     const parsed = JSON.parse(savedDevs);
-                    if (Array.isArray(parsed) && parsed.length > 0) dguvDevices = parsed;
+                    if (Array.isArray(parsed)) dguvDevices = parsed;
                 }
 
                 const savedUsers = localStorage.getItem('ecb_users_v13');
@@ -520,34 +530,33 @@
             } catch(e) {}
         }
 
-        async function fetchCloudData() {
+        function fetchCloudData() {
             if (!db) return;
             try {
-                const protoSnap = await getDocs(collection(db, 'protocols'));
-                let map = new Map();
-                protocols.forEach(p => map.set(p.id || p.firestoreId, p));
-                
-                protoSnap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const key = data.id || docSnap.id;
-                    map.set(key, { firestoreId: docSnap.id, ...data });
-                });
-                protocols = Array.from(map.values());
-                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                db.collection("protocols").get().then((querySnapshot) => {
+                    let map = new Map();
+                    protocols.forEach(p => map.set(p.id || p.firestoreId, p));
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        map.set(data.id || doc.id, { firestoreId: doc.id, ...data });
+                    });
+                    protocols = Array.from(map.values());
+                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                    saveLocalCache();
+                    updateUI();
+                }).catch(e => console.warn("Fetch protocols error:", e));
 
-                const dguvSnap = await getDocs(collection(db, 'dguv_devices'));
-                let devMap = new Map();
-                dguvDevices.forEach(d => devMap.set(d.id || d.firestoreId, d));
-
-                dguvSnap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const key = data.id || docSnap.id;
-                    devMap.set(key, { firestoreId: docSnap.id, ...data });
-                });
-                dguvDevices = Array.from(devMap.values());
-
-                saveLocalCache();
-                updateUI();
+                db.collection("dguv_devices").get().then((querySnapshot) => {
+                    let map = new Map();
+                    dguvDevices.forEach(d => map.set(d.id || d.firestoreId, d));
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        map.set(data.id || doc.id, { firestoreId: doc.id, ...data });
+                    });
+                    dguvDevices = Array.from(map.values());
+                    saveLocalCache();
+                    updateUI();
+                }).catch(e => console.warn("Fetch dguv error:", e));
             } catch (e) {
                 console.warn("Fehler beim Abrufen der Cloud-Daten:", e);
             }
@@ -556,13 +565,12 @@
         function initFirebaseListeners() {
             if (!db) return;
             try {
-                onSnapshot(collection(db, 'protocols'), (snapshot) => {
+                db.collection("protocols").onSnapshot((snapshot) => {
                     let map = new Map();
                     protocols.forEach(p => map.set(p.id || p.firestoreId, p));
-                    snapshot.forEach(docSnap => {
-                        const data = docSnap.data();
-                        const key = data.id || docSnap.id;
-                        map.set(key, { firestoreId: docSnap.id, ...data });
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        map.set(data.id || doc.id, { firestoreId: doc.id, ...data });
                     });
                     protocols = Array.from(map.values());
                     protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
@@ -570,13 +578,12 @@
                     updateUI();
                 }, err => console.warn("Protocol snapshot err:", err));
 
-                onSnapshot(collection(db, 'dguv_devices'), (snapshot) => {
+                db.collection("dguv_devices").onSnapshot((snapshot) => {
                     let map = new Map();
                     dguvDevices.forEach(d => map.set(d.id || d.firestoreId, d));
-                    snapshot.forEach(docSnap => {
-                        const data = docSnap.data();
-                        const key = data.id || docSnap.id;
-                        map.set(key, { firestoreId: docSnap.id, ...data });
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        map.set(data.id || doc.id, { firestoreId: doc.id, ...data });
                     });
                     dguvDevices = Array.from(map.values());
                     saveLocalCache();
@@ -631,7 +638,7 @@
 
             if (db) {
                 try {
-                    const docRef = await addDoc(collection(db, 'protocols'), protocol);
+                    const docRef = await db.collection("protocols").add(protocol);
                     protocol.firestoreId = docRef.id;
                     saveLocalCache();
                 } catch(e) {
@@ -667,7 +674,7 @@
 
             if (db) {
                 try {
-                    const docRef = await addDoc(collection(db, 'dguv_devices'), newDev);
+                    const docRef = await db.collection("dguv_devices").add(newDev);
                     newDev.firestoreId = docRef.id;
                     saveLocalCache();
                 } catch(e) {
@@ -683,7 +690,7 @@
         window.deleteProtocol = async function(firestoreId, index) {
             if (firestoreId && db) {
                 try {
-                    await deleteDoc(doc(db, 'protocols', firestoreId));
+                    await db.collection("protocols").doc(firestoreId).delete();
                 } catch(e) {}
             }
             protocols.splice(index, 1);
@@ -694,7 +701,7 @@
         window.deleteDguvDevice = async function(firestoreId, index) {
             if (firestoreId && db) {
                 try {
-                    await deleteDoc(doc(db, 'dguv_devices', firestoreId));
+                    await db.collection("dguv_devices").doc(firestoreId).delete();
                 } catch(e) {}
             }
             dguvDevices.splice(index, 1);
@@ -722,7 +729,7 @@
 
                     if (db && devLocal.firestoreId) {
                         try {
-                            await updateDoc(doc(db, 'dguv_devices', devLocal.firestoreId), {
+                            await db.collection("dguv_devices").doc(devLocal.firestoreId).update({
                                 status: 'Erledigt',
                                 protocolHistory: devLocal.protocolHistory
                             });
