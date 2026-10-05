@@ -13,7 +13,7 @@
     <!-- jsPDF for professional PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- Firebase v8 compatibility mode (Reliable CDN Loading) -->
+    <!-- Firebase v8 CDN (Reliable Global Loading) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -49,7 +49,6 @@
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
-    <!-- Login Screen -->
     <div id="login-screen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 space-y-6 animate-fade-in">
             <div class="text-center space-y-2">
@@ -79,7 +78,6 @@
         </div>
     </div>
 
-    <!-- Admin & Backdate Modal -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -112,8 +110,8 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Kategorie / Anlage:</label>
                     <select id="backdate-category" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50 cursor-pointer">
-                        <option value="Waschmaschine">Waschmaschinen</option>
-                        <option value="Trockner">Trockner</option>
+                        <option value="Waschmaschine">Milnor Waschmaschinen (1-4)</option>
+                        <option value="Trockner">Trockner (1-4)</option>
                         <option value="Kompressor 2-Wochen">Kompressor Wartung (2-Wochen)</option>
                         <option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option>
                     </select>
@@ -136,7 +134,6 @@
         </div>
     </div>
 
-    <!-- Password Change Modal -->
     <div id="modal-password" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -155,7 +152,6 @@
         </div>
     </div>
 
-    <!-- Header -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
@@ -171,7 +167,7 @@
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
                         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Verbinde mit Firebase Cloud...</span>
+                        <span id="cloud-status-text">Verbunden mit Firebase Cloud (Live Sync)</span>
                     </p>
                 </div>
             </div>
@@ -198,7 +194,6 @@
         </div>
     </header>
 
-    <!-- Main Body -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
 
         <!-- Dashboard Tab -->
@@ -227,8 +222,8 @@
                         <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
                             <i class="fa-solid fa-shirt"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-slate-900">Waschmaschinen</h3>
-                        <p class="text-xs font-semibold text-ecbGreen mt-1 uppercase tracking-wider">Intervall: Alle 2 Wochen</p>
+                        <h3 class="text-xl font-bold text-slate-900">Milnor Waschmaschinen</h3>
+                        <p class="text-xs font-semibold text-ecbGreen mt-1 uppercase tracking-wider">4 Maschinen • Alle 2 Wochen</p>
                         <div id="due-Waschmaschine" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Berechne Termin...</div>
                     </div>
                     <div class="mt-6 flex items-center justify-between text-sm font-bold text-ecbDarkGreen group-hover:text-ecbGreen">
@@ -246,7 +241,7 @@
                             <i class="fa-solid fa-wind"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900">Trockner</h3>
-                        <p class="text-xs font-semibold text-amber-600 mt-1 uppercase tracking-wider">Intervall: Alle 2 Wochen</p>
+                        <p class="text-xs font-semibold text-amber-600 mt-1 uppercase tracking-wider">4 Trockner • Alle 2 Wochen</p>
                         <div id="due-Trockner" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Berechne Termin...</div>
                     </div>
                     <div class="mt-6 flex items-center justify-between text-sm font-bold text-amber-700 group-hover:text-amber-600">
@@ -282,7 +277,7 @@
                             <i class="fa-solid fa-calendar-days"></i>
                         </div>
                         <h3 class="text-xl font-bold text-slate-900">Kompressor Jahreswartung</h3>
-                        <p class="text-xs font-semibold text-purple-600 mt-1 uppercase tracking-wider">Alle 180 Tage</p>
+                        <p class="text-xs font-semibold text-purple-600 mt-1 uppercase tracking-wider">Umfassend • Alle 180 Tage</p>
                         <div id="due-Kompressor Jahreswartung" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Berechne Termin...</div>
                     </div>
                     <div class="mt-6 flex items-center justify-between text-sm font-bold text-purple-700 group-hover:text-purple-600">
@@ -380,7 +375,7 @@
                     <label class="block text-xs font-bold text-slate-600 mb-1">Maschine / Kategorie:</label>
                     <select id="filter-category" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-slate-50 cursor-pointer">
                         <option value="all">Alle Maschinen</option>
-                        <option value="Waschmaschine">Waschmaschinen</option>
+                        <option value="Waschmaschine">Milnor Waschmaschinen</option>
                         <option value="Trockner">Trockner</option>
                         <option value="Kompressor 2-Wochen">Kompressor Wartung (2-Wochen)</option>
                         <option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option>
@@ -473,6 +468,7 @@
             loadLocalCache();
             updateUI();
 
+            // Bulletproof Firebase initialization
             try {
                 if (typeof firebase !== 'undefined') {
                     if (!firebase.apps.length) {
@@ -481,13 +477,15 @@
                     auth = firebase.auth();
                     db = firebase.firestore();
 
+                    // Force anonymous login to satisfy Firestore rules
                     auth.signInAnonymously().then(() => {
+                        console.log("Firebase Auth Success");
                         document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
-                        document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden (Live Sync)";
+                        document.getElementById('cloud-status-text').innerText = "Verbunden mit Firebase Cloud (Live Sync)";
                         fetchCloudData();
                         initFirebaseListeners();
                     }).catch(err => {
-                        console.warn("Auth Anonym Error:", err);
+                        console.warn("Auth Anonym Error, attempting direct fetch:", err);
                         fetchCloudData();
                     });
                 }
@@ -504,19 +502,19 @@
 
         function loadLocalCache() {
             try {
-                const savedProtos = localStorage.getItem('ecb_protocols_permanent_v9');
+                const savedProtos = localStorage.getItem('ecb_protocols_permanent_v20');
                 if (savedProtos) {
                     const parsed = JSON.parse(savedProtos);
                     if (Array.isArray(parsed)) protocols = parsed;
                 }
 
-                const savedDevs = localStorage.getItem('ecb_dguv_v13');
+                const savedDevs = localStorage.getItem('ecb_dguv_v20');
                 if (savedDevs) {
                     const parsed = JSON.parse(savedDevs);
                     if (Array.isArray(parsed)) dguvDevices = parsed;
                 }
 
-                const savedUsers = localStorage.getItem('ecb_users_v13');
+                const savedUsers = localStorage.getItem('ecb_users_v20');
                 if (savedUsers) {
                     const parsed = JSON.parse(savedUsers);
                     if (Array.isArray(parsed) && parsed.length > 0) cloudUsers = parsed;
@@ -526,9 +524,9 @@
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_permanent_v9', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v13', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v13', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_permanent_v20', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v20', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v20', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
@@ -959,8 +957,8 @@
             const tableBody = document.getElementById('calendar-table-body');
             if (!tableBody) return;
             const cats = [
-                { key: 'Waschmaschine', days: 14, name: 'Waschmaschinen' },
-                { key: 'Trockner', days: 14, name: 'Trockner' },
+                { key: 'Waschmaschine', days: 14, name: 'Milnor Waschmaschinen (1-4)' },
+                { key: 'Trockner', days: 14, name: 'Trockner (1-4)' },
                 { key: 'Kompressor 2-Wochen', days: 14, name: 'Kompressor Wartung (2-Wochen)' },
                 { key: 'Kompressor Jahreswartung', days: 180, name: 'Kompressor Jahreswartung' }
             ];
@@ -994,13 +992,22 @@
 
         window.openWashingMachineMenu = function() {
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6">Waschmaschinen Wartung</h2>
+                <h2 class="text-2xl font-extrabold mb-6">Milnor Waschmaschinen Wartung</h2>
                 <form onsubmit="submitProtocol(event, 'Waschmaschine')" class="space-y-6">
                     ${renderCommonHeaderFields()}
-                    <select id="machine-select" class="w-full border rounded-xl p-3 text-sm"><option value="Waschmaschine 1 (Milnor)">Waschmaschine 1</option><option value="Waschmaschine 2 (Milnor)">Waschmaschine 2</option></select>
-                    ${renderCheckPoint(1, 'Schmieren der Maschine')}
-                    ${renderCheckPoint(2, 'Reinigen der Maschine')}
-                    ${renderCheckPoint(3, 'Mängelfreiheit prüfen')}
+                    <div>
+                        <label class="block font-bold text-sm mb-1.5">Maschine auswählen:</label>
+                        <select id="machine-select" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 cursor-pointer">
+                            <option value="Milnor Waschmaschine 1">Milnor Waschmaschine 1</option>
+                            <option value="Milnor Waschmaschine 2">Milnor Waschmaschine 2</option>
+                            <option value="Milnor Waschmaschine 3">Milnor Waschmaschine 3</option>
+                            <option value="Milnor Waschmaschine 4">Milnor Waschmaschine 4</option>
+                        </select>
+                    </div>
+                    ${renderCheckPoint(1, 'Wassertank reinigen')}
+                    ${renderCheckPoint(2, 'Maschine Reinigen, Zwischenräume')}
+                    ${renderCheckPoint(3, 'Waschmaschine schmieren')}
+                    ${renderCheckPoint(4, 'Keine Mängel festgestellt')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
                     <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl shadow-lg cursor-pointer">Protokoll speichern &amp; PDF</button>
                 </form>
@@ -1013,9 +1020,20 @@
                 <h2 class="text-2xl font-extrabold mb-6">Trockner Wartung</h2>
                 <form onsubmit="submitProtocol(event, 'Trockner')" class="space-y-6">
                     ${renderCommonHeaderFields()}
-                    <select id="machine-select" class="w-full border rounded-xl p-3 text-sm"><option value="Trockner 1">Trockner 1</option><option value="Trockner 2">Trockner 2</option></select>
-                    ${renderCheckPoint(1, 'Gründliche Reinigung')}
-                    ${renderCheckPoint(2, 'Prüfung auf Mängel')}
+                    <div>
+                        <label class="block font-bold text-sm mb-1.5">Trockner auswählen:</label>
+                        <select id="machine-select" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 cursor-pointer">
+                            <option value="Trockner 1">Trockner 1</option>
+                            <option value="Trockner 2">Trockner 2</option>
+                            <option value="Trockner 3">Trockner 3</option>
+                            <option value="Trockner 4">Trockner 4</option>
+                        </select>
+                    </div>
+                    ${renderCheckPoint(1, 'Gründliche Reinigung der Flusssiebe & Abluftkanäle')}
+                    ${renderCheckPoint(2, 'Prüfung der Trommeldichtung & Türverriegelung')}
+                    ${renderCheckPoint(3, 'Trockner aussaugen')}
+                    ${renderCheckPoint(4, 'Abluftrohre reinigen ggf. Flexrohr erneuern')}
+                    ${renderCheckPoint(5, 'Sicht- und Funktionsprüfung auf Mängel')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
                     <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl shadow-lg cursor-pointer">Protokoll speichern &amp; PDF</button>
                 </form>
@@ -1030,9 +1048,10 @@
                     ${renderCommonHeaderFields()}
                     <input type="hidden" id="machine-select" value="Kompressor (2-Wochen)">
                     <div class="space-y-1"><label class="block font-bold text-sm">Betriebsstunden:</label><input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm" placeholder="Betriebsstunden"></div>
-                    ${renderCheckPoint(1, 'Ölstand prüfen')}
-                    ${renderCheckPoint(2, 'Ansaugfilter prüfen')}
-                    ${renderCheckPoint(3, 'Kompressor reinigen')}
+                    ${renderCheckPoint(1, 'Ölstand am Schauglas prüfen und bei Bedarf öl auffüllen.')}
+                    ${renderCheckPoint(2, 'Ansaugfilter reinigen ggf. erneuern')}
+                    ${renderCheckPoint(3, 'Kältetrockner reinigen')}
+                    ${renderCheckPoint(4, 'Kompressor & Umgebung reinigen')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
                     <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl shadow-lg cursor-pointer">Protokoll speichern &amp; PDF</button>
                 </form>
@@ -1047,9 +1066,18 @@
                     ${renderCommonHeaderFields()}
                     <input type="hidden" id="machine-select" value="Kompressor (Jahreswartung)">
                     <div class="space-y-1"><label class="block font-bold text-sm">Betriebsstunden:</label><input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm" placeholder="Betriebsstunden"></div>
-                    ${renderCheckPoint(1, 'Ölwechsel')}
-                    ${renderCheckPoint(2, 'Ölfilter wechseln')}
-                    ${renderCheckPoint(3, 'Luftfilter wechseln')}
+                    ${renderCheckPoint(1, 'Kompletten Ölwechsel durchführen (Altöl ablassen, spülen, neues Kompressoröl einfüllen)')}
+                    ${renderCheckPoint(2, 'Ölfilter erneuern und auf Dichtigkeit achten')}
+                    ${renderCheckPoint(3, 'Luftfilter / Ansaugfilter komplett erneuern & reinigen')}
+                    ${renderCheckPoint(4, 'Kältetrockner gründlich reinigen und auf Funktion prüfen')}
+                    ${renderCheckPoint(5, 'Ölabscheider / Feinabscheider prüfen & ggf. erneuern')}
+                    ${renderCheckPoint(6, 'Riemenspannung aller Antriebsriemen prüfen und nachspannen / einstellen')}
+                    ${renderCheckPoint(7, 'Sicherheitsventile auf manuelle Auslösung und Funktion prüfen')}
+                    ${renderCheckPoint(8, 'Druckschalter Schaltpunkte und Hysterese prüfen')}
+                    ${renderCheckPoint(9, 'Kondensatableiter (elektronisch/pneumatisch) auf Funktion prüfen und reinigen')}
+                    ${renderCheckPoint(10, 'Elektrische Anschlüsse, Klemmen & Schütze auf festen Sitz prüfen')}
+                    ${renderCheckPoint(11, 'Gesamtanlage auf Dichtigkeit, ungewöhnliche Geräusche und Vibrationsfreiheit prüfen')}
+                    ${renderCheckPoint(12, 'Nachlauf- und Probelauf unter Betriebsdruck durchführen')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
                     <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl shadow-lg cursor-pointer">Protokoll speichern &amp; PDF</button>
                 </form>
@@ -1094,7 +1122,7 @@
                 r.onload = (evt) => { activePhotos.push(evt.target.result); updatePhotoPreview(); };
                 r.readAsDataURL(f);
             });
-            e.target.value = ''; // Reset input to allow same photo re-selection
+            e.target.value = '';
         };
 
         function updatePhotoPreview() {
