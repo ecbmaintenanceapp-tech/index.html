@@ -81,16 +81,15 @@
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
-                <h3 class="text-xl font-extrabold text-slate-900">Admin-Verwaltung &amp; Datenaustausch</h3>
+                <h3 class="text-xl font-extrabold text-slate-900">Admin-Verwaltung &amp; Backup</h3>
                 <button onclick="closeRegisterModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <!-- Backup & Restore Sync Section -->
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
-                <h4 class="font-bold text-emerald-900 text-sm"><i class="fa-solid fa-cloud-arrow-up mr-1 text-emerald-600"></i> Geräteübergreifender Datenexport / -import</h4>
-                <p class="text-xs text-emerald-700">Erstellen Sie ein Backup aller Protokolle und importieren Sie es auf jedem anderen Gerät (Handy/PC), um alle Daten sofort zu synchronisieren.</p>
+                <h4 class="font-bold text-emerald-900 text-sm"><i class="fa-solid fa-cloud-arrow-up mr-1 text-emerald-600"></i> Datenexport / -import</h4>
+                <p class="text-xs text-emerald-700">Erstellen Sie ein Backup aller Protokolle und importieren Sie es auf jedem anderen Gerät, um Daten sofort abzugleichen.</p>
                 <div class="flex gap-2 pt-1">
                     <button onclick="exportAllDataJson()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow transition cursor-pointer flex items-center justify-center gap-1.5">
                         <i class="fa-solid fa-download"></i> Backup exportieren
@@ -121,7 +120,7 @@
             </form>
 
             <form onsubmit="startBackdateForm(event)" class="space-y-4 pb-6 border-b border-slate-100">
-                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-calendar-plus mr-1 text-sky-600"></i> Vollständige Wartung nachtragen</h4>
+                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-calendar-plus mr-1 text-sky-600"></i> Wartung nachtragen</h4>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Kategorie / Anlage:</label>
                     <select id="backdate-category" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50 cursor-pointer">
@@ -139,7 +138,7 @@
                     <label class="block text-xs font-bold text-slate-700 mb-1">Durchführungsdatum:</label>
                     <input type="datetime-local" id="backdate-datetime" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50">
                 </div>
-                <button type="submit" class="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Wartungsformular mit diesem Datum starten</button>
+                <button type="submit" class="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Formular mit diesem Datum starten</button>
             </form>
 
             <div class="space-y-3">
@@ -224,7 +223,7 @@
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden">
                     <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Datenaustausch / Backup
+                        <i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Backup
                     </button>
                 </div>
             </div>
@@ -483,7 +482,6 @@
             loadLocalCache();
             updateUI();
 
-            // Initialize Firebase if available
             try {
                 if (typeof firebase !== 'undefined') {
                     if (!firebase.apps.length) {
@@ -493,11 +491,11 @@
                     db = firebase.firestore();
 
                     auth.signInAnonymously().then(() => {
-                        console.log("Firebase Connected");
+                        console.log("Firebase Connected Successfully");
                         fetchAllCloudData();
                         initRealtimeListeners();
                     }).catch(err => {
-                        console.warn("Auth fallback, using local cache:", err);
+                        console.warn("Auth fallback notice:", err);
                     });
                 }
             } catch (err) {
@@ -615,7 +613,7 @@
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
-            showModal('Backup erstellt', 'Die Sicherungsdatei wurde heruntergeladen. Sie können diese Datei nun auf jedem anderen Gerät über "Backup importieren" einlesen.', true);
+            showModal('Backup erstellt', 'Die Sicherungsdatei wurde heruntergeladen.', true);
         };
 
         window.importAllDataJson = function(event) {
