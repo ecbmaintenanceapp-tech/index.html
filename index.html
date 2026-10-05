@@ -100,7 +100,7 @@
             </form>
 
             <form onsubmit="startBackdateForm(event)" class="space-y-4 pb-6 border-b border-slate-100">
-                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-calendar-plus mr-1 text-sky-600"></i> Vollständige Wartung nachtragen (mit Checkpunkten &amp; Fotos)</h4>
+                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-calendar-plus mr-1 text-sky-600"></i> Vollständige Wartung nachtragen</h4>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Kategorie / Anlage:</label>
                     <select id="backdate-category" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50 cursor-pointer">
@@ -115,10 +115,10 @@
                     <select id="backdate-technician" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50 cursor-pointer"></select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Durchführungsdatum (Datum &amp; Uhrzeit):</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Durchführungsdatum:</label>
                     <input type="datetime-local" id="backdate-datetime" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50">
                 </div>
-                <button type="submit" class="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Vollständiges Wartungsformular mit diesem Datum starten</button>
+                <button type="submit" class="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Wartungsformular mit diesem Datum starten</button>
             </form>
 
             <div class="space-y-3">
@@ -198,7 +198,7 @@
                     <div>
                         <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                         <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen-, Maschinen- &amp; DGUV-Wartung</h2>
-                        <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen. Fälligkeitstermine werden vollautomatisch berechnet.</p>
+                        <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen.</p>
                     </div>
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden">
@@ -390,6 +390,7 @@
 
     </main>
 
+    <!-- DGUV Modal -->
     <div id="modal-dguv" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -511,41 +512,67 @@
         async function initFirebaseRealtimeSync() {
             if (!db) return;
             try {
-                const protoRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols');
+                // Fetch root collections directly for maximum compatibility
+                const protoRef = collection(db, 'protocols');
+                const protoSnap = await getDocs(protoRef);
+                if (!protoSnap.empty) {
+                    let remoteMap = new Map();
+                    protocols.forEach(p => remoteMap.set(p.id, p));
+                    protoSnap.forEach(docSnap => {
+                        const data = docSnap.data();
+                        const key = data.id || docSnap.id;
+                        remoteMap.set(key, { firestoreId: docSnap.id, ...data });
+                    });
+                    protocols = Array.from(remoteMap.values());
+                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                    saveLocalCache();
+                    updateUI();
+                }
+
                 onSnapshot(protoRef, (snapshot) => {
                     let remoteMap = new Map();
                     protocols.forEach(p => remoteMap.set(p.id, p));
-
                     snapshot.forEach(docSnap => {
                         const data = docSnap.data();
                         const key = data.id || docSnap.id;
-                        if (!remoteMap.has(key)) {
-                            remoteMap.set(key, { firestoreId: docSnap.id, ...data });
-                        }
+                        remoteMap.set(key, { firestoreId: docSnap.id, ...data });
                     });
-
                     protocols = Array.from(remoteMap.values());
                     protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                     saveLocalCache();
                     updateUI();
                 });
 
-                const dguvRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices');
+                const dguvRef = collection(db, 'dguv_devices');
+                const dguvSnap = await getDocs(dguvRef);
+                if (!dguvSnap.empty) {
+                    let remoteDevsMap = new Map();
+                    dguvDevices.forEach(d => remoteDevsMap.set(d.id, d));
+                    dguvSnap.forEach(docSnap => {
+                        const data = docSnap.data();
+                        const key = data.id || docSnap.id;
+                        remoteDevsMap.set(key, { firestoreId: docSnap.id, ...data });
+                    });
+                    dguvDevices = Array.from(remoteDevsMap.values());
+                    saveLocalCache();
+                    updateUI();
+                }
+
                 onSnapshot(dguvRef, (snapshot) => {
                     let remoteDevsMap = new Map();
                     dguvDevices.forEach(d => remoteDevsMap.set(d.id, d));
                     snapshot.forEach(docSnap => {
                         const data = docSnap.data();
                         const key = data.id || docSnap.id;
-                        if (!remoteDevsMap.has(key)) {
-                            remoteDevsMap.set(key, { firestoreId: docSnap.id, ...data });
-                        }
+                        remoteDevsMap.set(key, { firestoreId: docSnap.id, ...data });
                     });
                     dguvDevices = Array.from(remoteDevsMap.values());
                     saveLocalCache();
                     updateUI();
                 });
-            } catch(e) {}
+            } catch(e) {
+                console.warn("Firebase Sync Hinweis:", e);
+            }
         }
 
         async function saveProtocolToCloud(protocol) {
@@ -560,11 +587,11 @@
 
             if (db) {
                 try {
-                    const docRef = await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols'), protocol);
+                    const docRef = await addDoc(collection(db, 'protocols'), protocol);
                     protocol.firestoreId = docRef.id;
                     saveLocalCache();
                 } catch(e) {
-                    console.warn("Firestore Schreibfehler:", e);
+                    console.warn("Firestore Schreibfehler Protocols:", e);
                 }
             }
         }
@@ -576,10 +603,12 @@
 
             if (db) {
                 try {
-                    const docRef = await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices'), dev);
+                    const docRef = await addDoc(collection(db, 'dguv_devices'), dev);
                     dev.firestoreId = docRef.id;
                     saveLocalCache();
-                } catch(e) {}
+                } catch(e) {
+                    console.warn("Firestore Schreibfehler DGUV:", e);
+                }
             }
         }
 
@@ -594,7 +623,7 @@
 
             if (db && firestoreId) {
                 try {
-                    await deleteDoc(doc(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols', firestoreId));
+                    await deleteDoc(doc(db, 'protocols', firestoreId));
                 } catch(e) {}
             }
         }
@@ -610,7 +639,7 @@
 
             if (db && firestoreId) {
                 try {
-                    await deleteDoc(doc(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices', firestoreId));
+                    await deleteDoc(doc(db, 'dguv_devices', firestoreId));
                 } catch(e) {}
             }
         }
@@ -1372,7 +1401,7 @@
                     
                     if (db && devLocal.firestoreId) {
                         try {
-                            await updateDoc(doc(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices', devLocal.firestoreId), {
+                            await updateDoc(doc(db, 'dguv_devices', devLocal.firestoreId), {
                                 status: 'Erledigt',
                                 protocolHistory: devLocal.protocolHistory
                             });
@@ -1407,7 +1436,7 @@
                     try {
                         for (let p of protocols) {
                             if (p.firestoreId) {
-                                await deleteDoc(doc(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols', p.firestoreId));
+                                await deleteDoc(doc(db, 'protocols', p.firestoreId));
                             }
                         }
                     } catch(e) {}
