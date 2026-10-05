@@ -549,7 +549,6 @@
         }
 
         async function saveProtocolToCloud(protocol) {
-            // Sofortige lokale Sicherung
             const existsIndex = protocols.findIndex(p => p.id === protocol.id);
             if (existsIndex >= 0) {
                 protocols[existsIndex] = protocol;
@@ -559,7 +558,6 @@
             saveLocalCache();
             updateUI();
 
-            // Verbindungsversuch mit Firebase
             if (db) {
                 try {
                     const docRef = await addDoc(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols'), protocol);
@@ -1321,7 +1319,6 @@
 
             backdateContext = null;
 
-            // In Firebase & LocalStorage speichern mit await
             await saveProtocolToCloud(protocol);
             generatePDF(protocol);
 
@@ -1405,7 +1402,7 @@
                 showModal('Zugriff verwehrt', 'Nur der Administrator kann den Verlauf leeren.', false);
                 return;
             }
-            if (confirm('Verlauf wirklich löschen?')) {
+            if (confirm('Ver Verlauf wirklich löschen?')) {
                 if (db) {
                     try {
                         for (let p of protocols) {
