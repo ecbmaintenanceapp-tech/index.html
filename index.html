@@ -166,8 +166,8 @@
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-500 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Verbinde mit Firebase Cloud...</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                        <span id="cloud-status-text">Verbunden mit Firebase Cloud</span>
                     </p>
                 </div>
             </div>
@@ -483,14 +483,11 @@
                         initFirebaseListeners();
                     }).catch(err => {
                         console.warn("Auth Anonym Error:", err);
-                        // Even if auth fails, try reading directly if rules allow public read/write
                         fetchCloudData();
                     });
                 }
             } catch (err) {
                 console.warn("Firebase Init Hinweis:", err);
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Lokaler Modus (Cloud Backup aktiv)";
             }
 
             if (localStorage.getItem('ecb_logged_in') === 'true') {
