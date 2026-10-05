@@ -490,20 +490,26 @@
 
         function loadLocalCache() {
             try {
-                const savedProtos = localStorage.getItem('ecb_protocols_all_v7');
-                if (savedProtos) protocols = JSON.parse(savedProtos);
-                const savedDevs = localStorage.getItem('ecb_dguv_devices_all_v7');
-                if (savedDevs) dguvDevices = JSON.parse(savedDevs);
-                const savedUsers = localStorage.getItem('ecb_cloud_users_all_v7');
-                if (savedUsers) cloudUsers = JSON.parse(savedUsers);
+                const savedProtos = localStorage.getItem('ecb_protocols_permanent_v8');
+                if (savedProtos) {
+                    protocols = JSON.parse(savedProtos);
+                }
+                const savedDevs = localStorage.getItem('ecb_dguv_devices_permanent_v8');
+                if (savedDevs) {
+                    dguvDevices = JSON.parse(savedDevs);
+                }
+                const savedUsers = localStorage.getItem('ecb_cloud_users_permanent_v8');
+                if (savedUsers) {
+                    cloudUsers = JSON.parse(savedUsers);
+                }
             } catch(e) {}
         }
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_all_v7', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_devices_all_v7', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_cloud_users_all_v7', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_permanent_v8', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_devices_permanent_v8', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_cloud_users_permanent_v8', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
@@ -513,23 +519,18 @@
                 const protoRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols');
                 onSnapshot(protoRef, (snapshot) => {
                     let remoteMap = new Map();
+                    protocols.forEach(p => {
+                        const k = p.id || String(p.timestamp);
+                        remoteMap.set(k, p);
+                    });
+
                     snapshot.forEach(docSnap => {
                         const data = docSnap.data();
-                        const key = data.id || (docSnap.id + (data.timestamp || ''));
+                        const key = data.id || docSnap.id;
                         remoteMap.set(key, { firestoreId: docSnap.id, ...data });
                     });
 
-                    // Merge keeping local items that might not have synced yet
-                    let mergedMap = new Map();
-                    protocols.forEach(p => {
-                        const k = p.id || (p.firestoreId + (p.timestamp || ''));
-                        mergedMap.set(k, p);
-                    });
-                    remoteMap.forEach((val, key) => {
-                        mergedMap.set(key, val);
-                    });
-
-                    protocols = Array.from(mergedMap.values());
+                    protocols = Array.from(remoteMap.values());
                     protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                     saveLocalCache();
                     updateUI();
@@ -537,15 +538,15 @@
 
                 const dguvRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices');
                 onSnapshot(dguvRef, (snapshot) => {
-                    let remoteDevs = [];
+                    let remoteDevsMap = new Map();
+                    dguvDevices.forEach(d => remoteDevsMap.set(d.id, d));
                     snapshot.forEach(docSnap => {
-                        remoteDevs.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                        const data = docSnap.data();
+                        remoteDevsMap.set(data.id || docSnap.id, { firestoreId: docSnap.id, ...data });
                     });
-                    if (remoteDevs.length >= 0) {
-                        dguvDevices = remoteDevs;
-                        saveLocalCache();
-                        updateUI();
-                    }
+                    dguvDevices = Array.from(remoteDevsMap.values());
+                    saveLocalCache();
+                    updateUI();
                 }, (error) => { console.warn("DGUV Sync Warnung:", error); });
             } catch(e) {
                 console.warn("Sync Exception:", e);
@@ -557,32 +558,39 @@
                 if (db) {
                     try {
                         const protoSnapshot = await getDocs(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols'));
-                        let remote = [];
-                        protoSnapshot.forEach(d => remote.push({ firestoreId: d.id, ...d.data() }));
-                        if (remote.length > 0) {
-                            let mergedMap = new Map();
-                            protocols.forEach(p => mergedMap.set(p.id, p));
-                            remote.forEach(r => mergedMap.set(r.id, r));
-                            protocols = Array.from(mergedMap.values());
-                            protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                        }
+                        let remoteMap = new Map();
+                        protocols.forEach(p => remoteMap.set(p.id, p));
+                        protoSnapshot.forEach(d => {
+                            const data = d.data();
+                            remoteMap.set(data.id || d.id, { firestoreId: d.id, ...data });
+                        });
+                        protocols = Array.from(remoteMap.values());
+                        protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
 
                         const dguvSnapshot = await getDocs(collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices'));
-                        let remoteDevs = [];
-                        dguvSnapshot.forEach(d => remoteDevs.push({ firestoreId: d.id, ...d.data() }));
-                        if (remoteDevs.length > 0) {
-                            dguvDevices = remoteDevs;
-                        }
+                        let remoteDevsMap = new Map();
+                        dguvDevices.forEach(d => remoteDevsMap.set(d.id, d));
+                        dguvSnapshot.forEach(d => {
+                            const data = d.data();
+                            remoteDevsMap.set(data.id || d.id, { firestoreId: d.id, ...data });
+                        });
+                        dguvDevices = Array.from(remoteDevsMap.values());
+
                         saveLocalCache();
                         updateUI();
                     } catch(e) {}
                 }
-            }, 3000);
+            }, 5000);
         }
 
         async function saveProtocolToCloud(protocol) {
-            // Unshift locally immediately and lock in storage
-            protocols.unshift(protocol);
+            // Garantierte Sofort-Speicherung im lokalen Array und Cache
+            const existsIndex = protocols.findIndex(p => p.id === protocol.id);
+            if (existsIndex >= 0) {
+                protocols[existsIndex] = protocol;
+            } else {
+                protocols.unshift(protocol);
+            }
             saveLocalCache();
             updateUI();
 
@@ -615,9 +623,9 @@
             updateUI();
         }
 
-        async function removeProtocolFromCloud(firestoreId, index) {
+        async function removeProtocolFromCloud(firestoreId, index, protocolId) {
             if (firestoreId) {
-                protocols = protocols.filter(p => p.firestoreId !== firestoreId);
+                protocols = protocols.filter(p => p.firestoreId !== firestoreId && p.id !== protocolId);
             } else if (index !== undefined && index >= 0) {
                 protocols.splice(index, 1);
             }
@@ -632,9 +640,9 @@
             updateUI();
         }
 
-        async function removeDguvFromCloud(firestoreId, index) {
+        async function removeDguvFromCloud(firestoreId, index, devId) {
             if (firestoreId) {
-                dguvDevices = dguvDevices.filter(d => d.firestoreId !== firestoreId);
+                dguvDevices = dguvDevices.filter(d => d.firestoreId !== firestoreId && d.id !== devId);
             } else if (index !== undefined && index >= 0) {
                 dguvDevices.splice(index, 1);
             }
@@ -1421,11 +1429,13 @@
         }
 
         window.deleteDguvDevice = async function(firestoreId, index) {
-            await removeDguvFromCloud(firestoreId, index);
+            const dev = dguvDevices[index];
+            await removeDguvFromCloud(firestoreId, index, dev ? dev.id : null);
         }
 
         window.deleteProtocol = async function(firestoreId, index) {
-            await removeProtocolFromCloud(firestoreId, index);
+            const proto = protocols[index];
+            await removeProtocolFromCloud(firestoreId, index, proto ? proto.id : null);
         }
 
         window.clearHistory = async function() {
@@ -1434,7 +1444,7 @@
                 showModal('Zugriff verwehrt', 'Nur der Administrator kann den Verlauf leeren.', false);
                 return;
             }
-            if (confirm('Ver Verlauf wirklich löschen?')) {
+            if (confirm('Verlauf wirklich löschen?')) {
                 try {
                     if (db) {
                         for (let p of protocols) {
@@ -1447,7 +1457,7 @@
                 protocols = [];
                 saveLocalCache();
                 updateUI();
-                showModal('Erfolg', 'Ver Verlauf geleert.', true);
+                showModal('Erfolg', 'Verlauf geleert.', true);
             }
         }
 
@@ -1508,7 +1518,7 @@
 
             let html = '';
             filtered.forEach((p, idx) => {
-                let actualGlobalIndex = protocols.findIndex(item => item.id === p.id && item.timestamp === p.timestamp);
+                let actualGlobalIndex = protocols.findIndex(item => item.id === p.id);
                 if (actualGlobalIndex === -1) actualGlobalIndex = idx;
                 let targetId = p.firestoreId || '';
 
