@@ -490,20 +490,20 @@
 
         function loadLocalCache() {
             try {
-                const savedProtos = localStorage.getItem('ecb_protocols_all_v5');
+                const savedProtos = localStorage.getItem('ecb_protocols_all_v7');
                 if (savedProtos) protocols = JSON.parse(savedProtos);
-                const savedDevs = localStorage.getItem('ecb_dguv_devices_all_v5');
+                const savedDevs = localStorage.getItem('ecb_dguv_devices_all_v7');
                 if (savedDevs) dguvDevices = JSON.parse(savedDevs);
-                const savedUsers = localStorage.getItem('ecb_cloud_users_all_v5');
+                const savedUsers = localStorage.getItem('ecb_cloud_users_all_v7');
                 if (savedUsers) cloudUsers = JSON.parse(savedUsers);
             } catch(e) {}
         }
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_all_v5', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_devices_all_v5', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_cloud_users_all_v5', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_all_v7', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_devices_all_v7', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_cloud_users_all_v7', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
@@ -517,10 +517,11 @@
                         remote.push({ firestoreId: docSnap.id, ...docSnap.data() });
                     });
                     if (remote.length > 0) {
-                        // Merge intelligent ohne lokale Neuanlagen zu löschen
-                        const existingIds = new Set(protocols.map(p => p.id + p.timestamp));
+                        const existingMap = new Map();
+                        protocols.forEach(p => existingMap.set(p.id + (p.timestamp || ''), p));
                         remote.forEach(r => {
-                            if (!existingIds.has(r.id + r.timestamp)) {
+                            const key = r.id + (r.timestamp || '');
+                            if (!existingMap.has(key)) {
                                 protocols.push(r);
                             }
                         });
@@ -569,11 +570,10 @@
                         updateUI();
                     } catch(e) {}
                 }
-            }, 3000);
+            }, 4000);
         }
 
         async function saveProtocolToCloud(protocol) {
-            // Unmittelbar vorne einreihen und lokal abspeichern
             protocols.unshift(protocol);
             saveLocalCache();
             updateUI();
@@ -1345,10 +1345,7 @@
 
             backdateContext = null;
 
-            // Sofort lokal und persistent speichern
             await saveProtocolToCloud(protocol);
-
-            // PDF generieren und herunterladen
             generatePDF(protocol);
 
             showModal('Erfolg', 'Wartungsprotokoll erfolgreich gespeichert & PDF erstellt!', true);
