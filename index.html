@@ -512,23 +512,27 @@
             try {
                 const protoRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'protocols');
                 onSnapshot(protoRef, (snapshot) => {
-                    let remote = [];
+                    let remoteMap = new Map();
                     snapshot.forEach(docSnap => {
-                        remote.push({ firestoreId: docSnap.id, ...docSnap.data() });
+                        const data = docSnap.data();
+                        const key = data.id || (docSnap.id + (data.timestamp || ''));
+                        remoteMap.set(key, { firestoreId: docSnap.id, ...data });
                     });
-                    if (remote.length >= 0) {
-                        const existingMap = new Map();
-                        protocols.forEach(p => existingMap.set(p.id + (p.timestamp || ''), p));
-                        remote.forEach(r => {
-                            const key = r.id + (r.timestamp || '');
-                            if (!existingMap.has(key)) {
-                                protocols.push(r);
-                            }
-                        });
-                        protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                        saveLocalCache();
-                        updateUI();
-                    }
+
+                    // Merge keeping local items that might not have synced yet
+                    let mergedMap = new Map();
+                    protocols.forEach(p => {
+                        const k = p.id || (p.firestoreId + (p.timestamp || ''));
+                        mergedMap.set(k, p);
+                    });
+                    remoteMap.forEach((val, key) => {
+                        mergedMap.set(key, val);
+                    });
+
+                    protocols = Array.from(mergedMap.values());
+                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                    saveLocalCache();
+                    updateUI();
                 }, (error) => { console.warn("Protokoll Sync Warnung:", error); });
 
                 const dguvRef = collection(db, 'artifacts', 'ecb-maintenance', 'public', 'data', 'dguv_devices');
@@ -556,7 +560,10 @@
                         let remote = [];
                         protoSnapshot.forEach(d => remote.push({ firestoreId: d.id, ...d.data() }));
                         if (remote.length > 0) {
-                            protocols = remote;
+                            let mergedMap = new Map();
+                            protocols.forEach(p => mergedMap.set(p.id, p));
+                            remote.forEach(r => mergedMap.set(r.id, r));
+                            protocols = Array.from(mergedMap.values());
                             protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                         }
 
@@ -574,6 +581,7 @@
         }
 
         async function saveProtocolToCloud(protocol) {
+            // Unshift locally immediately and lock in storage
             protocols.unshift(protocol);
             saveLocalCache();
             updateUI();
@@ -1439,7 +1447,7 @@
                 protocols = [];
                 saveLocalCache();
                 updateUI();
-                showModal('Erfolg', 'Verlauf geleert.', true);
+                showModal('Erfolg', 'Ver Verlauf geleert.', true);
             }
         }
 
