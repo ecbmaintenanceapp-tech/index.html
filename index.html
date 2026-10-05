@@ -43,6 +43,7 @@
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
+    <!-- Login Screen -->
     <div id="login-screen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 space-y-6 animate-fade-in">
             <div class="text-center space-y-2">
@@ -72,6 +73,7 @@
         </div>
     </div>
 
+    <!-- Admin & Backdate Modal -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -128,6 +130,7 @@
         </div>
     </div>
 
+    <!-- Password Modal -->
     <div id="modal-password" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -146,6 +149,7 @@
         </div>
     </div>
 
+    <!-- Header -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
@@ -160,8 +164,8 @@
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Firebase Cloud Verbunden (Live Sync)</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-500 inline-block animate-pulse"></span>
+                        <span id="cloud-status-text">Verbinde mit Firebase Cloud...</span>
                     </p>
                 </div>
             </div>
@@ -188,6 +192,7 @@
         </div>
     </header>
 
+    <!-- Main Content -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
 
         <!-- Dashboard Tab -->
@@ -419,7 +424,7 @@
         </div>
     </div>
 
-    <!-- MESSAGE MODAL -->
+    <!-- Message Modal -->
     <div id="modal-message" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl border border-slate-100 text-center">
             <div id="modal-icon" class="w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner">
@@ -433,11 +438,11 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+    <!-- Firebase SDKs (Compat v10) & App Logic -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEvon6SHIVRB5k",
             authDomain: "ecb-maintenance.firebaseapp.com",
@@ -447,7 +452,7 @@
             appId: "1:229926423123:web:a309c14c708fc88c62d4a6"
         };
 
-        let app, db, auth;
+        let db = null;
         let protocols = [];
         let dguvDevices = [];
         let cloudUsers = [
@@ -466,10 +471,11 @@
             updateUI();
 
             try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                await signInAnonymously(auth);
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+                await firebase.auth().signInAnonymously();
                 
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
                 document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden (Live Sync)";
@@ -490,46 +496,29 @@
 
         function loadLocalCache() {
             try {
-                const savedProtos = localStorage.getItem('ecb_protocols_permanent_v9');
+                const savedProtos = localStorage.getItem('ecb_protocols_permanent_v12');
                 if (savedProtos) protocols = JSON.parse(savedProtos);
 
-                const savedDevs = localStorage.getItem('ecb_dguv_devices_permanent_v9');
+                const savedDevs = localStorage.getItem('ecb_dguv_devices_permanent_v12');
                 if (savedDevs) dguvDevices = JSON.parse(savedDevs);
 
-                const savedUsers = localStorage.getItem('ecb_cloud_users_permanent_v9');
+                const savedUsers = localStorage.getItem('ecb_cloud_users_permanent_v12');
                 if (savedUsers) cloudUsers = JSON.parse(savedUsers);
             } catch(e) {}
         }
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_permanent_v9', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_devices_permanent_v9', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_cloud_users_permanent_v9', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_permanent_v12', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_devices_permanent_v12', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_cloud_users_permanent_v12', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
-        async function initFirebaseRealtimeSync() {
+        function initFirebaseRealtimeSync() {
             if (!db) return;
             try {
-                // Fetch root collections directly for maximum compatibility
-                const protoRef = collection(db, 'protocols');
-                const protoSnap = await getDocs(protoRef);
-                if (!protoSnap.empty) {
-                    let remoteMap = new Map();
-                    protocols.forEach(p => remoteMap.set(p.id, p));
-                    protoSnap.forEach(docSnap => {
-                        const data = docSnap.data();
-                        const key = data.id || docSnap.id;
-                        remoteMap.set(key, { firestoreId: docSnap.id, ...data });
-                    });
-                    protocols = Array.from(remoteMap.values());
-                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                    saveLocalCache();
-                    updateUI();
-                }
-
-                onSnapshot(protoRef, (snapshot) => {
+                db.collection('protocols').onSnapshot((snapshot) => {
                     let remoteMap = new Map();
                     protocols.forEach(p => remoteMap.set(p.id, p));
                     snapshot.forEach(docSnap => {
@@ -541,24 +530,9 @@
                     protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                     saveLocalCache();
                     updateUI();
-                });
+                }, err => console.warn("Protocol snapshot err:", err));
 
-                const dguvRef = collection(db, 'dguv_devices');
-                const dguvSnap = await getDocs(dguvRef);
-                if (!dguvSnap.empty) {
-                    let remoteDevsMap = new Map();
-                    dguvDevices.forEach(d => remoteDevsMap.set(d.id, d));
-                    dguvSnap.forEach(docSnap => {
-                        const data = docSnap.data();
-                        const key = data.id || docSnap.id;
-                        remoteDevsMap.set(key, { firestoreId: docSnap.id, ...data });
-                    });
-                    dguvDevices = Array.from(remoteDevsMap.values());
-                    saveLocalCache();
-                    updateUI();
-                }
-
-                onSnapshot(dguvRef, (snapshot) => {
+                db.collection('dguv_devices').onSnapshot((snapshot) => {
                     let remoteDevsMap = new Map();
                     dguvDevices.forEach(d => remoteDevsMap.set(d.id, d));
                     snapshot.forEach(docSnap => {
@@ -569,7 +543,7 @@
                     dguvDevices = Array.from(remoteDevsMap.values());
                     saveLocalCache();
                     updateUI();
-                });
+                }, err => console.warn("DGUV snapshot err:", err));
             } catch(e) {
                 console.warn("Firebase Sync Hinweis:", e);
             }
@@ -587,7 +561,7 @@
 
             if (db) {
                 try {
-                    const docRef = await addDoc(collection(db, 'protocols'), protocol);
+                    const docRef = await db.collection('protocols').add(protocol);
                     protocol.firestoreId = docRef.id;
                     saveLocalCache();
                 } catch(e) {
@@ -603,7 +577,7 @@
 
             if (db) {
                 try {
-                    const docRef = await addDoc(collection(db, 'dguv_devices'), dev);
+                    const docRef = await db.collection('dguv_devices').add(dev);
                     dev.firestoreId = docRef.id;
                     saveLocalCache();
                 } catch(e) {
@@ -623,7 +597,7 @@
 
             if (db && firestoreId) {
                 try {
-                    await deleteDoc(doc(db, 'protocols', firestoreId));
+                    await db.collection('protocols').doc(firestoreId).delete();
                 } catch(e) {}
             }
         }
@@ -639,7 +613,7 @@
 
             if (db && firestoreId) {
                 try {
-                    await deleteDoc(doc(db, 'dguv_devices', firestoreId));
+                    await db.collection('dguv_devices').doc(firestoreId).delete();
                 } catch(e) {}
             }
         }
@@ -1401,7 +1375,7 @@
                     
                     if (db && devLocal.firestoreId) {
                         try {
-                            await updateDoc(doc(db, 'dguv_devices', devLocal.firestoreId), {
+                            await db.collection('dguv_devices').doc(devLocal.firestoreId).update({
                                 status: 'Erledigt',
                                 protocolHistory: devLocal.protocolHistory
                             });
@@ -1436,7 +1410,7 @@
                     try {
                         for (let p of protocols) {
                             if (p.firestoreId) {
-                                await deleteDoc(doc(db, 'protocols', p.firestoreId));
+                                await db.collection('protocols').doc(p.firestoreId).delete();
                             }
                         }
                     } catch(e) {}
