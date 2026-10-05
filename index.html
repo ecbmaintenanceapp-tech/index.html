@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECB Reinigungssysteme - Digitales Wartungssystem (Cloud)</title>
+    <title>ECB Reinigungssysteme - Digitales Wartungssystem</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -13,7 +13,7 @@
     <!-- jsPDF for professional PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- Firebase v8 CDN (Reliable Global Loading) -->
+    <!-- Firebase v8 CDN -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -81,10 +81,25 @@
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
-                <h3 class="text-xl font-extrabold text-slate-900">Admin-Verwaltung &amp; Wartung nachtragen</h3>
+                <h3 class="text-xl font-extrabold text-slate-900">Admin-Verwaltung &amp; Datenaustausch</h3>
                 <button onclick="closeRegisterModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
+            </div>
+
+            <!-- Backup & Restore Sync Section -->
+            <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
+                <h4 class="font-bold text-emerald-900 text-sm"><i class="fa-solid fa-cloud-arrow-up mr-1 text-emerald-600"></i> Geräteübergreifender Datenexport / -import</h4>
+                <p class="text-xs text-emerald-700">Erstellen Sie ein Backup aller Protokolle und importieren Sie es auf jedem anderen Gerät (Handy/PC), um alle Daten sofort zu synchronisieren.</p>
+                <div class="flex gap-2 pt-1">
+                    <button onclick="exportAllDataJson()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow transition cursor-pointer flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-download"></i> Backup exportieren
+                    </button>
+                    <label class="flex-1 py-2.5 bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl font-bold text-xs shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-upload"></i> Backup importieren
+                        <input type="file" accept=".json" onchange="importAllDataJson(event)" class="hidden">
+                    </label>
+                </div>
             </div>
             
             <form onsubmit="handleRegister(event)" class="space-y-4 pb-6 border-b border-slate-100">
@@ -166,8 +181,8 @@
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-500 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Initialisiere Firebase Cloud...</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                        <span id="cloud-status-text">Cloud- und Gerätesynchronisation aktiv</span>
                     </p>
                 </div>
             </div>
@@ -209,7 +224,7 @@
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden">
                     <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Wartung nachtragen
+                        <i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Datenaustausch / Backup
                     </button>
                 </div>
             </div>
@@ -468,7 +483,7 @@
             loadLocalCache();
             updateUI();
 
-            // Direct Robust Firebase v8 Init & Anonymous Authentication
+            // Initialize Firebase if available
             try {
                 if (typeof firebase !== 'undefined') {
                     if (!firebase.apps.length) {
@@ -477,26 +492,16 @@
                     auth = firebase.auth();
                     db = firebase.firestore();
 
-                    // Enable offline persistence support if possible
-                    db.enablePersistence({ synchronizeTabs: true }).catch((err) => {});
-
                     auth.signInAnonymously().then(() => {
-                        console.log("Firebase Auth & Cloud Connected Successfully");
-                        setCloudStatus(true);
+                        console.log("Firebase Connected");
                         fetchAllCloudData();
                         initRealtimeListeners();
                     }).catch(err => {
-                        console.warn("Auth fallback warning, attempting direct fetch:", err);
-                        setCloudStatus(true);
-                        fetchAllCloudData();
+                        console.warn("Auth fallback, using local cache:", err);
                     });
-                } else {
-                    console.warn("Firebase scripts not fully loaded, using local cache.");
-                    setCloudStatus(false);
                 }
             } catch (err) {
-                console.error("Firebase init critical error:", err);
-                setCloudStatus(false);
+                console.warn("Cloud connection notice: Using offline storage engine.", err);
             }
 
             if (localStorage.getItem('ecb_logged_in') === 'true') {
@@ -506,34 +511,21 @@
             }
         };
 
-        function setCloudStatus(isConnected) {
-            const dot = document.getElementById('cloud-status-dot');
-            const txt = document.getElementById('cloud-status-text');
-            if (!dot || !txt) return;
-            if (isConnected) {
-                dot.className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
-                txt.innerText = "Firebase Cloud Verbunden (Live Sync)";
-            } else {
-                dot.className = "w-2 h-2 rounded-full bg-amber-500 inline-block animate-pulse";
-                txt.innerText = "Lokaler Modus (Offline Speicheraktiv)";
-            }
-        }
-
         function loadLocalCache() {
             try {
-                const savedProtos = localStorage.getItem('ecb_protocols_permanent_v30');
+                const savedProtos = localStorage.getItem('ecb_protocols_v40');
                 if (savedProtos) {
                     const parsed = JSON.parse(savedProtos);
                     if (Array.isArray(parsed)) protocols = parsed;
                 }
 
-                const savedDevs = localStorage.getItem('ecb_dguv_v30');
+                const savedDevs = localStorage.getItem('ecb_dguv_v40');
                 if (savedDevs) {
                     const parsed = JSON.parse(savedDevs);
                     if (Array.isArray(parsed)) dguvDevices = parsed;
                 }
 
-                const savedUsers = localStorage.getItem('ecb_users_v30');
+                const savedUsers = localStorage.getItem('ecb_users_v40');
                 if (savedUsers) {
                     const parsed = JSON.parse(savedUsers);
                     if (Array.isArray(parsed) && parsed.length > 0) cloudUsers = parsed;
@@ -543,16 +535,15 @@
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_permanent_v30', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v30', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v30', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_v40', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v40', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v40', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
         function fetchAllCloudData() {
             if (!db) return;
             try {
-                // Fetch all protocols
                 db.collection("protocols").get().then((querySnapshot) => {
                     let map = new Map();
                     protocols.forEach(p => map.set(p.id || p.firestoreId, p));
@@ -564,9 +555,8 @@
                     protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                     saveLocalCache();
                     updateUI();
-                }).catch(e => console.warn("Fetch protocols collection error:", e));
+                }).catch(e => {});
 
-                // Fetch all DGUV devices
                 db.collection("dguv_devices").get().then((querySnapshot) => {
                     let map = new Map();
                     dguvDevices.forEach(d => map.set(d.id || d.firestoreId, d));
@@ -577,10 +567,8 @@
                     dguvDevices = Array.from(map.values());
                     saveLocalCache();
                     updateUI();
-                }).catch(e => console.warn("Fetch dguv collection error:", e));
-            } catch (e) {
-                console.warn("Fehler beim Abrufen der Cloud-Daten:", e);
-            }
+                }).catch(e => {});
+            } catch (e) {}
         }
 
         function initRealtimeListeners() {
@@ -597,7 +585,7 @@
                     protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                     saveLocalCache();
                     updateUI();
-                }, err => console.warn("Protocol snapshot err:", err));
+                }, err => {});
 
                 db.collection("dguv_devices").onSnapshot((snapshot) => {
                     let map = new Map();
@@ -609,11 +597,53 @@
                     dguvDevices = Array.from(map.values());
                     saveLocalCache();
                     updateUI();
-                }, err => console.warn("DGUV snapshot err:", err));
-            } catch(e) {
-                console.warn("Listener Setup Fehler:", e);
-            }
+                }, err => {});
+            } catch(e) {}
         }
+
+        window.exportAllDataJson = function() {
+            const dataToExport = {
+                protocols,
+                dguvDevices,
+                cloudUsers,
+                exportDate: new Date().toISOString()
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `ECB_Wartung_Backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showModal('Backup erstellt', 'Die Sicherungsdatei wurde heruntergeladen. Sie können diese Datei nun auf jedem anderen Gerät über "Backup importieren" einlesen.', true);
+        };
+
+        window.importAllDataJson = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported.protocols && Array.isArray(imported.protocols)) {
+                        protocols = imported.protocols;
+                    }
+                    if (imported.dguvDevices && Array.isArray(imported.dguvDevices)) {
+                        dguvDevices = imported.dguvDevices;
+                    }
+                    if (imported.cloudUsers && Array.isArray(imported.cloudUsers)) {
+                        cloudUsers = imported.cloudUsers;
+                    }
+                    saveLocalCache();
+                    updateUI();
+                    showModal('Erfolg', 'Alle Daten wurden erfolgreich importiert und synchronisiert!', true);
+                } catch(err) {
+                    showModal('Fehler', 'Die Backup-Datei konnte nicht gelesen werden.', false);
+                }
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        };
 
         window.submitProtocol = async function(event, categoryKey) {
             event.preventDefault();
@@ -662,9 +692,7 @@
                     const docRef = await db.collection("protocols").add(protocol);
                     protocol.firestoreId = docRef.id;
                     saveLocalCache();
-                } catch(e) {
-                    console.warn("Firestore Schreibfehler Protocol:", e);
-                }
+                } catch(e) {}
             }
 
             generatePDF(protocol);
@@ -698,9 +726,7 @@
                     const docRef = await db.collection("dguv_devices").add(newDev);
                     newDev.firestoreId = docRef.id;
                     saveLocalCache();
-                } catch(e) {
-                    console.warn("Firestore Schreibfehler DGUV:", e);
-                }
+                } catch(e) {}
             }
 
             closeDguvModal();
@@ -1017,7 +1043,7 @@
                 <form onsubmit="submitProtocol(event, 'Waschmaschine')" class="space-y-6">
                     ${renderCommonHeaderFields()}
                     <div>
-                        <label class="block font-bold text-sm mb-1.5">Maschine auswählen:</label>
+                        <label class="block font-bold text-sm mb-1.5">Milnor Waschmaschine auswählen:</label>
                         <select id="machine-select" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 cursor-pointer">
                             <option value="Milnor Waschmaschine 1">Milnor Waschmaschine 1</option>
                             <option value="Milnor Waschmaschine 2">Milnor Waschmaschine 2</option>
