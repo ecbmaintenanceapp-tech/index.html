@@ -516,7 +516,7 @@
                     snapshot.forEach(docSnap => {
                         remote.push({ firestoreId: docSnap.id, ...docSnap.data() });
                     });
-                    if (remote.length > 0) {
+                    if (remote.length >= 0) {
                         const existingMap = new Map();
                         protocols.forEach(p => existingMap.set(p.id + (p.timestamp || ''), p));
                         remote.forEach(r => {
@@ -537,7 +537,7 @@
                     snapshot.forEach(docSnap => {
                         remoteDevs.push({ firestoreId: docSnap.id, ...docSnap.data() });
                     });
-                    if (remoteDevs.length > 0) {
+                    if (remoteDevs.length >= 0) {
                         dguvDevices = remoteDevs;
                         saveLocalCache();
                         updateUI();
@@ -570,7 +570,7 @@
                         updateUI();
                     } catch(e) {}
                 }
-            }, 4000);
+            }, 3000);
         }
 
         async function saveProtocolToCloud(protocol) {
@@ -585,7 +585,7 @@
                     saveLocalCache();
                 }
             } catch(e) {
-                console.warn("Firestore Protokoll Schreibfehler (lokal persistent aktiv):", e);
+                console.warn("Firestore Protokoll Schreibfehler:", e);
             }
             updateUI();
         }
@@ -602,7 +602,7 @@
                     saveLocalCache();
                 }
             } catch(e) {
-                console.warn("Firestore DGUV Schreibfehler (lokal persistent aktiv):", e);
+                console.warn("Firestore DGUV Schreibfehler:", e);
             }
             updateUI();
         }
@@ -1426,7 +1426,7 @@
                 showModal('Zugriff verwehrt', 'Nur der Administrator kann den Verlauf leeren.', false);
                 return;
             }
-            if (confirm('Verlauf wirklich löschen?')) {
+            if (confirm('Ver Verlauf wirklich löschen?')) {
                 try {
                     if (db) {
                         for (let p of protocols) {
