@@ -166,8 +166,8 @@
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Verbunden mit Firebase Cloud (Live Sync)</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-500 inline-block animate-pulse"></span>
+                        <span id="cloud-status-text">Initialisiere Firebase Cloud...</span>
                     </p>
                 </div>
             </div>
@@ -468,7 +468,7 @@
             loadLocalCache();
             updateUI();
 
-            // Bulletproof Firebase initialization
+            // Direct Robust Firebase v8 Init & Anonymous Authentication
             try {
                 if (typeof firebase !== 'undefined') {
                     if (!firebase.apps.length) {
@@ -477,20 +477,26 @@
                     auth = firebase.auth();
                     db = firebase.firestore();
 
-                    // Force anonymous login to satisfy Firestore rules
+                    // Enable offline persistence support if possible
+                    db.enablePersistence({ synchronizeTabs: true }).catch((err) => {});
+
                     auth.signInAnonymously().then(() => {
-                        console.log("Firebase Auth Success");
-                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
-                        document.getElementById('cloud-status-text').innerText = "Verbunden mit Firebase Cloud (Live Sync)";
-                        fetchCloudData();
-                        initFirebaseListeners();
+                        console.log("Firebase Auth & Cloud Connected Successfully");
+                        setCloudStatus(true);
+                        fetchAllCloudData();
+                        initRealtimeListeners();
                     }).catch(err => {
-                        console.warn("Auth Anonym Error, attempting direct fetch:", err);
-                        fetchCloudData();
+                        console.warn("Auth fallback warning, attempting direct fetch:", err);
+                        setCloudStatus(true);
+                        fetchAllCloudData();
                     });
+                } else {
+                    console.warn("Firebase scripts not fully loaded, using local cache.");
+                    setCloudStatus(false);
                 }
             } catch (err) {
-                console.warn("Firebase Init Hinweis:", err);
+                console.error("Firebase init critical error:", err);
+                setCloudStatus(false);
             }
 
             if (localStorage.getItem('ecb_logged_in') === 'true') {
@@ -500,21 +506,34 @@
             }
         };
 
+        function setCloudStatus(isConnected) {
+            const dot = document.getElementById('cloud-status-dot');
+            const txt = document.getElementById('cloud-status-text');
+            if (!dot || !txt) return;
+            if (isConnected) {
+                dot.className = "w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse";
+                txt.innerText = "Firebase Cloud Verbunden (Live Sync)";
+            } else {
+                dot.className = "w-2 h-2 rounded-full bg-amber-500 inline-block animate-pulse";
+                txt.innerText = "Lokaler Modus (Offline Speicheraktiv)";
+            }
+        }
+
         function loadLocalCache() {
             try {
-                const savedProtos = localStorage.getItem('ecb_protocols_permanent_v20');
+                const savedProtos = localStorage.getItem('ecb_protocols_permanent_v30');
                 if (savedProtos) {
                     const parsed = JSON.parse(savedProtos);
                     if (Array.isArray(parsed)) protocols = parsed;
                 }
 
-                const savedDevs = localStorage.getItem('ecb_dguv_v20');
+                const savedDevs = localStorage.getItem('ecb_dguv_v30');
                 if (savedDevs) {
                     const parsed = JSON.parse(savedDevs);
                     if (Array.isArray(parsed)) dguvDevices = parsed;
                 }
 
-                const savedUsers = localStorage.getItem('ecb_users_v20');
+                const savedUsers = localStorage.getItem('ecb_users_v30');
                 if (savedUsers) {
                     const parsed = JSON.parse(savedUsers);
                     if (Array.isArray(parsed) && parsed.length > 0) cloudUsers = parsed;
@@ -524,15 +543,16 @@
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_permanent_v20', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v20', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v20', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_permanent_v30', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v30', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v30', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
-        function fetchCloudData() {
+        function fetchAllCloudData() {
             if (!db) return;
             try {
+                // Fetch all protocols
                 db.collection("protocols").get().then((querySnapshot) => {
                     let map = new Map();
                     protocols.forEach(p => map.set(p.id || p.firestoreId, p));
@@ -544,8 +564,9 @@
                     protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                     saveLocalCache();
                     updateUI();
-                }).catch(e => console.warn("Fetch protocols error:", e));
+                }).catch(e => console.warn("Fetch protocols collection error:", e));
 
+                // Fetch all DGUV devices
                 db.collection("dguv_devices").get().then((querySnapshot) => {
                     let map = new Map();
                     dguvDevices.forEach(d => map.set(d.id || d.firestoreId, d));
@@ -556,13 +577,13 @@
                     dguvDevices = Array.from(map.values());
                     saveLocalCache();
                     updateUI();
-                }).catch(e => console.warn("Fetch dguv error:", e));
+                }).catch(e => console.warn("Fetch dguv collection error:", e));
             } catch (e) {
                 console.warn("Fehler beim Abrufen der Cloud-Daten:", e);
             }
         }
 
-        function initFirebaseListeners() {
+        function initRealtimeListeners() {
             if (!db) return;
             try {
                 db.collection("protocols").onSnapshot((snapshot) => {
