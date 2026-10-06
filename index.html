@@ -4,20 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ECB Reinigungssysteme - Digitales Wartungssystem</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- jsPDF for professional PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- Firebase v8 CDN -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
     <script>
         tailwind.config = {
             theme: {
@@ -28,9 +19,7 @@
                         ecbLightGreen: '#ecfccb',
                         ecbDark: '#0f172a',
                     },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    }
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
                 }
             }
         }
@@ -38,13 +27,8 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .signature-canvas { touch-action: none; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
@@ -82,85 +66,39 @@
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
                 <h3 class="text-xl font-extrabold text-slate-900">Admin-Verwaltung &amp; Backup</h3>
-                <button onclick="closeRegisterModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <button onclick="closeRegisterModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
             </div>
-
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
-                <h4 class="font-bold text-emerald-900 text-sm"><i class="fa-solid fa-cloud-arrow-up mr-1 text-emerald-600"></i> Datenexport / -import</h4>
-                <p class="text-xs text-emerald-700">Erstellen Sie ein Backup aller Protokolle und importieren Sie es auf jedem anderen Gerät, um Daten sofort abzugleichen.</p>
+                <h4 class="font-bold text-emerald-900 text-sm"><i class="fa-solid fa-cloud-arrow-up mr-1 text-emerald-600"></i> Lokales Backup exportieren / importieren</h4>
                 <div class="flex gap-2 pt-1">
-                    <button onclick="exportAllDataJson()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow transition cursor-pointer flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-download"></i> Backup exportieren
-                    </button>
-                    <label class="flex-1 py-2.5 bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl font-bold text-xs shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-upload"></i> Backup importieren
-                        <input type="file" accept=".json" onchange="importAllDataJson(event)" class="hidden">
-                    </label>
+                    <button onclick="exportAllDataJson()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow transition cursor-pointer flex items-center justify-center gap-1.5"><i class="fa-solid fa-download"></i> Backup exportieren</button>
+                    <label class="flex-1 py-2.5 bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl font-bold text-xs shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5"><i class="fa-solid fa-upload"></i> Backup importieren<input type="file" accept=".json" onchange="importAllDataJson(event)" class="hidden"></label>
                 </div>
             </div>
-            
             <form onsubmit="handleRegister(event)" class="space-y-4 pb-6 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-user-plus mr-1 text-ecbGreen"></i> Neuen Mitarbeiter anlegen</h4>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Mitarbeiter-Vollname:</label>
-                    <input type="text" id="reg-fullname" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Vor- und Nachname">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Benutzername:</label>
-                    <input type="text" id="reg-user" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Benutzername">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Passwort:</label>
-                    <input type="password" id="reg-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Passwort">
-                </div>
+                <div><label class="block text-xs font-bold text-slate-700 mb-1">Mitarbeiter-Vollname:</label><input type="text" id="reg-fullname" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Vor- und Nachname"></div>
+                <div><label class="block text-xs font-bold text-slate-700 mb-1">Benutzername:</label><input type="text" id="reg-user" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Benutzername"></div>
+                <div><label class="block text-xs font-bold text-slate-700 mb-1">Passwort:</label><input type="password" id="reg-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Passwort"></div>
                 <div id="reg-error" class="text-xs text-red-600 font-bold hidden">Benutzer existiert bereits!</div>
                 <button type="submit" class="w-full py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Mitarbeiter anlegen</button>
             </form>
-
             <form onsubmit="startBackdateForm(event)" class="space-y-4 pb-6 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-calendar-plus mr-1 text-sky-600"></i> Wartung nachtragen</h4>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Kategorie / Anlage:</label>
-                    <select id="backdate-category" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50 cursor-pointer">
-                        <option value="Waschmaschine">Milnor Waschmaschinen (1-4)</option>
-                        <option value="Trockner">Trockner (1-4)</option>
-                        <option value="Kompressor 2-Wochen">Kompressor Wartung (2-Wochen)</option>
-                        <option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Zuständiger Techniker:</label>
-                    <select id="backdate-technician" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50 cursor-pointer"></select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Durchführungsdatum:</label>
-                    <input type="datetime-local" id="backdate-datetime" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-slate-50">
-                </div>
+                <div><label class="block text-xs font-bold text-slate-700 mb-1">Kategorie / Anlage:</label><select id="backdate-category" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-slate-50 cursor-pointer"><option value="Waschmaschine">Milnor Waschmaschinen (1-4)</option><option value="Trockner">Trockner (1-4)</option><option value="Kompressor 2-Wochen">Kompressor Wartung (2-Wochen)</option><option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option></select></div>
+                <div><label class="block text-xs font-bold text-slate-700 mb-1">Zuständiger Techniker:</label><select id="backdate-technician" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-slate-50 cursor-pointer"></select></div>
+                <div><label class="block text-xs font-bold text-slate-700 mb-1">Durchführungsdatum:</label><input type="datetime-local" id="backdate-datetime" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-slate-50"></div>
                 <button type="submit" class="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Formular mit diesem Datum starten</button>
             </form>
-
-            <div class="space-y-3">
-                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-users-gear mr-1 text-sky-600"></i> Existierende Benutzer verwalten</h4>
-                <div id="admin-user-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
-            </div>
+            <div class="space-y-3"><h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-users-gear mr-1 text-sky-600"></i> Existierende Benutzer verwalten</h4><div id="admin-user-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div></div>
         </div>
     </div>
 
     <div id="modal-password" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-4">
-                <h3 class="text-xl font-extrabold text-slate-900">Passwort ändern</h3>
-                <button onclick="closePasswordModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4"><h3 class="text-xl font-extrabold text-slate-900">Passwort ändern</h3><button onclick="closePasswordModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
             <form onsubmit="handleChangePassword(event)" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1">Neues Passwort:</label>
-                    <input type="password" id="new-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Neues Passwort eingeben">
-                </div>
+                <div><label class="block text-sm font-bold text-slate-700 mb-1">Neues Passwort:</label><input type="password" id="new-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Neues Passwort eingeben"></div>
                 <button type="submit" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-xl font-bold text-sm shadow-lg transition cursor-pointer">Passwort aktualisieren</button>
             </form>
         </div>
@@ -169,7 +107,7 @@
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
-                <div class="w-12 h-12 rounded-2xl bg-[#65a30d] p-0.5 shadow-md flex items-center justify-center transform hover:rotate-3 transition duration-300 overflow-hidden border border-white/20">
+                <div class="w-12 h-12 rounded-2xl bg-[#65a30d] p-0.5 shadow-md flex items-center justify-center overflow-hidden border border-white/20">
                     <svg viewBox="0 0 500 500" class="w-full h-full rounded-xl">
                         <rect width="500" height="500" fill="#65a30d"/>
                         <path d="M 20 330 C 80 270 200 270 300 320 C 380 360 430 360 480 300 C 470 320 420 390 350 390 C 250 390 120 410 40 370 C 25 362 20 345 20 330 Z" fill="#ffffff" opacity="0.95"/>
@@ -180,281 +118,157 @@
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                        <span id="cloud-status-text">Cloud- und Gerätesynchronisation aktiv</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
+                        <span id="cloud-status-text">Verbinde mit Firebase Cloud...</span>
                     </p>
                 </div>
             </div>
             <nav class="flex items-center space-x-2 mt-3 sm:mt-0 flex-wrap gap-2">
-                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition shadow-sm flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-layer-group"></i> Dashboard
-                </button>
-                <button onclick="switchTab('calendar')" id="nav-calendar" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-calendar-check"></i> Wartungskalender
-                </button>
-                <button onclick="switchTab('dguv')" id="nav-dguv" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-plug-circle-check"></i> DGUV V3 <span id="dguv-count" class="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
-                </button>
-                <button onclick="switchTab('history')" id="nav-history" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Protokolle <span id="protocol-count" class="bg-ecbGreen text-white text-xs px-2 py-0.5 rounded-full">0</span>
-                </button>
-                <button onclick="openPasswordModal()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-white/20 hover:bg-white/30 transition flex items-center gap-1 cursor-pointer" title="Passwort ändern">
-                    <i class="fa-solid fa-key"></i>
-                </button>
-                <button onclick="handleLogout()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-red-600/80 hover:bg-red-600 transition flex items-center gap-1 cursor-pointer" title="Abmelden">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                </button>
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-layer-group"></i> Dashboard</button>
+                <button onclick="switchTab('calendar')" id="nav-calendar" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-calendar-check"></i> Wartungskalender</button>
+                <button onclick="switchTab('dguv')" id="nav-dguv" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plug-circle-check"></i> DGUV V3 <span id="dguv-count" class="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">0</span></button>
+                <button onclick="switchTab('history')" id="nav-history" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-clock-rotate-left"></i> Protokolle <span id="protocol-count" class="bg-ecbGreen text-white text-xs px-2 py-0.5 rounded-full">0</span></button>
+                <button onclick="openPasswordModal()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-white/20 hover:bg-white/30 transition flex items-center gap-1 cursor-pointer" title="Passwort ändern"><i class="fa-solid fa-key"></i></button>
+                <button onclick="handleLogout()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-red-600/80 hover:bg-red-600 transition flex items-center gap-1 cursor-pointer" title="Abmelden"><i class="fa-solid fa-right-from-bracket"></i></button>
             </nav>
         </div>
     </header>
 
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
-
-        <!-- Dashboard Tab -->
         <div id="tab-dashboard" class="space-y-8 animate-fade-in">
             <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
-                <div class="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-ecbLightGreen/40 rounded-full blur-3xl pointer-events-none"></div>
-                <div class="relative z-10 max-w-2xl flex flex-wrap justify-between items-center gap-4">
-                    <div>
-                        <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
-                        <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen-, Maschinen- &amp; DGUV-Wartung</h2>
-                        <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen.</p>
-                    </div>
+                <div class="relative z-10 max-w-2xl">
+                    <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen-, Maschinen- &amp; DGUV-Wartung</h2>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen.</p>
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden">
-                    <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Backup
-                    </button>
+                    <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Backup</button>
                 </div>
             </div>
 
-            <!-- Category Cards Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div onclick="openWashingMachineMenu()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-ecbGreen hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Waschmaschine" class="absolute top-4 right-4"></div>
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
-                            <i class="fa-solid fa-shirt"></i>
-                        </div>
+                        <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm"><i class="fa-solid fa-shirt"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Milnor Waschmaschinen</h3>
-                        <p class="text-xs font-semibold text-ecbGreen mt-1 uppercase tracking-wider">4 Maschinen • Alle 2 Wochen</p>
+                        <p class="text-xs font-semibold text-ecbGreen mt-1 uppercase tracking-wider">4 Maschinen (1-4)</p>
                         <div id="due-Waschmaschine" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Berechne Termin...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-ecbDarkGreen group-hover:text-ecbGreen">
-                        <span>Wartung starten</span>
-                        <div class="w-8 h-8 rounded-full bg-ecbLightGreen flex items-center justify-center group-hover:translate-x-1 transition">
-                            <i class="fa-solid fa-arrow-right text-xs"></i>
-                        </div>
-                    </div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-ecbDarkGreen"><span>Wartung starten</span><div class="w-8 h-8 rounded-full bg-ecbLightGreen flex items-center justify-center group-hover:translate-x-1 transition"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
                 <div onclick="openDryerMenu()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-amber-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Trockner" class="absolute top-4 right-4"></div>
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
-                            <i class="fa-solid fa-wind"></i>
-                        </div>
+                        <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm"><i class="fa-solid fa-wind"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Trockner</h3>
-                        <p class="text-xs font-semibold text-amber-600 mt-1 uppercase tracking-wider">4 Trockner • Alle 2 Wochen</p>
+                        <p class="text-xs font-semibold text-amber-600 mt-1 uppercase tracking-wider">4 Trockner (1-4)</p>
                         <div id="due-Trockner" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Berechne Termin...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-amber-700 group-hover:text-amber-600">
-                        <span>Wartung starten</span>
-                        <div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center group-hover:translate-x-1 transition">
-                            <i class="fa-solid fa-arrow-right text-xs"></i>
-                        </div>
-                    </div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-amber-700"><span>Wartung starten</span><div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center group-hover:translate-x-1 transition"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
                 <div onclick="openCompressorRoutine()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-sky-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor 2-Wochen" class="absolute top-4 right-4"></div>
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
-                            <i class="fa-solid fa-gauge-high"></i>
-                        </div>
+                        <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm"><i class="fa-solid fa-gauge-high"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Kompressor Wartung</h3>
                         <p class="text-xs font-semibold text-sky-600 mt-1 uppercase tracking-wider">Intervall: Alle 2 Wochen</p>
                         <div id="due-Kompressor 2-Wochen" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Berechne Termin...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-sky-700 group-hover:text-sky-600">
-                        <span>Wartung starten</span>
-                        <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center group-hover:translate-x-1 transition">
-                            <i class="fa-solid fa-arrow-right text-xs"></i>
-                        </div>
-                    </div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-sky-700"><span>Wartung starten</span><div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center group-hover:translate-x-1 transition"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
                 <div onclick="openCompressorAnnual()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-purple-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor Jahreswartung" class="absolute top-4 right-4"></div>
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm">
-                            <i class="fa-solid fa-calendar-days"></i>
-                        </div>
+                        <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm"><i class="fa-solid fa-calendar-days"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Kompressor Jahreswartung</h3>
                         <p class="text-xs font-semibold text-purple-600 mt-1 uppercase tracking-wider">Umfassend • Alle 180 Tage</p>
                         <div id="due-Kompressor Jahreswartung" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Berechne Termin...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-purple-700 group-hover:text-purple-600">
-                        <span>Wartung starten</span>
-                        <div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center group-hover:translate-x-1 transition">
-                            <i class="fa-solid fa-arrow-right text-xs"></i>
-                        </div>
-                    </div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-purple-700"><span>Wartung starten</span><div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center group-hover:translate-x-1 transition"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
             </div>
 
-            <!-- DGUV V3 Section -->
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-100 pb-5">
-                    <div>
-                        <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Prüfmanagement</span>
-                        <h3 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen (Elektrische Betriebsmittel)</h3>
-                    </div>
-                    <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm transition shadow-lg flex items-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-plus"></i> Neues Gerät erfassen
-                    </button>
+                    <div><span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Prüfmanagement</span><h3 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen (Elektrische Betriebsmittel)</h3></div>
+                    <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm transition shadow-lg flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plus"></i> Neues Gerät erfassen</button>
                 </div>
                 <div id="dashboard-dguv-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
         </div>
 
-        <!-- Wartungskalender Tab -->
         <div id="tab-calendar" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
-                <div>
-                    <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Übersicht &amp; Planung</span>
-                    <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungskalender</h2>
-                </div>
+                <div><span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Übersicht &amp; Planung</span><h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungskalender</h2></div>
             </div>
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 overflow-x-auto">
                 <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-slate-200 text-xs font-extrabold text-slate-500 uppercase tracking-wider">
-                            <th class="py-3 px-4">Kategorie / Anlage</th>
-                            <th class="py-3 px-4">Letzte Wartung</th>
-                            <th class="py-3 px-4">Nächster Fälligkeitstermin</th>
-                            <th class="py-3 px-4">Status</th>
-                        </tr>
-                    </thead>
+                    <thead><tr class="border-b border-slate-200 text-xs font-extrabold text-slate-500 uppercase tracking-wider"><th class="py-3 px-4">Kategorie / Anlage</th><th class="py-3 px-4">Letzte Wartung</th><th class="py-3 px-4">Nächster Fälligkeitstermin</th><th class="py-3 px-4">Status</th></tr></thead>
                     <tbody id="calendar-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- DGUV V3 Tab -->
         <div id="tab-dguv" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
-                <div>
-                    <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Prüfmanagement</span>
-                    <h2 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen</h2>
-                </div>
-                <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm transition shadow-lg flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-plus"></i> Neues Gerät erfassen
-                </button>
+                <div><span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Prüfmanagement</span><h2 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen</h2></div>
+                <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm transition shadow-lg flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plus"></i> Neues Gerät erfassen</button>
             </div>
             <div id="dguv-devices-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- History Tab -->
         <div id="tab-history" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
-                <div>
-                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle</h2>
-                </div>
-                <div id="history-admin-clear-container" class="hidden">
-                    <button onclick="clearHistory()" class="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-bold transition flex items-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-trash-can"></i> Verlauf leeren (Admin)
-                    </button>
-                </div>
+                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle</h2>
+                <div id="history-admin-clear-container" class="hidden"><button onclick="clearHistory()" class="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-bold transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-trash-can"></i> Verlauf leeren (Admin)</button></div>
             </div>
-            
             <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-4">
-                <div class="flex-grow sm:flex-grow-0">
-                    <label class="block text-xs font-bold text-slate-600 mb-1">Jahr filtern:</label>
-                    <select id="filter-year" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-slate-50 cursor-pointer">
-                        <option value="all">Alle Jahre</option>
-                    </select>
-                </div>
-                <div class="flex-grow sm:flex-grow-0">
-                    <label class="block text-xs font-bold text-slate-600 mb-1">Monat filtern:</label>
-                    <select id="filter-month" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-slate-50 cursor-pointer">
-                        <option value="all">Alle Monate</option>
-                        <option value="01">Januar</option><option value="02">Februar</option><option value="03">März</option>
-                        <option value="04">April</option><option value="05">Mai</option><option value="06">Juni</option>
-                        <option value="07">Juli</option><option value="08">August</option><option value="09">September</option>
-                        <option value="10">Oktober</option><option value="11">November</option><option value="12">Dezember</option>
-                    </select>
-                </div>
-                <div class="flex-grow sm:flex-grow-0">
-                    <label class="block text-xs font-bold text-slate-600 mb-1">Maschine / Kategorie:</label>
-                    <select id="filter-category" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-ecbGreen focus:outline-none bg-slate-50 cursor-pointer">
-                        <option value="all">Alle Maschinen</option>
-                        <option value="Waschmaschine">Milnor Waschmaschinen</option>
-                        <option value="Trockner">Trockner</option>
-                        <option value="Kompressor 2-Wochen">Kompressor Wartung (2-Wochen)</option>
-                        <option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option>
-                    </select>
-                </div>
+                <div><label class="block text-xs font-bold text-slate-600 mb-1">Jahr:</label><select id="filter-year" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium bg-slate-50 cursor-pointer"><option value="all">Alle Jahre</option></select></div>
+                <div><label class="block text-xs font-bold text-slate-600 mb-1">Monat:</label><select id="filter-month" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium bg-slate-50 cursor-pointer"><option value="all">Alle</option><option value="01">Jan</option><option value="02">Feb</option><option value="03">März</option><option value="04">Apr</option><option value="05">Mai</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option><option value="10">Okt</option><option value="11">Nov</option><option value="12">Dez</option></select></div>
+                <div><label class="block text-xs font-bold text-slate-600 mb-1">Kategorie:</label><select id="filter-category" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium bg-slate-50 cursor-pointer"><option value="all">Alle</option><option value="Waschmaschine">Waschmaschine</option><option value="Trockner">Trockner</option><option value="Kompressor 2-Wochen">Kompressor 2-Wochen</option><option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option></select></div>
             </div>
-
             <div id="protocols-container" class="space-y-4"></div>
         </div>
 
-        <!-- Form View -->
         <div id="form-view" class="hidden space-y-6 animate-fade-in">
-            <button onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 transition shadow-sm flex items-center gap-2 cursor-pointer">
-                <i class="fa-solid fa-arrow-left"></i> Zurück zur Übersicht
-            </button>
+            <button onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 transition shadow-sm flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-arrow-left"></i> Zurück zur Übersicht</button>
             <div id="dynamic-form-content" class="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200/80"></div>
         </div>
-
     </main>
 
-    <!-- DGUV Modal -->
     <div id="modal-dguv" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-4">
-                <h3 class="text-xl font-extrabold text-slate-900">Neues Gerät für DGUV V3 erfassen</h3>
-                <button onclick="closeDguvModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4"><h3 class="text-xl font-extrabold text-slate-900">Neues Gerät für DGUV V3 erfassen</h3><button onclick="closeDguvModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
             <form onsubmit="saveDguvDevice(event)" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-bold text-slate-800 mb-1.5">Gerätebezeichnung: <span class="text-red-500">*</span></label>
-                    <input type="text" id="dguv-dev-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium" placeholder="z. B. Industriestaubsauger #2">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-slate-800 mb-1.5">Standort / Abteilung: <span class="text-red-500">*</span></label>
-                    <input type="text" id="dguv-dev-location" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium" placeholder="z. B. Waschebene Halle 1">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-slate-800 mb-1.5">Nächster Fälligkeitstermin: <span class="text-red-500">*</span></label>
-                    <input type="date" id="dguv-dev-duedate" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white font-medium">
-                </div>
-                <div class="pt-2">
-                    <button type="submit" class="w-full py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold shadow-lg transition cursor-pointer">Gerät speichern</button>
-                </div>
+                <div><label class="block text-sm font-bold text-slate-800 mb-1.5">Gerätebezeichnung: <span class="text-red-500">*</span></label><input type="text" id="dguv-dev-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-white" placeholder="z. B. Industriestaubsauger #2"></div>
+                <div><label class="block text-sm font-bold text-slate-800 mb-1.5">Standort / Abteilung: <span class="text-red-500">*</span></label><input type="text" id="dguv-dev-location" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-white" placeholder="z. B. Waschebene Halle 1"></div>
+                <div><label class="block text-sm font-bold text-slate-800 mb-1.5">Nächster Fälligkeitstermin: <span class="text-red-500">*</span></label><input type="date" id="dguv-dev-duedate" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-white"></div>
+                <button type="submit" class="w-full py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold shadow-lg transition cursor-pointer">Gerät speichern</button>
             </form>
         </div>
     </div>
 
-    <!-- Message Modal -->
     <div id="modal-message" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl border border-slate-100 text-center">
-            <div id="modal-icon" class="w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner">
-                <i class="fa-solid fa-check"></i>
-            </div>
+            <div id="modal-icon" class="w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner"><i class="fa-solid fa-check"></i></div>
             <h3 id="modal-title" class="text-xl font-extrabold text-slate-900">Meldung</h3>
             <p id="modal-text" class="text-sm text-slate-600 leading-relaxed"></p>
-            <div class="pt-2">
-                <button onclick="closeModal()" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-2xl font-bold shadow-lg transition cursor-pointer">Verstanden</button>
-            </div>
+            <button onclick="closeModal()" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-2xl font-bold shadow-lg transition cursor-pointer">Verstanden</button>
         </div>
     </div>
 
-    <script>
-        const firebaseConfig = {
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-maintenance-default';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEvon6SHIVRB5k",
             authDomain: "ecb-maintenance.firebaseapp.com",
             projectId: "ecb-maintenance",
@@ -462,9 +276,12 @@
             messagingSenderId: "229926423123",
             appId: "1:229926423123:web:a309c14c708fc88c62d4a6"
         };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : undefined;
 
+        let app = null;
         let db = null;
         let auth = null;
+
         let protocols = [];
         let dguvDevices = [];
         let cloudUsers = [
@@ -474,146 +291,103 @@
 
         let activePhotos = [];
         let signaturePadInstance = null;
-        let inactivityTimer = null;
         let backdateContext = null;
-        const INACTIVITY_LIMIT = 5 * 60 * 1000;
 
-        window.onload = function() {
+        window.onload = async function() {
             loadLocalCache();
             updateUI();
 
             try {
-                if (typeof firebase !== 'undefined') {
-                    if (!firebase.apps.length) {
-                        firebase.initializeApp(firebaseConfig);
-                    }
-                    auth = firebase.auth();
-                    db = firebase.firestore();
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
 
-                    auth.signInAnonymously().then(() => {
-                        console.log("Firebase Connected Successfully");
-                        fetchAllCloudData();
-                        initRealtimeListeners();
-                    }).catch(err => {
-                        console.warn("Auth fallback notice:", err);
-                    });
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
                 }
+
+                console.log("Firebase v11 Connected & Authenticated Successfully");
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden (Live Sync)";
+
+                initRealtimeCloudSync();
             } catch (err) {
-                console.warn("Cloud connection notice: Using offline storage engine.", err);
+                console.warn("Cloud connection fallback notice:", err);
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Lokaler Offline-Modus aktiv";
             }
 
             if (localStorage.getItem('ecb_logged_in') === 'true') {
                 document.getElementById('login-screen').classList.add('hidden');
                 checkAdminNav();
-                resetInactivityTimer();
             }
         };
 
         function loadLocalCache() {
             try {
-                const savedProtos = localStorage.getItem('ecb_protocols_v40');
-                if (savedProtos) {
-                    const parsed = JSON.parse(savedProtos);
-                    if (Array.isArray(parsed)) protocols = parsed;
-                }
-
-                const savedDevs = localStorage.getItem('ecb_dguv_v40');
-                if (savedDevs) {
-                    const parsed = JSON.parse(savedDevs);
-                    if (Array.isArray(parsed)) dguvDevices = parsed;
-                }
-
-                const savedUsers = localStorage.getItem('ecb_users_v40');
-                if (savedUsers) {
-                    const parsed = JSON.parse(savedUsers);
-                    if (Array.isArray(parsed) && parsed.length > 0) cloudUsers = parsed;
-                }
+                const p = localStorage.getItem('ecb_protocols_v52');
+                if (p) protocols = JSON.parse(p);
+                const d = localStorage.getItem('ecb_dguv_v52');
+                if (d) dguvDevices = JSON.parse(d);
+                const u = localStorage.getItem('ecb_users_v52');
+                if (u) cloudUsers = JSON.parse(u);
             } catch(e) {}
         }
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_v40', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v40', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v40', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_v52', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v52', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v52', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
-        function fetchAllCloudData() {
+        function initRealtimeCloudSync() {
             if (!db) return;
-            try {
-                db.collection("protocols").get().then((querySnapshot) => {
-                    let map = new Map();
-                    protocols.forEach(p => map.set(p.id || p.firestoreId, p));
-                    querySnapshot.forEach((doc) => {
-                        const data = doc.data();
-                        map.set(data.id || doc.id, { firestoreId: doc.id, ...data });
-                    });
-                    protocols = Array.from(map.values());
-                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                    saveLocalCache();
-                    updateUI();
-                }).catch(e => {});
 
-                db.collection("dguv_devices").get().then((querySnapshot) => {
-                    let map = new Map();
-                    dguvDevices.forEach(d => map.set(d.id || d.firestoreId, d));
-                    querySnapshot.forEach((doc) => {
-                        const data = doc.data();
-                        map.set(data.id || doc.id, { firestoreId: doc.id, ...data });
-                    });
-                    dguvDevices = Array.from(map.values());
-                    saveLocalCache();
-                    updateUI();
-                }).catch(e => {});
-            } catch (e) {}
-        }
+            const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
+            const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
 
-        function initRealtimeListeners() {
-            if (!db) return;
-            try {
-                db.collection("protocols").onSnapshot((snapshot) => {
-                    let map = new Map();
-                    protocols.forEach(p => map.set(p.id || p.firestoreId, p));
-                    snapshot.forEach((doc) => {
-                        const data = doc.data();
-                        map.set(data.id || doc.id, { firestoreId: doc.id, ...data });
-                    });
-                    protocols = Array.from(map.values());
-                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                    saveLocalCache();
-                    updateUI();
-                }, err => {});
+            onSnapshot(protocolsCol, (snapshot) => {
+                let map = new Map();
+                protocols.forEach(item => map.set(item.id || item.firestoreId, item));
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    map.set(data.id || docSnap.id, { firestoreId: docSnap.id, ...data });
+                });
+                protocols = Array.from(map.values());
+                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                saveLocalCache();
+                updateUI();
+            }, (error) => {
+                console.warn("Protocol snapshot sync warning:", error);
+            });
 
-                db.collection("dguv_devices").onSnapshot((snapshot) => {
-                    let map = new Map();
-                    dguvDevices.forEach(d => map.set(d.id || d.firestoreId, d));
-                    snapshot.forEach((doc) => {
-                        const data = doc.data();
-                        map.set(data.id || doc.id, { firestoreId: doc.id, ...data });
-                    });
-                    dguvDevices = Array.from(map.values());
-                    saveLocalCache();
-                    updateUI();
-                }, err => {});
-            } catch(e) {}
+            onSnapshot(dguvCol, (snapshot) => {
+                let map = new Map();
+                dguvDevices.forEach(item => map.set(item.id || item.firestoreId, item));
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    map.set(data.id || docSnap.id, { firestoreId: docSnap.id, ...data });
+                });
+                dguvDevices = Array.from(map.values());
+                saveLocalCache();
+                updateUI();
+            }, (error) => {
+                console.warn("DGUV snapshot sync warning:", error);
+            });
         }
 
         window.exportAllDataJson = function() {
-            const dataToExport = {
-                protocols,
-                dguvDevices,
-                cloudUsers,
-                exportDate: new Date().toISOString()
-            };
+            const dataToExport = { protocols, dguvDevices, cloudUsers, date: new Date().toISOString() };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `ECB_Wartung_Backup_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-            showModal('Backup erstellt', 'Die Sicherungsdatei wurde heruntergeladen.', true);
+            const a = document.createElement('a');
+            a.setAttribute("href", dataStr);
+            a.setAttribute("download", `ECB_Backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(a); a.click(); a.remove();
+            showModal('Backup', 'Sicherungsdatei wurde exportiert.', true);
         };
 
         window.importAllDataJson = function(event) {
@@ -622,22 +396,13 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const imported = JSON.parse(e.target.result);
-                    if (imported.protocols && Array.isArray(imported.protocols)) {
-                        protocols = imported.protocols;
-                    }
-                    if (imported.dguvDevices && Array.isArray(imported.dguvDevices)) {
-                        dguvDevices = imported.dguvDevices;
-                    }
-                    if (imported.cloudUsers && Array.isArray(imported.cloudUsers)) {
-                        cloudUsers = imported.cloudUsers;
-                    }
-                    saveLocalCache();
-                    updateUI();
-                    showModal('Erfolg', 'Alle Daten wurden erfolgreich importiert und synchronisiert!', true);
-                } catch(err) {
-                    showModal('Fehler', 'Die Backup-Datei konnte nicht gelesen werden.', false);
-                }
+                    const imp = JSON.parse(e.target.result);
+                    if (imp.protocols) protocols = imp.protocols;
+                    if (imp.dguvDevices) dguvDevices = imp.dguvDevices;
+                    if (imp.cloudUsers) cloudUsers = imp.cloudUsers;
+                    saveLocalCache(); updateUI();
+                    showModal('Erfolg', 'Backup erfolgreich importiert!', true);
+                } catch(err) { showModal('Fehler', 'Ungültige Backup-Datei.', false); }
             };
             reader.readAsDataURL(file);
             event.target.value = '';
@@ -680,21 +445,22 @@
             };
 
             backdateContext = null;
-
             protocols.unshift(protocol);
-            saveLocalCache();
-            updateUI();
+            saveLocalCache(); updateUI();
 
             if (db) {
                 try {
-                    const docRef = await db.collection("protocols").add(protocol);
+                    const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
+                    const docRef = await addDoc(protocolsCol, protocol);
                     protocol.firestoreId = docRef.id;
                     saveLocalCache();
-                } catch(e) {}
+                } catch(e) {
+                    console.warn("Cloud save warning:", e);
+                }
             }
 
             generatePDF(protocol);
-            showModal('Erfolg', 'Wartungsprotokoll erfolgreich gespeichert & PDF erstellt!', true);
+            showModal('Erfolg', 'Wartungsprotokoll erfolgreich gespeichert & synchronisiert!', true);
             switchTab('history');
         };
 
@@ -716,12 +482,12 @@
             };
 
             dguvDevices.unshift(newDev);
-            saveLocalCache();
-            updateUI();
+            saveLocalCache(); updateUI();
 
             if (db) {
                 try {
-                    const docRef = await db.collection("dguv_devices").add(newDev);
+                    const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
+                    const docRef = await addDoc(dguvCol, newDev);
                     newDev.firestoreId = docRef.id;
                     saveLocalCache();
                 } catch(e) {}
@@ -734,24 +500,18 @@
 
         window.deleteProtocol = async function(firestoreId, index) {
             if (firestoreId && db) {
-                try {
-                    await db.collection("protocols").doc(firestoreId).delete();
-                } catch(e) {}
+                try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', firestoreId)); } catch(e) {}
             }
             protocols.splice(index, 1);
-            saveLocalCache();
-            updateUI();
+            saveLocalCache(); updateUI();
         };
 
         window.deleteDguvDevice = async function(firestoreId, index) {
             if (firestoreId && db) {
-                try {
-                    await db.collection("dguv_devices").doc(firestoreId).delete();
-                } catch(e) {}
+                try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId)); } catch(e) {}
             }
             dguvDevices.splice(index, 1);
-            saveLocalCache();
-            updateUI();
+            saveLocalCache(); updateUI();
         };
 
         window.handleProtocolUpload = async function(event, deviceId) {
@@ -759,25 +519,16 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = async function(e) {
-                const newHistoryItem = {
-                    date: new Date().toLocaleString('de-DE'),
-                    fileName: file.name,
-                    fileData: e.target.result
-                };
-
-                const devLocal = dguvDevices.find(d => d.id === deviceId);
-                if (devLocal) {
-                    if (!devLocal.protocolHistory) devLocal.protocolHistory = [];
-                    devLocal.protocolHistory.unshift(newHistoryItem);
-                    devLocal.status = 'Erledigt';
+                const item = { date: new Date().toLocaleString('de-DE'), fileName: file.name, fileData: e.target.result };
+                const dev = dguvDevices.find(d => d.id === deviceId);
+                if (dev) {
+                    if (!dev.protocolHistory) dev.protocolHistory = [];
+                    dev.protocolHistory.unshift(item);
+                    dev.status = 'Erledigt';
                     saveLocalCache();
-
-                    if (db && devLocal.firestoreId) {
+                    if (db && dev.firestoreId) {
                         try {
-                            await db.collection("dguv_devices").doc(devLocal.firestoreId).update({
-                                status: 'Erledigt',
-                                protocolHistory: devLocal.protocolHistory
-                            });
+                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', dev.firestoreId), { status: 'Erledigt', protocolHistory: dev.protocolHistory });
                         } catch(e) {}
                     }
                 }
@@ -793,17 +544,13 @@
             const pass = document.getElementById('login-pass').value.trim();
             const found = cloudUsers.find(u => u.user === user && u.pass === pass);
             if (found) {
-                if (found.active === false) {
-                    showModal('Zugriff verwehrt', 'Ihr Konto wurde deaktiviert.', false);
-                    return;
-                }
+                if (found.active === false) { showModal('Zugriff verwehrt', 'Konto deaktiviert.', false); return; }
                 localStorage.setItem('ecb_logged_in', 'true');
                 localStorage.setItem('ecb_current_user', user);
                 localStorage.setItem('ecb_current_fullname', found.fullname || user);
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('login-error').classList.add('hidden');
                 checkAdminNav();
-                resetInactivityTimer();
                 updateUI();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
@@ -869,10 +616,10 @@
             event.preventDefault();
             const newPass = document.getElementById('new-pass').value.trim();
             const currentUser = localStorage.getItem('ecb_current_user');
-            const userObj = cloudUsers.find(u => u.user === currentUser);
-            if (userObj) { userObj.pass = newPass; saveLocalCache(); }
+            const found = cloudUsers.find(u => u.user === currentUser);
+            if (found) { found.pass = newPass; saveLocalCache(); }
             closePasswordModal();
-            showModal('Erfolg', 'Passwort erfolgreich geändert!', true);
+            showModal('Erfolg', 'Passwort aktualisiert!', true);
         };
 
         window.handleRegister = async function(event) {
@@ -880,26 +627,19 @@
             const fullname = document.getElementById('reg-fullname').value.trim();
             const newUser = document.getElementById('reg-user').value.trim();
             const newPass = document.getElementById('reg-pass').value.trim();
-            if (cloudUsers.some(u => u.user === newUser)) {
-                document.getElementById('reg-error').classList.remove('hidden');
-                return;
-            }
+            if (cloudUsers.some(u => u.user === newUser)) { document.getElementById('reg-error').classList.remove('hidden'); return; }
             cloudUsers.push({ fullname, user: newUser, pass: newPass, active: true });
             saveLocalCache();
-            document.getElementById('reg-fullname').value = '';
-            document.getElementById('reg-user').value = '';
-            document.getElementById('reg-pass').value = '';
-            renderAdminUserList();
-            populateBackdateTechnicians();
-            showModal('Erfolg', `Mitarbeiter "${newUser}" angelegt!`, true);
+            document.getElementById('reg-fullname').value = ''; document.getElementById('reg-user').value = ''; document.getElementById('reg-pass').value = '';
+            renderAdminUserList(); populateBackdateTechnicians();
+            showModal('Erfolg', `Mitarbeiter angelegt.`, true);
         };
 
         window.startBackdateForm = function(event) {
             event.preventDefault();
             const categoryKey = document.getElementById('backdate-category').value;
             const technician = document.getElementById('backdate-technician').value;
-            const datetimeInput = document.getElementById('backdate-datetime').value;
-            const maintenanceDate = new Date(datetimeInput);
+            const maintenanceDate = new Date(document.getElementById('backdate-datetime').value);
             backdateContext = { technician, dateObj: maintenanceDate, dateString: maintenanceDate.toLocaleString('de-DE'), timestamp: maintenanceDate.getTime() };
             closeRegisterModal();
             if (categoryKey === 'Waschmaschine') openWashingMachineMenu();
@@ -911,39 +651,28 @@
         function populateBackdateTechnicians() {
             const selectEl = document.getElementById('backdate-technician');
             if (!selectEl) return;
-            let html = '';
-            cloudUsers.forEach(u => { const name = u.fullname || u.user; html += `<option value="${name}">${name}</option>`; });
-            selectEl.innerHTML = html;
+            selectEl.innerHTML = cloudUsers.map(u => `<option value="${u.fullname || u.user}">${u.fullname || u.user}</option>`).join('');
         }
 
         window.toggleUserActive = function(index) {
             if (cloudUsers[index].user === 'ECB_Wartung') return;
             cloudUsers[index].active = !cloudUsers[index].active;
-            saveLocalCache();
-            renderAdminUserList();
+            saveLocalCache(); renderAdminUserList();
         };
 
         function renderAdminUserList() {
             const container = document.getElementById('admin-user-list');
             if (!container) return;
-            let html = '';
-            cloudUsers.forEach((u, index) => {
-                const isAdmin = u.user === 'ECB_Wartung';
-                html += `
-                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
-                        <div><strong class="text-sm">${u.fullname || u.user}</strong> <span class="text-xs text-slate-400">(${u.user})</span></div>
-                        <div class="flex items-center gap-2">
-                            ${!isAdmin ? `<button type="button" onclick="toggleUserActive(${index})" class="px-2.5 py-1.5 rounded-lg text-xs font-bold ${u.active !== false ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}">${u.active !== false ? 'Deaktivieren' : 'Aktivieren'}</button>` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
+            container.innerHTML = cloudUsers.map((u, i) => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <div><strong class="text-sm">${u.fullname || u.user}</strong> <span class="text-xs text-slate-400">(${u.user})</span></div>
+                    ${u.user !== 'ECB_Wartung' ? `<button type="button" onclick="toggleUserActive(${i})" class="px-2.5 py-1.5 rounded-lg text-xs font-bold ${u.active !== false ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}">${u.active !== false ? 'Deaktivieren' : 'Aktivieren'}</button>` : ''}
+                </div>
+            `).join('');
         }
 
         function checkAdminNav() {
-            const currentUser = localStorage.getItem('ecb_current_user');
-            if (currentUser === 'ECB_Wartung') {
+            if (localStorage.getItem('ecb_current_user') === 'ECB_Wartung') {
                 document.getElementById('dashboard-admin-btn-container').classList.remove('hidden');
                 document.getElementById('history-admin-clear-container').classList.remove('hidden');
             } else {
@@ -951,15 +680,6 @@
                 document.getElementById('history-admin-clear-container').classList.add('hidden');
             }
         }
-
-        function resetInactivityTimer() {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(() => {
-                localStorage.removeItem('ecb_logged_in');
-                document.getElementById('login-screen').classList.remove('hidden');
-            }, INACTIVITY_LIMIT);
-        }
-        ['mousemove', 'mousedown', 'keypress', 'touchstart'].forEach(evt => window.addEventListener(evt, resetInactivityTimer, true));
 
         function updateUI() {
             document.getElementById('protocol-count').innerText = protocols.length;
@@ -985,15 +705,14 @@
                 if (!dueEl || !badgeEl) return;
                 if (matching.length === 0) {
                     dueEl.innerHTML = `Noch keine Wartung`;
-                    badgeEl.innerHTML = `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold">Kein Protokoll</span>`;
+                    badgeEl.innerHTML = `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold">Offen</span>`;
                 } else {
                     const latest = matching.reduce((prev, curr) => (Number(curr.timestamp || 0) > Number(prev.timestamp || 0)) ? curr : prev);
-                    const lastDate = new Date(Number(latest.timestamp || Date.now()));
-                    const nextDueDate = new Date(lastDate.getTime() + (cat.days * 24 * 60 * 60 * 1000));
+                    const nextDueDate = new Date(Number(latest.timestamp || Date.now()) + (cat.days * 24 * 60 * 60 * 1000));
                     nextDueDate.setHours(0,0,0,0);
                     const isOverdue = now.getTime() > nextDueDate.getTime();
                     dueEl.innerHTML = `Nächster Termin: <strong>${nextDueDate.toLocaleDateString('de-DE')}</strong>`;
-                    badgeEl.innerHTML = isOverdue ? `<span class="px-2 py-0.5 bg-red-600 text-white rounded-full text-[10px] font-bold animate-pulse">ÜBERFÄLLIG</span>` : `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold">Eingehalten</span>`;
+                    badgeEl.innerHTML = isOverdue ? `<span class="px-2 py-0.5 bg-red-600 text-white rounded-full text-[10px] font-bold animate-pulse">ÜBERFÄLLIG</span>` : `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold">OK</span>`;
                 }
             });
         }
@@ -1012,7 +731,7 @@
             cats.forEach(cat => {
                 const matching = protocols.filter(p => p.category === cat.key);
                 if (matching.length === 0) {
-                    html += `<tr class="border-b"><td class="py-3 px-4 font-bold">${cat.name}</td><td class="py-3 px-4 text-slate-400">Keine</td><td class="py-3 px-4 text-amber-600 font-bold">Sofort fällig</td><td><span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">Offen</span></td></tr>`;
+                    html += `<tr class="border-b"><td class="py-3 px-4 font-bold">${cat.name}</td><td class="py-3 px-4 text-slate-400">-</td><td class="py-3 px-4 text-amber-600 font-bold">Sofort fällig</td><td><span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">Offen</span></td></tr>`;
                 } else {
                     const latest = matching.reduce((prev, curr) => (Number(curr.timestamp || 0) > Number(prev.timestamp || 0)) ? curr : prev);
                     const lastDate = new Date(Number(latest.timestamp || Date.now()));
@@ -1029,7 +748,7 @@
             const activeTechnician = backdateContext ? backdateContext.technician : loggedInName;
             return `
                 <div class="p-6 bg-slate-50 rounded-2xl border space-y-4 mb-8">
-                    <div class="font-bold text-sm text-ecbDarkGreen"><i class="fa-solid fa-user mr-1"></i> Techniker &amp; Zeitstempel</div>
+                    <div class="font-bold text-sm text-ecbDarkGreen"><i class="fa-solid fa-user mr-1"></i> Techniker</div>
                     <input type="text" id="employee-name" required value="${activeTechnician}" class="w-full border rounded-xl p-3 text-sm font-bold bg-slate-100" readonly>
                 </div>
             `;
@@ -1137,7 +856,7 @@
         function renderPhotoSection() {
             return `
                 <div class="p-5 bg-slate-50 rounded-2xl border space-y-3">
-                    <label class="block font-bold text-sm text-slate-800"><i class="fa-solid fa-camera mr-1.5 text-ecbDarkGreen"></i> Fotos hinzufügen / aufnehmen:</label>
+                    <label class="block font-bold text-sm text-slate-800"><i class="fa-solid fa-camera mr-1.5 text-ecbDarkGreen"></i> Fotos hinzufügen:</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <label class="flex items-center justify-center gap-2 p-3.5 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-xs cursor-pointer shadow transition">
                             <i class="fa-solid fa-camera text-base"></i> Foto mit Kamera machen
@@ -1153,13 +872,8 @@
             `;
         }
 
-        function renderRemarksSection() {
-            return `<div class="space-y-1"><label class="block font-bold text-sm">Bemerkungen / Feststellungen:</label><textarea id="remarks-input" class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Zusätzliche Notizen oder Mängel..."></textarea></div>`;
-        }
-
-        function renderSignatureSection() {
-            return `<div class="space-y-1"><div class="flex justify-between items-center"><label class="font-bold text-sm">Unterschrift des Technikers:</label><button type="button" onclick="clearSignature()" class="text-xs font-bold text-red-600 hover:underline">Unterschrift löschen</button></div><canvas id="signature-canvas" class="signature-canvas w-full h-36 border rounded-xl bg-white shadow-inner"></canvas></div>`;
-        }
+        function renderRemarksSection() { return `<div class="space-y-1"><label class="block font-bold text-sm">Bemerkungen / Feststellungen:</label><textarea id="remarks-input" class="w-full border rounded-xl p-3 text-sm" placeholder="Zusätzliche Notizen..."></textarea></div>`; }
+        function renderSignatureSection() { return `<div class="space-y-1"><div class="flex justify-between items-center"><label class="font-bold text-sm">Unterschrift des Technikers:</label><button type="button" onclick="clearSignature()" class="text-xs font-bold text-red-600 hover:underline">Löschen</button></div><canvas id="signature-canvas" class="signature-canvas w-full h-36 border rounded-xl bg-white shadow-inner"></canvas></div>`; }
 
         window.handlePhotoCapture = function(e) {
             Array.from(e.target.files).forEach(f => {
@@ -1176,15 +890,12 @@
             grid.innerHTML = activePhotos.map((p, i) => `
                 <div class="relative group">
                     <img src="${p}" class="w-full h-20 object-cover rounded-xl border shadow-sm">
-                    <button type="button" onclick="removePhoto(${i})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow hover:bg-red-700">&times;</button>
+                    <button type="button" onclick="removePhoto(${i})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">&times;</button>
                 </div>
             `).join('');
         }
 
-        window.removePhoto = function(index) {
-            activePhotos.splice(index, 1);
-            updatePhotoPreview();
-        };
+        window.removePhoto = function(index) { activePhotos.splice(index, 1); updatePhotoPreview(); };
 
         function initSignaturePad() {
             const canvas = document.getElementById('signature-canvas');
@@ -1251,7 +962,7 @@
                         </div>
                         <div class="bg-slate-50 p-4 rounded-xl space-y-2">${pts}</div>
                         ${photosHtml}
-                        ${p.remarks ? `<p class="text-xs text-slate-600 bg-amber-50/50 p-3 rounded-xl border border-amber-100"><strong>Bemerkung:</strong> ${p.remarks}</p>` : ''}
+                        ${p.remarks ? `<p class="text-xs text-slate-600 bg-amber-50/50 p-3 rounded-xl border"><strong>Bemerkung:</strong> ${p.remarks}</p>` : ''}
                     </div>
                 `;
             }).join('');
@@ -1296,12 +1007,8 @@
             doc.text('E.C.B. REINIGUNGSSYSTEME - Wartungsprotokoll', 15, 20);
             doc.setFontSize(10); doc.text(`Anlage: ${p.machine} | Datum: ${p.date} | Techniker: ${p.employee}`, 15, 45);
             let y = 60;
-            (p.points || []).forEach(pt => {
-                doc.text(`${pt.title}: ${pt.status.toUpperCase()}`, 15, y); y += 8;
-            });
-            if (p.remarks) {
-                y += 5; doc.text(`Bemerkung: ${p.remarks}`, 15, y);
-            }
+            (p.points || []).forEach(pt => { doc.text(`${pt.title}: ${pt.status.toUpperCase()}`, 15, y); y += 8; });
+            if (p.remarks) { y += 5; doc.text(`Bemerkung: ${p.remarks}`, 15, y); }
             doc.save(`ECB_Protokoll_${p.id}.pdf`);
         }
     </script>
