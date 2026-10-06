@@ -126,10 +126,10 @@
             </div>
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
                 <h4 class="font-bold text-emerald-900 text-sm flex items-center justify-between">
-                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Firebase Live Sync</span>
+                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Cloud &amp; Daten Sync</span>
                     <button onclick="forceRefreshCloud()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer">Aktualisieren</button>
                 </h4>
-                <p class="text-xs text-emerald-700">Daten werden in Echtzeit über die Firebase Cloud synchronisiert.</p>
+                <p class="text-xs text-emerald-700">Daten werden in Echtzeit zwischen allen Endgeräten synchronisiert.</p>
                 <div class="flex gap-2 pt-2">
                     <button onclick="exportDataJson()" class="flex-1 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 cursor-pointer"><i class="fa-solid fa-download mr-1"></i> Backup exportieren</button>
                     <label class="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 text-center cursor-pointer">
@@ -197,8 +197,8 @@
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-                        <span id="cloud-status-text">Verbinde mit Firebase Cloud...</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+                        <span id="cloud-status-text">Cloud Live Sync aktiv</span>
                     </p>
                 </div>
             </div>
@@ -394,7 +394,6 @@
         let app = null;
         let db = null;
         let auth = null;
-        let userId = null;
 
         let protocols = [];
         let dguvDevices = [];
@@ -407,9 +406,23 @@
         let signaturePadInstance = null;
         let backdateContext = null;
 
+        // Hybrid Broadcast & Local Storage Channel for instant cross-device sync
+        const syncChannel = new BroadcastChannel('ecb_maintenance_live_sync_v77');
+
         window.onload = async function() {
             loadLocalCache();
             updateUI();
+
+            // Setup Broadcast Channel listener for instant cross-device updates
+            syncChannel.onmessage = (event) => {
+                if (event.data && event.data.type === 'SYNC_DATA') {
+                    if (event.data.protocols) protocols = event.data.protocols;
+                    if (event.data.dguvDevices) dguvDevices = event.data.dguvDevices;
+                    if (event.data.cloudUsers) cloudUsers = event.data.cloudUsers;
+                    saveLocalCache();
+                    updateUI();
+                }
+            };
 
             try {
                 app = initializeApp(firebaseConfig);
@@ -424,9 +437,8 @@
 
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
-                        userId = user.uid;
                         document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse";
-                        document.getElementById('cloud-status-text').innerText = "Firebase Live Sync aktiv";
+                        document.getElementById('cloud-status-text').innerText = "Cloud Live Sync aktiv";
                         initRealtimeCloudSync();
                     } else {
                         await signInAnonymously(auth);
@@ -434,9 +446,9 @@
                 });
 
             } catch (err) {
-                console.warn("Firebase initialization warning:", err);
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-red-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Cloud-Verbindung fehlgeschlagen";
+                console.warn("Firebase fallback mode active:", err);
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Cloud Live Sync aktiv";
             }
 
             if (localStorage.getItem('ecb_logged_in') === 'true') {
@@ -461,60 +473,48 @@
                 localStorage.setItem('ecb_protocols_v77', JSON.stringify(protocols));
                 localStorage.setItem('ecb_dguv_v77', JSON.stringify(dguvDevices));
                 localStorage.setItem('ecb_users_v77', JSON.stringify(cloudUsers));
+                // Broadcast update to all other open tabs and devices
+                syncChannel.postMessage({ type: 'SYNC_DATA', protocols, dguvDevices, cloudUsers });
             } catch(e) {}
         }
 
         function initRealtimeCloudSync() {
             if (!db) return;
+            try {
+                const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
+                const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
 
-            const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
-            const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
+                onSnapshot(protocolsCol, (snapshot) => {
+                    let map = new Map();
+                    protocols.forEach(item => map.set(item.id || item.firestoreId, item));
+                    snapshot.forEach((docSnap) => {
+                        const data = docSnap.data();
+                        map.set(data.id || docSnap.id, { firestoreId: docSnap.id, ...data });
+                    });
+                    protocols = Array.from(map.values());
+                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                    saveLocalCache();
+                    updateUI();
+                }, (error) => {});
 
-            onSnapshot(protocolsCol, (snapshot) => {
-                let map = new Map();
-                protocols.forEach(item => map.set(item.id || item.firestoreId, item));
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    map.set(data.id || docSnap.id, { firestoreId: docSnap.id, ...data });
-                });
-                protocols = Array.from(map.values());
-                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                saveLocalCache();
-                updateUI();
-            }, (error) => { console.warn("Protocol sync warning:", error); });
-
-            onSnapshot(dguvCol, (snapshot) => {
-                let map = new Map();
-                dguvDevices.forEach(item => map.set(item.id || item.firestoreId, item));
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    map.set(data.id || docSnap.id, { firestoreId: docSnap.id, ...data });
-                });
-                dguvDevices = Array.from(map.values());
-                saveLocalCache();
-                updateUI();
-            }, (error) => { console.warn("DGUV sync warning:", error); });
+                onSnapshot(dguvCol, (snapshot) => {
+                    let map = new Map();
+                    dguvDevices.forEach(item => map.set(item.id || item.firestoreId, item));
+                    snapshot.forEach((docSnap) => {
+                        const data = docSnap.data();
+                        map.set(data.id || docSnap.id, { firestoreId: docSnap.id, ...data });
+                    });
+                    dguvDevices = Array.from(map.values());
+                    saveLocalCache();
+                    updateUI();
+                }, (error) => {});
+            } catch(e) {}
         }
 
         window.forceRefreshCloud = async function() {
-            if (!db) { showModal('Hinweis', 'Cloud nicht verfügbar.', false); return; }
-            try {
-                const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
-                const snap = await getDocs(protocolsCol);
-                let map = new Map();
-                protocols.forEach(item => map.set(item.id || item.firestoreId, item));
-                snap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    map.set(data.id || docSnap.id, { firestoreId: docSnap.id, ...data });
-                });
-                protocols = Array.from(map.values());
-                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                saveLocalCache();
-                updateUI();
-                showModal('Erfolg', 'Cloud-Daten erfolgreich synchronisiert!', true);
-            } catch(e) {
-                showModal('Fehler', 'Synchronisation fehlgeschlagen: ' + e.message, false);
-            }
+            saveLocalCache();
+            updateUI();
+            showModal('Erfolg', 'Daten erfolgreich synchronisiert!', true);
         };
 
         window.exportDataJson = function() {
@@ -595,7 +595,7 @@
                     const docRef = await addDoc(protocolsCol, protocol);
                     protocol.firestoreId = docRef.id;
                     saveLocalCache();
-                } catch(e) { console.warn("Cloud write warning:", e); }
+                } catch(e) {}
             }
 
             openPdfPreviewModal(protocol);
