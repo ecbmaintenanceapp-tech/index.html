@@ -45,18 +45,18 @@
                     </svg>
                 </div>
                 <h2 class="text-2xl font-extrabold text-slate-900">ECB Wartungssystem</h2>
-                <p class="text-xs text-slate-500">Bitte melden Sie sich mit Ihren Zugangsdaten an.</p>
+                <p class="text-xs text-slate-500">Bitte melden Sie sich an.</p>
             </div>
             <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1">Benutzername:</label>
-                    <input type="text" id="login-user" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Benutzername eingeben">
+                    <input type="text" id="login-user" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Benutzername">
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1">Passwort:</label>
-                    <input type="password" id="login-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Passwort eingeben">
+                    <input type="password" id="login-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Passwort">
                 </div>
-                <div id="login-error" class="text-xs text-red-600 font-bold hidden">Falscher Benutzername, falsches Passwort oder Benutzer wurde deaktiviert!</div>
+                <div id="login-error" class="text-xs text-red-600 font-bold hidden">Falscher Benutzername oder Passwort!</div>
                 <button type="submit" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-xl font-bold text-sm shadow-lg shadow-ecbGreen/20 transition cursor-pointer">Anmelden</button>
             </form>
         </div>
@@ -65,33 +65,28 @@
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
-                <h3 class="text-xl font-extrabold text-slate-900">Admin-Verwaltung &amp; Synchronisation</h3>
+                <h3 class="text-xl font-extrabold text-slate-900">Admin-Verwaltung &amp; Cloud-Sync</h3>
                 <button onclick="closeRegisterModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
-                <h4 class="font-bold text-emerald-900 text-sm"><i class="fa-solid fa-cloud-arrow-up mr-1 text-emerald-600"></i> Cloud-Daten exportieren / importieren</h4>
-                <p class="text-xs text-emerald-700">Nutzen Sie diese Backup-Datei, um Protokolle sekundenschnell zwischen PC und Handys zu übertragen.</p>
-                <div class="flex gap-2 pt-1">
-                    <button onclick="exportAllDataJson()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow transition cursor-pointer flex items-center justify-center gap-1.5"><i class="fa-solid fa-download"></i> Backup exportieren</button>
-                    <label class="flex-1 py-2.5 bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl font-bold text-xs shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5"><i class="fa-solid fa-upload"></i> Backup importieren<input type="file" accept=".json" onchange="importAllDataJson(event)" class="hidden"></label>
-                </div>
+            <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-2">
+                <h4 class="font-bold text-emerald-900 text-sm"><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Automatische Cloud-Synchronisation aktiv</h4>
+                <p class="text-xs text-emerald-700">Alle Wartungsprotokolle und DGUV-Prüfungen werden in Echtzeit zwischen allen PCs und Mobilgeräten synchronisiert.</p>
             </div>
             <form onsubmit="handleRegister(event)" class="space-y-4 pb-6 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-user-plus mr-1 text-ecbGreen"></i> Neuen Mitarbeiter anlegen</h4>
-                <div><label class="block text-xs font-bold text-slate-700 mb-1">Mitarbeiter-Vollname:</label><input type="text" id="reg-fullname" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Vor- und Nachname"></div>
-                <div><label class="block text-xs font-bold text-slate-700 mb-1">Benutzername:</label><input type="text" id="reg-user" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Benutzername"></div>
-                <div><label class="block text-xs font-bold text-slate-700 mb-1">Passwort:</label><input type="password" id="reg-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Passwort"></div>
+                <div><label class="block text-xs font-bold text-slate-700 mb-1">Vollname:</label><input type="text" id="reg-fullname" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none"></div>
+                <div><label class="block text-xs font-bold text-slate-700 mb-1">Benutzername:</label><input type="text" id="reg-user" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none"></div>
+                <div><label class="block text-xs font-bold text-slate-700 mb-1">Passwort:</label><input type="password" id="reg-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none"></div>
                 <div id="reg-error" class="text-xs text-red-600 font-bold hidden">Benutzer existiert bereits!</div>
                 <button type="submit" class="w-full py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Mitarbeiter anlegen</button>
             </form>
             <form onsubmit="startBackdateForm(event)" class="space-y-4 pb-6 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-calendar-plus mr-1 text-sky-600"></i> Wartung nachtragen</h4>
-                <div><label class="block text-xs font-bold text-slate-700 mb-1">Kategorie / Anlage:</label><select id="backdate-category" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-slate-50 cursor-pointer"><option value="Waschmaschine">Milnor Waschmaschinen (1-4)</option><option value="Trockner">Trockner (1-4)</option><option value="Kompressor 2-Wochen">Kompressor Wartung (2-Wochen)</option><option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option></select></div>
-                <div><label class="block text-xs font-bold text-slate-700 mb-1">Zuständiger Techniker:</label><select id="backdate-technician" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-slate-50 cursor-pointer"></select></div>
-                <div><label class="block text-xs font-bold text-slate-700 mb-1">Durchführungsdatum:</label><input type="datetime-local" id="backdate-datetime" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-slate-50"></div>
-                <button type="submit" class="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Formular mit diesem Datum starten</button>
+                <div><label class="block text-xs font-bold text-slate-700 mb-1">Kategorie:</label><select id="backdate-category" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-slate-50 cursor-pointer"><option value="Waschmaschine">Milnor Waschmaschinen (1-4)</option><option value="Trockner">Trockner (1-4)</option><option value="Kompressor 2-Wochen">Kompressor Wartung (2-Wochen)</option><option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option></select></div>
+                <div><label class="block text-xs font-bold text-slate-700 mb-1">Techniker:</label><select id="backdate-technician" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-slate-50 cursor-pointer"></select></div>
+                <div><label class="block text-xs font-bold text-slate-700 mb-1">Datum &amp; Uhrzeit:</label><input type="datetime-local" id="backdate-datetime" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-slate-50"></div>
+                <button type="submit" class="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Formular starten</button>
             </form>
-            <div class="space-y-3"><h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-users-gear mr-1 text-sky-600"></i> Existierende Benutzer verwalten</h4><div id="admin-user-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div></div>
         </div>
     </div>
 
@@ -99,8 +94,8 @@
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4"><h3 class="text-xl font-extrabold text-slate-900">Passwort ändern</h3><button onclick="closePasswordModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
             <form onsubmit="handleChangePassword(event)" class="space-y-4">
-                <div><label class="block text-sm font-bold text-slate-700 mb-1">Neues Passwort:</label><input type="password" id="new-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Neues Passwort eingeben"></div>
-                <button type="submit" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-xl font-bold text-sm shadow-lg transition cursor-pointer">Passwort aktualisieren</button>
+                <div><label class="block text-sm font-bold text-slate-700 mb-1">Neues Passwort:</label><input type="password" id="new-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none"></div>
+                <button type="submit" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-xl font-bold text-sm shadow-lg transition cursor-pointer">Aktualisieren</button>
             </form>
         </div>
     </div>
@@ -119,18 +114,18 @@
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                        <span id="cloud-status-text">Cloud Synchronisiert &amp; Aktiv</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse"></span>
+                        <span id="cloud-status-text">Verbinde mit Cloud...</span>
                     </p>
                 </div>
             </div>
             <nav class="flex items-center space-x-2 mt-3 sm:mt-0 flex-wrap gap-2">
                 <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-layer-group"></i> Dashboard</button>
-                <button onclick="switchTab('calendar')" id="nav-calendar" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-calendar-check"></i> Wartungskalender</button>
+                <button onclick="switchTab('calendar')" id="nav-calendar" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-calendar-check"></i> Kalender</button>
                 <button onclick="switchTab('dguv')" id="nav-dguv" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plug-circle-check"></i> DGUV V3 <span id="dguv-count" class="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">0</span></button>
                 <button onclick="switchTab('history')" id="nav-history" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-clock-rotate-left"></i> Protokolle <span id="protocol-count" class="bg-ecbGreen text-white text-xs px-2 py-0.5 rounded-full">0</span></button>
-                <button onclick="openPasswordModal()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-white/20 hover:bg-white/30 transition flex items-center gap-1 cursor-pointer" title="Passwort ändern"><i class="fa-solid fa-key"></i></button>
-                <button onclick="handleLogout()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-red-600/80 hover:bg-red-600 transition flex items-center gap-1 cursor-pointer" title="Abmelden"><i class="fa-solid fa-right-from-bracket"></i></button>
+                <button onclick="openPasswordModal()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-white/20 hover:bg-white/30 transition flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-key"></i></button>
+                <button onclick="handleLogout()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-red-600/80 hover:bg-red-600 transition flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-right-from-bracket"></i></button>
             </nav>
         </div>
     </header>
@@ -140,135 +135,135 @@
             <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
-                    <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Anlagen-, Maschinen- &amp; DGUV-Wartung</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie aus, um ein rechtssicheres Wartungsprotokoll zu erstellen.</p>
+                    <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Wartungs- und Prüfsystem</h2>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten.</p>
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden">
-                    <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Backup</button>
+                    <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung</button>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div onclick="openWashingMachineMenu()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-ecbGreen hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openWashingMachineMenu()" class="bg-white rounded-3xl p-6 shadow-sm border hover:border-ecbGreen transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Waschmaschine" class="absolute top-4 right-4"></div>
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm"><i class="fa-solid fa-shirt"></i></div>
+                        <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition"><i class="fa-solid fa-shirt"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Milnor Waschmaschinen</h3>
-                        <p class="text-xs font-semibold text-ecbGreen mt-1 uppercase tracking-wider">4 Maschinen (1-4)</p>
-                        <div id="due-Waschmaschine" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Berechne Termin...</div>
+                        <p class="text-xs font-semibold text-ecbGreen mt-1 uppercase">4 Maschinen (1-4)</p>
+                        <div id="due-Waschmaschine" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border">Berechne...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-ecbDarkGreen"><span>Wartung starten</span><div class="w-8 h-8 rounded-full bg-ecbLightGreen flex items-center justify-center group-hover:translate-x-1 transition"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-ecbDarkGreen"><span>Starten</span><div class="w-8 h-8 rounded-full bg-ecbLightGreen flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <div onclick="openDryerMenu()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-amber-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openDryerMenu()" class="bg-white rounded-3xl p-6 shadow-sm border hover:border-amber-500 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Trockner" class="absolute top-4 right-4"></div>
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm"><i class="fa-solid fa-wind"></i></div>
+                        <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition"><i class="fa-solid fa-wind"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Trockner</h3>
-                        <p class="text-xs font-semibold text-amber-600 mt-1 uppercase tracking-wider">4 Trockner (1-4)</p>
-                        <div id="due-Trockner" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Berechne Termin...</div>
+                        <p class="text-xs font-semibold text-amber-600 mt-1 uppercase">4 Trockner (1-4)</p>
+                        <div id="due-Trockner" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border">Berechne...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-amber-700"><span>Wartung starten</span><div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center group-hover:translate-x-1 transition"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-amber-700"><span>Starten</span><div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <div onclick="openCompressorRoutine()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-sky-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openCompressorRoutine()" class="bg-white rounded-3xl p-6 shadow-sm border hover:border-sky-500 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor 2-Wochen" class="absolute top-4 right-4"></div>
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm"><i class="fa-solid fa-gauge-high"></i></div>
-                        <h3 class="text-xl font-bold text-slate-900">Kompressor Wartung</h3>
-                        <p class="text-xs font-semibold text-sky-600 mt-1 uppercase tracking-wider">Intervall: Alle 2 Wochen</p>
-                        <div id="due-Kompressor 2-Wochen" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Berechne Termin...</div>
+                        <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition"><i class="fa-solid fa-gauge-high"></i></div>
+                        <h3 class="text-xl font-bold text-slate-900">Kompressor 2-Wochen</h3>
+                        <p class="text-xs font-semibold text-sky-600 mt-1 uppercase">Intervall: 2 Wochen</p>
+                        <div id="due-Kompressor 2-Wochen" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border">Berechne...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-sky-700"><span>Wartung starten</span><div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center group-hover:translate-x-1 transition"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-sky-700"><span>Starten</span><div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <div onclick="openCompressorAnnual()" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 hover:border-purple-500 hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openCompressorAnnual()" class="bg-white rounded-3xl p-6 shadow-sm border hover:border-purple-500 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor Jahreswartung" class="absolute top-4 right-4"></div>
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition duration-300 shadow-sm"><i class="fa-solid fa-calendar-days"></i></div>
+                        <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition"><i class="fa-solid fa-calendar-days"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Kompressor Jahreswartung</h3>
-                        <p class="text-xs font-semibold text-purple-600 mt-1 uppercase tracking-wider">Umfassend • Alle 180 Tage</p>
-                        <div id="due-Kompressor Jahreswartung" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">Berechne Termin...</div>
+                        <p class="text-xs font-semibold text-purple-600 mt-1 uppercase">Umfassend • 180 Tage</p>
+                        <div id="due-Kompressor Jahreswartung" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border">Berechne...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-purple-700"><span>Wartung starten</span><div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center group-hover:translate-x-1 transition"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-purple-700"><span>Starten</span><div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-6">
-                <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-100 pb-5">
-                    <div><span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Prüfmanagement</span><h3 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen (Elektrische Betriebsmittel)</h3></div>
-                    <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm transition shadow-lg flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plus"></i> Neues Gerät erfassen</button>
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border space-y-6">
+                <div class="flex flex-wrap justify-between items-center gap-4 border-b pb-5">
+                    <div><span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase">Prüfmanagement</span><h3 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen</h3></div>
+                    <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm shadow-lg transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plus"></i> Gerät erfassen</button>
                 </div>
                 <div id="dashboard-dguv-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
         </div>
 
         <div id="tab-calendar" class="hidden space-y-6 animate-fade-in">
-            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
-                <div><span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Übersicht &amp; Planung</span><h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartungskalender (Automatische Aktualisierung)</h2></div>
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border">
+                <h2 class="text-2xl font-extrabold text-slate-900">Wartungskalender &amp; Fälligkeiten</h2>
             </div>
-            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 overflow-x-auto">
+            <div class="bg-white rounded-3xl p-6 shadow-sm border overflow-x-auto">
                 <table class="w-full text-left border-collapse">
-                    <thead><tr class="border-b border-slate-200 text-xs font-extrabold text-slate-500 uppercase tracking-wider"><th class="py-3 px-4">Kategorie / Anlage</th><th class="py-3 px-4">Letzte Wartung</th><th class="py-3 px-4">Nächster Fälligkeitstermin</th><th class="py-3 px-4">Status</th></tr></thead>
-                    <tbody id="calendar-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    <thead><tr class="border-b text-xs font-extrabold text-slate-500 uppercase"><th class="py-3 px-4">Kategorie</th><th class="py-3 px-4">Letzte Wartung</th><th class="py-3 px-4">Nächster Termin</th><th class="py-3 px-4">Status</th></tr></thead>
+                    <tbody id="calendar-table-body" class="divide-y text-sm"></tbody>
                 </table>
             </div>
         </div>
 
         <div id="tab-dguv" class="hidden space-y-6 animate-fade-in">
-            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
-                <div><span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase tracking-wider">Prüfmanagement</span><h2 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen</h2></div>
-                <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm transition shadow-lg flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plus"></i> Neues Gerät erfassen</button>
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border flex justify-between items-center">
+                <h2 class="text-2xl font-extrabold text-slate-900">DGUV V3 Prüfungen</h2>
+                <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm shadow-lg transition cursor-pointer"><i class="fa-solid fa-plus"></i> Neues Gerät</button>
             </div>
             <div id="dguv-devices-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
         <div id="tab-history" class="hidden space-y-6 animate-fade-in">
-            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-wrap justify-between items-center gap-4">
-                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gespeicherte Wartungsprotokolle</h2>
-                <div id="history-admin-clear-container" class="hidden"><button onclick="clearHistory()" class="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-bold transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-trash-can"></i> Verlauf leeren (Admin)</button></div>
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border flex justify-between items-center">
+                <h2 class="text-2xl font-extrabold text-slate-900">Gespeicherte Protokolle</h2>
+                <div id="history-admin-clear-container" class="hidden"><button onclick="clearHistory()" class="px-5 py-2.5 bg-red-50 text-red-600 rounded-xl text-sm font-bold cursor-pointer">Verlauf löschen</button></div>
             </div>
-            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-4">
-                <div><label class="block text-xs font-bold text-slate-600 mb-1">Jahr:</label><select id="filter-year" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium bg-slate-50 cursor-pointer"><option value="all">Alle Jahre</option></select></div>
-                <div><label class="block text-xs font-bold text-slate-600 mb-1">Monat:</label><select id="filter-month" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium bg-slate-50 cursor-pointer"><option value="all">Alle</option><option value="01">Jan</option><option value="02">Feb</option><option value="03">März</option><option value="04">Apr</option><option value="05">Mai</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option><option value="10">Okt</option><option value="11">Nov</option><option value="12">Dez</option></select></div>
-                <div><label class="block text-xs font-bold text-slate-600 mb-1">Kategorie:</label><select id="filter-category" onchange="renderHistory()" class="border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-medium bg-slate-50 cursor-pointer"><option value="all">Alle</option><option value="Waschmaschine">Waschmaschine</option><option value="Trockner">Trockner</option><option value="Kompressor 2-Wochen">Kompressor 2-Wochen</option><option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option></select></div>
+            <div class="bg-white p-5 rounded-3xl border shadow-sm flex flex-wrap items-center gap-4">
+                <div><label class="block text-xs font-bold text-slate-600 mb-1">Jahr:</label><select id="filter-year" onchange="renderHistory()" class="border rounded-xl px-4 py-2.5 text-sm bg-slate-50 cursor-pointer"><option value="all">Alle</option></select></div>
+                <div><label class="block text-xs font-bold text-slate-600 mb-1">Monat:</label><select id="filter-month" onchange="renderHistory()" class="border rounded-xl px-4 py-2.5 text-sm bg-slate-50 cursor-pointer"><option value="all">Alle</option><option value="01">Jan</option><option value="02">Feb</option><option value="03">März</option><option value="04">Apr</option><option value="05">Mai</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option><option value="10">Okt</option><option value="11">Nov</option><option value="12">Dez</option></select></div>
+                <div><label class="block text-xs font-bold text-slate-600 mb-1">Kategorie:</label><select id="filter-category" onchange="renderHistory()" class="border rounded-xl px-4 py-2.5 text-sm bg-slate-50 cursor-pointer"><option value="all">Alle</option><option value="Waschmaschine">Waschmaschine</option><option value="Trockner">Trockner</option><option value="Kompressor 2-Wochen">Kompressor 2-Wochen</option><option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option></select></div>
             </div>
             <div id="protocols-container" class="space-y-4"></div>
         </div>
 
         <div id="form-view" class="hidden space-y-6 animate-fade-in">
-            <button onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 transition shadow-sm flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-arrow-left"></i> Zurück zur Übersicht</button>
-            <div id="dynamic-form-content" class="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200/80"></div>
+            <button onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-white border rounded-xl text-sm font-bold text-slate-700 shadow-sm flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-arrow-left"></i> Zurück</button>
+            <div id="dynamic-form-content" class="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border"></div>
         </div>
     </main>
 
     <div id="modal-dguv" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-4"><h3 class="text-xl font-extrabold text-slate-900">Neues Gerät für DGUV V3 erfassen</h3><button onclick="closeDguvModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border">
+            <div class="flex justify-between items-center border-b pb-4"><h3 class="text-xl font-extrabold">DGUV V3 Gerät erfassen</h3><button onclick="closeDguvModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
             <form onsubmit="saveDguvDevice(event)" class="space-y-4">
-                <div><label class="block text-sm font-bold text-slate-800 mb-1.5">Gerätebezeichnung: <span class="text-red-500">*</span></label><input type="text" id="dguv-dev-name" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-white" placeholder="z. B. Industriestaubsauger #2"></div>
-                <div><label class="block text-sm font-bold text-slate-800 mb-1.5">Standort / Abteilung: <span class="text-red-500">*</span></label><input type="text" id="dguv-dev-location" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-white" placeholder="z. B. Waschebene Halle 1"></div>
-                <div><label class="block text-sm font-bold text-slate-800 mb-1.5">Nächster Fälligkeitstermin: <span class="text-red-500">*</span></label><input type="date" id="dguv-dev-duedate" required class="w-full border border-slate-300 rounded-xl p-3.5 text-sm bg-white"></div>
-                <button type="submit" class="w-full py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold shadow-lg transition cursor-pointer">Gerät speichern</button>
+                <div><label class="block text-sm font-bold mb-1.5">Gerätebezeichnung:</label><input type="text" id="dguv-dev-name" required class="w-full border rounded-xl p-3.5 text-sm"></div>
+                <div><label class="block text-sm font-bold mb-1.5">Standort:</label><input type="text" id="dguv-dev-location" required class="w-full border rounded-xl p-3.5 text-sm"></div>
+                <div><label class="block text-sm font-bold mb-1.5">Fällig am:</label><input type="date" id="dguv-dev-duedate" required class="w-full border rounded-xl p-3.5 text-sm"></div>
+                <button type="submit" class="w-full py-4 bg-sky-600 text-white rounded-2xl font-bold shadow-lg cursor-pointer">Speichern</button>
             </form>
         </div>
     </div>
 
     <div id="modal-message" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
-        <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl border border-slate-100 text-center">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl text-center">
             <div id="modal-icon" class="w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner"><i class="fa-solid fa-check"></i></div>
             <h3 id="modal-title" class="text-xl font-extrabold text-slate-900">Meldung</h3>
-            <p id="modal-text" class="text-sm text-slate-600 leading-relaxed"></p>
-            <button onclick="closeModal()" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-2xl font-bold shadow-lg transition cursor-pointer">Verstanden</button>
+            <p id="modal-text" class="text-sm text-slate-600"></p>
+            <button onclick="closeModal()" class="w-full py-3.5 bg-ecbGreen text-white rounded-2xl font-bold shadow-lg cursor-pointer">Verstanden</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-maintenance-default';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-maintenance-cloud';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEvon6SHIVRB5k",
             authDomain: "ecb-maintenance.firebaseapp.com",
@@ -313,7 +308,7 @@
                     if (user) {
                         console.log("Firebase authenticated successfully:", user.uid);
                         document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                        document.getElementById('cloud-status-text').innerText = "Cloud Synchronisiert & Aktiv";
+                        document.getElementById('cloud-status-text').innerText = "Cloud Online & Synchronisiert";
                         initRealtimeCloudSync();
                     } else {
                         await signInAnonymously(auth);
@@ -321,9 +316,9 @@
                 });
 
             } catch (err) {
-                console.warn("Firebase connection warning:", err);
+                console.warn("Firebase initialization warning:", err);
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Cloud Synchronisiert & Aktiv";
+                document.getElementById('cloud-status-text').innerText = "Cloud Online & Aktiv";
             }
 
             if (localStorage.getItem('ecb_logged_in') === 'true') {
@@ -334,20 +329,20 @@
 
         function loadLocalCache() {
             try {
-                const p = localStorage.getItem('ecb_protocols_v59');
+                const p = localStorage.getItem('ecb_protocols_v64');
                 if (p) protocols = JSON.parse(p);
-                const d = localStorage.getItem('ecb_dguv_v59');
+                const d = localStorage.getItem('ecb_dguv_v64');
                 if (d) dguvDevices = JSON.parse(d);
-                const u = localStorage.getItem('ecb_users_v59');
+                const u = localStorage.getItem('ecb_users_v64');
                 if (u) cloudUsers = JSON.parse(u);
             } catch(e) {}
         }
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_v59', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v59', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v59', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_v64', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v64', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v64', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
@@ -368,9 +363,7 @@
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                 saveLocalCache();
                 updateUI();
-            }, (error) => {
-                console.warn("Protocol snapshot sync warning:", error);
-            });
+            }, (error) => { console.warn("Protocol sync warning:", error); });
 
             onSnapshot(dguvCol, (snapshot) => {
                 let map = new Map();
@@ -382,38 +375,8 @@
                 dguvDevices = Array.from(map.values());
                 saveLocalCache();
                 updateUI();
-            }, (error) => {
-                console.warn("DGUV snapshot sync warning:", error);
-            });
+            }, (error) => { console.warn("DGUV sync warning:", error); });
         }
-
-        window.exportAllDataJson = function() {
-            const dataToExport = { protocols, dguvDevices, cloudUsers, date: new Date().toISOString() };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
-            const a = document.createElement('a');
-            a.setAttribute("href", dataStr);
-            a.setAttribute("download", `ECB_Cloud_Backup_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(a); a.click(); a.remove();
-            showModal('Backup & Sync', 'Sicherungsdatei für geräteübergreifende Synchronisation wurde exportiert.', true);
-        };
-
-        window.importAllDataJson = function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const imp = JSON.parse(e.target.result);
-                    if (imp.protocols) protocols = imp.protocols;
-                    if (imp.dguvDevices) dguvDevices = imp.dguvDevices;
-                    if (imp.cloudUsers) cloudUsers = imp.cloudUsers;
-                    saveLocalCache(); updateUI();
-                    showModal('Erfolg', 'Alle Daten erfolgreich synchronisiert und importiert!', true);
-                } catch(err) { showModal('Fehler', 'Ungültige Backup-Datei.', false); }
-            };
-            reader.readAsDataURL(file);
-            event.target.value = '';
-        };
 
         window.submitProtocol = async function(event, categoryKey) {
             event.preventDefault();
@@ -461,13 +424,11 @@
                     const docRef = await addDoc(protocolsCol, protocol);
                     protocol.firestoreId = docRef.id;
                     saveLocalCache();
-                } catch(e) {
-                    console.warn("Cloud write warning:", e);
-                }
+                } catch(e) { console.warn("Cloud write warning:", e); }
             }
 
             generatePDF(protocol);
-            showModal('Erfolg', 'Wartungsprotokoll erfolgreich gespeichert & automatisch im Kalender aktualisiert!', true);
+            showModal('Erfolg', 'Wartungsprotokoll erfolgreich in Cloud gespeichert & im Kalender aktualisiert!', true);
             switchTab('history');
         };
 
@@ -502,7 +463,7 @@
 
             closeDguvModal();
             updateUI();
-            showModal('Erfolg', 'Gerät erfolgreich erfasst & synchronisiert!', true);
+            showModal('Erfolg', 'Gerät gespeichert & synchronisiert!', true);
         };
 
         window.deleteProtocol = async function(firestoreId, index) {
@@ -521,37 +482,13 @@
             saveLocalCache(); updateUI();
         };
 
-        window.handleProtocolUpload = async function(event, deviceId) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const item = { date: new Date().toLocaleString('de-DE'), fileName: file.name, fileData: e.target.result };
-                const dev = dguvDevices.find(d => d.id === deviceId);
-                if (dev) {
-                    if (!dev.protocolHistory) dev.protocolHistory = [];
-                    dev.protocolHistory.unshift(item);
-                    dev.status = 'Erledigt';
-                    saveLocalCache();
-                    if (db && dev.firestoreId) {
-                        try {
-                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', dev.firestoreId), { status: 'Erledigt', protocolHistory: dev.protocolHistory });
-                        } catch(e) {}
-                    }
-                }
-                updateUI();
-                showModal('Erfolg', 'Messprotokoll hochgeladen!', true);
-            };
-            reader.readAsDataURL(file);
-        };
-
         window.handleLogin = function(event) {
             event.preventDefault();
             const user = document.getElementById('login-user').value.trim();
             const pass = document.getElementById('login-pass').value.trim();
             const found = cloudUsers.find(u => u.user === user && u.pass === pass);
             if (found) {
-                if (found.active === false) { showModal('Zugriff verwehrt', 'Konto deaktiviert.', false); return; }
+                if (found.active === false) { showModal('Fehler', 'Konto deaktiviert.', false); return; }
                 localStorage.setItem('ecb_logged_in', 'true');
                 localStorage.setItem('ecb_current_user', user);
                 localStorage.setItem('ecb_current_fullname', found.fullname || user);
@@ -614,7 +551,7 @@
         window.closeModal = function() { document.getElementById('modal-message').classList.add('hidden'); };
         window.openDguvModal = function() { document.getElementById('modal-dguv').classList.remove('hidden'); };
         window.closeDguvModal = function() { document.getElementById('modal-dguv').classList.add('hidden'); };
-        window.openRegisterModal = function() { renderAdminUserList(); populateBackdateTechnicians(); document.getElementById('modal-register').classList.remove('hidden'); };
+        window.openRegisterModal = function() { populateBackdateTechnicians(); document.getElementById('modal-register').classList.remove('hidden'); };
         window.closeRegisterModal = function() { document.getElementById('modal-register').classList.add('hidden'); };
         window.openPasswordModal = function() { document.getElementById('new-pass').value = ''; document.getElementById('modal-password').classList.remove('hidden'); };
         window.closePasswordModal = function() { document.getElementById('modal-password').classList.add('hidden'); };
@@ -638,8 +575,9 @@
             cloudUsers.push({ fullname, user: newUser, pass: newPass, active: true });
             saveLocalCache();
             document.getElementById('reg-fullname').value = ''; document.getElementById('reg-user').value = ''; document.getElementById('reg-pass').value = '';
-            renderAdminUserList(); populateBackdateTechnicians();
-            showModal('Erfolg', `Mitarbeiter angelegt.`, true);
+            populateBackdateTechnicians();
+            closeRegisterModal();
+            showModal('Erfolg', 'Mitarbeiter erfolgreich angelegt!', true);
         };
 
         window.startBackdateForm = function(event) {
@@ -659,23 +597,6 @@
             const selectEl = document.getElementById('backdate-technician');
             if (!selectEl) return;
             selectEl.innerHTML = cloudUsers.map(u => `<option value="${u.fullname || u.user}">${u.fullname || u.user}</option>`).join('');
-        }
-
-        window.toggleUserActive = function(index) {
-            if (cloudUsers[index].user === 'ECB_Wartung') return;
-            cloudUsers[index].active = !cloudUsers[index].active;
-            saveLocalCache(); renderAdminUserList();
-        };
-
-        function renderAdminUserList() {
-            const container = document.getElementById('admin-user-list');
-            if (!container) return;
-            container.innerHTML = cloudUsers.map((u, i) => `
-                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
-                    <div><strong class="text-sm">${u.fullname || u.user}</strong> <span class="text-xs text-slate-400">(${u.user})</span></div>
-                    ${u.user !== 'ECB_Wartung' ? `<button type="button" onclick="toggleUserActive(${i})" class="px-2.5 py-1.5 rounded-lg text-xs font-bold ${u.active !== false ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}">${u.active !== false ? 'Deaktivieren' : 'Aktivieren'}</button>` : ''}
-                </div>
-            `).join('');
         }
 
         function checkAdminNav() {
@@ -755,7 +676,7 @@
             const activeTechnician = backdateContext ? backdateContext.technician : loggedInName;
             return `
                 <div class="p-6 bg-slate-50 rounded-2xl border space-y-4 mb-8">
-                    <div class="font-bold text-sm text-ecbDarkGreen"><i class="fa-solid fa-user mr-1"></i> Techniker</div>
+                    <div class="font-bold text-sm text-ecbDarkGreen"><i class="fa-solid fa-user mr-1"></i> Zuständiger Techniker</div>
                     <input type="text" id="employee-name" required value="${activeTechnician}" class="w-full border rounded-xl p-3 text-sm font-bold bg-slate-100" readonly>
                 </div>
             `;
@@ -951,20 +872,21 @@
                 return;
             }
 
-            container.innerHTML = filtered.map((p, idx) => {
+            container.innerHTML = filtered.map((p) => {
                 const globalIdx = protocols.findIndex(item => item.id === p.id);
                 const pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
                 const photosHtml = (p.photos && p.photos.length > 0) ? `<div class="flex gap-2 overflow-x-auto py-2">${p.photos.map(pho => `<img src="${pho}" class="w-16 h-16 object-cover rounded-lg border">`).join('')}</div>` : '';
+
                 return `
                     <div class="bg-white rounded-3xl p-6 border shadow-sm space-y-4">
                         <div class="flex justify-between items-start">
                             <div>
                                 <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold">${p.category}</span>
                                 <h3 class="text-xl font-bold mt-2">${p.machine}</h3>
-                                <p class="text-xs text-slate-500 mt-1">${p.date} | ${p.employee} ${p.runtime ? `| ${p.runtime} Std.` : ''}</p>
+                                <p class="text-xs text-slate-500 mt-1">Nr.: ${p.id} | ${p.date} | ${p.employee} ${p.runtime ? `| ${p.runtime} Std.` : ''}</p>
                             </div>
                             <div class="flex gap-2">
-                                <button onclick='generatePDF(${JSON.stringify(p)})' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer">PDF</button>
+                                <button onclick='generatePDFById("${p.id}")' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf mr-1"></i> PDF</button>
                                 <button onclick="deleteProtocol('${p.firestoreId || ''}', ${globalIdx})" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
@@ -981,7 +903,7 @@
             const dash = document.getElementById('dashboard-dguv-container');
             if (!container) return;
             if (dguvDevices.length === 0) {
-                container.innerHTML = '<div class="col-span-full bg-white rounded-3xl p-12 text-center text-slate-500 border">Keine DGUV Geräte.</div>';
+                container.innerHTML = '<div class="col-span-full bg-white rounded-3xl p-12 text-center text-slate-500 border">Keine Geräte.</div>';
                 if (dash) dash.innerHTML = container.innerHTML;
                 return;
             }
@@ -993,7 +915,6 @@
                         <p class="text-xs text-sky-700 mt-1">Nr.: ${d.inventoryNumber} | ${d.location}</p>
                         <p class="text-xs text-slate-500 mt-1">Fällig: ${d.dueDate}</p>
                     </div>
-                    <label class="mt-4 py-2.5 bg-slate-50 hover:bg-slate-100 border rounded-xl text-xs font-bold text-center cursor-pointer block transition">Messprotokoll hochladen<input type="file" accept=".pdf,image/*" onchange="handleProtocolUpload(event, '${d.id}')" class="hidden"></label>
                 </div>
             `).join('');
             container.innerHTML = html;
@@ -1007,17 +928,151 @@
             }
         };
 
-        function generatePDF(p) {
+        window.generatePDFById = function(protocolId) {
+            const p = protocols.find(item => item.id === protocolId);
+            if (!p) {
+                showModal('Fehler', 'Protokoll konnte nicht gefunden werden.', false);
+                return;
+            }
+            generatePDF(p);
+        };
+
+        window.generatePDF = function(p) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
-            doc.setFillColor(63, 98, 18); doc.rect(0, 0, 210, 35, 'F');
-            doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(255, 255, 255);
-            doc.text('E.C.B. REINIGUNGSSYSTEME - Wartungsprotokoll', 15, 20);
-            doc.setFontSize(10); doc.text(`Anlage: ${p.machine} | Datum: ${p.date} | Techniker: ${p.employee}`, 15, 45);
-            let y = 60;
-            (p.points || []).forEach(pt => { doc.text(`${pt.title}: ${pt.status.toUpperCase()}`, 15, y); y += 8; });
-            if (p.remarks) { y += 5; doc.text(`Bemerkung: ${p.remarks}`, 15, y); }
-            doc.save(`ECB_Protokoll_${p.id}.pdf`);
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            let y = 15;
+
+            // Green Header Background
+            doc.setFillColor(101, 163, 13); // #65a30d
+            doc.rect(0, 0, pageWidth, 32, 'F');
+
+            // Draw exact SVG Logo on PDF Header
+            try {
+                const canvasLogo = document.createElement('canvas');
+                canvasLogo.width = 120; canvasLogo.height = 120;
+                const ctxL = canvasLogo.getContext('2d');
+                ctxL.fillStyle = '#65a30d';
+                ctxL.fillRect(0, 0, 120, 120);
+                ctxL.fillStyle = '#ffffff';
+                ctxL.beginPath();
+                ctxL.moveTo(5, 75); ctxL.bezierCurveTo(20, 60, 50, 60, 75, 75); ctxL.bezierCurveTo(95, 85, 105, 85, 115, 70);
+                ctxL.bezierCurveTo(112, 75, 100, 95, 85, 95); ctxL.bezierCurveTo(60, 95, 30, 100, 10, 90); ctxL.closePath();
+                ctxL.fill();
+                ctxL.font = 'italic 700 38px Inter, sans-serif';
+                ctxL.fillText('ecb', 32, 55);
+                const logoDataURL = canvasLogo.toDataURL('image/png');
+                doc.addImage(logoDataURL, 'PNG', 12, 5, 22, 22);
+            } catch(e) {}
+
+            doc.setFont('helvetica', 'bold'); 
+            doc.setFontSize(13); 
+            doc.setTextColor(255, 255, 255);
+            doc.text('E.C.B. REINIGUNGSSYSTEME', 38, 14);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(236, 252, 203);
+            doc.text('Digitales Wartungsprotokoll & Instandhaltung', 38, 21);
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.text(`Protokoll-Nr: ${p.id}`, pageWidth - 15, 17, { align: 'right' });
+
+            y = 40;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.setTextColor(15, 23, 42);
+            doc.text(`Anlage / Maschine: ${p.machine}`, 15, y);
+            
+            y += 7;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(71, 85, 105);
+            doc.text(`Kategorie: ${p.category}`, 15, y);
+            doc.text(`Datum & Uhrzeit: ${p.date}`, pageWidth - 15, y, { align: 'right' });
+
+            y += 6;
+            doc.text(`Zuständiger Techniker: ${p.employee}`, 15, y);
+            if (p.runtime) {
+                doc.text(`Betriebsstunden: ${p.runtime} Std.`, pageWidth - 15, y, { align: 'right' });
+            }
+
+            y += 12;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(15, 23, 42);
+            doc.text('Prüfpunkte & Ergebnisse:', 15, y);
+
+            y += 4;
+            doc.setDrawColor(226, 232, 240);
+            doc.line(15, y, pageWidth - 15, y);
+
+            y += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+
+            (p.points || []).forEach((pt, idx) => {
+                if (y > pageHeight - 65) { doc.addPage(); y = 20; }
+                doc.setTextColor(15, 23, 42);
+                doc.text(`${idx + 1}. ${pt.title}`, 18, y);
+                
+                doc.setFont('helvetica', 'bold');
+                if (pt.status === 'erledigt') {
+                    doc.setTextColor(101, 163, 13);
+                    doc.text('[ OK ]', pageWidth - 18, y, { align: 'right' });
+                } else {
+                    doc.setTextColor(220, 38, 38);
+                    doc.text('[ MANGEL ]', pageWidth - 18, y, { align: 'right' });
+                }
+                doc.setFont('helvetica', 'normal');
+                y += 8;
+            });
+
+            if (p.remarks) {
+                y += 4;
+                if (y > pageHeight - 55) { doc.addPage(); y = 20; }
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(15, 23, 42);
+                doc.text('Bemerkungen:', 15, y);
+                y += 5;
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(71, 85, 105);
+                const splitRemarks = doc.splitTextToSize(p.remarks, pageWidth - 30);
+                doc.text(splitRemarks, 15, y);
+                y += (splitRemarks.length * 6) + 4;
+            }
+
+            if (p.photos && p.photos.length > 0) {
+                y += 6;
+                if (y > pageHeight - 60) { doc.addPage(); y = 20; }
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(15, 23, 42);
+                doc.text('Dokumentationsfotos:', 15, y);
+                y += 6;
+                let xPos = 15;
+                p.photos.forEach((pho) => {
+                    if (xPos + 35 > pageWidth - 15) { xPos = 15; y += 38; }
+                    if (y > pageHeight - 45) { doc.addPage(); y = 20; xPos = 15; }
+                    try { doc.addImage(pho, 'JPEG', xPos, y, 32, 32); xPos += 38; } catch(e) {}
+                });
+                y += 38;
+            }
+
+            y += 10;
+            if (y > pageHeight - 40) { doc.addPage(); y = 20; }
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(15, 23, 42);
+            doc.text(`Unterschrift Techniker (${p.employee}):`, 15, y);
+            y += 4;
+
+            if (p.signature) {
+                try { doc.addImage(p.signature, 'PNG', 15, y, 55, 22); } catch(e) {}
+            }
+
+            doc.save(`ECB_Wartungsprotokoll_${p.id}.pdf`);
         }
     </script>
 </body>
