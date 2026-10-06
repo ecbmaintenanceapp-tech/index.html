@@ -25,14 +25,17 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top right, #f8fafc, #f1f5f9); }
         .signature-canvas { touch-action: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .checkpoint-card { transition: all 0.2s ease-in-out; }
+        .checkpoint-card:hover { background-color: #f7fee7; border-color: #bef264; transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(101, 163, 13, 0.08); }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
+<body class="text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
+    <!-- Login Screen -->
     <div id="login-screen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 space-y-6 animate-fade-in">
             <div class="text-center space-y-2">
@@ -62,6 +65,7 @@
         </div>
     </div>
 
+    <!-- Admin & Register Modal -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -69,8 +73,8 @@
                 <button onclick="closeRegisterModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-2">
-                <h4 class="font-bold text-emerald-900 text-sm"><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Automatische Cloud-Synchronisation aktiv</h4>
-                <p class="text-xs text-emerald-700">Alle Wartungsprotokolle und DGUV-Prüfungen werden in Echtzeit zwischen allen PCs und Mobilgeräten synchronisiert.</p>
+                <h4 class="font-bold text-emerald-900 text-sm"><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Cloud-Live-Sync aktiv</h4>
+                <p class="text-xs text-emerald-700">Alle Protokolle und Prüfungen werden in Echtzeit zwischen sämtlichen Endgeräten synchronisiert.</p>
             </div>
             <form onsubmit="handleRegister(event)" class="space-y-4 pb-6 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-user-plus mr-1 text-ecbGreen"></i> Neuen Mitarbeiter anlegen</h4>
@@ -90,6 +94,7 @@
         </div>
     </div>
 
+    <!-- Password Modal -->
     <div id="modal-password" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4"><h3 class="text-xl font-extrabold text-slate-900">Passwort ändern</h3><button onclick="closePasswordModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
@@ -100,6 +105,7 @@
         </div>
     </div>
 
+    <!-- Header -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
@@ -114,8 +120,8 @@
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Verbinde mit Cloud...</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+                        <span id="cloud-status-text">Cloud Live Sync aktiv</span>
                     </p>
                 </div>
             </div>
@@ -130,16 +136,18 @@
         </div>
     </header>
 
+    <!-- Main Content -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
+        <!-- Dashboard Tab -->
         <div id="tab-dashboard" class="space-y-8 animate-fade-in">
-            <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
+            <div class="bg-gradient-to-br from-white via-emerald-50/20 to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Wartungs- und Prüfsystem</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten.</p>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge synchronisieren sich vollautomatisch in Echtzeit.</p>
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden">
-                    <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung</button>
+                    <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Backup</button>
                 </div>
             </div>
 
@@ -198,9 +206,11 @@
             </div>
         </div>
 
+        <!-- Calendar Tab -->
         <div id="tab-calendar" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border">
                 <h2 class="text-2xl font-extrabold text-slate-900">Wartungskalender &amp; Fälligkeiten</h2>
+                <p class="text-sm text-slate-500 mt-1">Aktualisiert sich vollautomatisch nach jeder durchgeführten Wartung.</p>
             </div>
             <div class="bg-white rounded-3xl p-6 shadow-sm border overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -210,6 +220,7 @@
             </div>
         </div>
 
+        <!-- DGUV Tab -->
         <div id="tab-dguv" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border flex justify-between items-center">
                 <h2 class="text-2xl font-extrabold text-slate-900">DGUV V3 Prüfungen</h2>
@@ -218,6 +229,7 @@
             <div id="dguv-devices-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
+        <!-- History Tab -->
         <div id="tab-history" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border flex justify-between items-center">
                 <h2 class="text-2xl font-extrabold text-slate-900">Gespeicherte Protokolle</h2>
@@ -231,12 +243,14 @@
             <div id="protocols-container" class="space-y-4"></div>
         </div>
 
+        <!-- Form View -->
         <div id="form-view" class="hidden space-y-6 animate-fade-in">
             <button onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-white border rounded-xl text-sm font-bold text-slate-700 shadow-sm flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-arrow-left"></i> Zurück</button>
             <div id="dynamic-form-content" class="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border"></div>
         </div>
     </main>
 
+    <!-- DGUV Modal -->
     <div id="modal-dguv" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border">
             <div class="flex justify-between items-center border-b pb-4"><h3 class="text-xl font-extrabold">DGUV V3 Gerät erfassen</h3><button onclick="closeDguvModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
@@ -249,6 +263,7 @@
         </div>
     </div>
 
+    <!-- Message Modal -->
     <div id="modal-message" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl text-center">
             <div id="modal-icon" class="w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner"><i class="fa-solid fa-check"></i></div>
@@ -258,6 +273,7 @@
         </div>
     </div>
 
+    <!-- Firebase & App Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -307,8 +323,8 @@
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         console.log("Firebase authenticated successfully:", user.uid);
-                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                        document.getElementById('cloud-status-text').innerText = "Cloud Online & Synchronisiert";
+                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse";
+                        document.getElementById('cloud-status-text').innerText = "Cloud Live Sync aktiv";
                         initRealtimeCloudSync();
                     } else {
                         await signInAnonymously(auth);
@@ -317,8 +333,9 @@
 
             } catch (err) {
                 console.warn("Firebase initialization warning:", err);
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Cloud Online & Aktiv";
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Cloud Live Sync aktiv";
+                initRealtimeCloudSync();
             }
 
             if (localStorage.getItem('ecb_logged_in') === 'true') {
@@ -675,21 +692,21 @@
             const loggedInName = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
             const activeTechnician = backdateContext ? backdateContext.technician : loggedInName;
             return `
-                <div class="p-6 bg-slate-50 rounded-2xl border space-y-4 mb-8">
+                <div class="p-6 bg-emerald-50/40 rounded-2xl border border-emerald-100 space-y-4 mb-8 shadow-sm">
                     <div class="font-bold text-sm text-ecbDarkGreen"><i class="fa-solid fa-user mr-1"></i> Zuständiger Techniker</div>
-                    <input type="text" id="employee-name" required value="${activeTechnician}" class="w-full border rounded-xl p-3 text-sm font-bold bg-slate-100" readonly>
+                    <input type="text" id="employee-name" required value="${activeTechnician}" class="w-full border rounded-xl p-3 text-sm font-bold bg-white shadow-inner" readonly>
                 </div>
             `;
         }
 
         window.openWashingMachineMenu = function() {
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6">Milnor Waschmaschinen Wartung</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Milnor Waschmaschinen Wartung</h2>
                 <form onsubmit="submitProtocol(event, 'Waschmaschine')" class="space-y-6">
                     ${renderCommonHeaderFields()}
                     <div>
-                        <label class="block font-bold text-sm mb-1.5">Milnor Waschmaschine auswählen:</label>
-                        <select id="machine-select" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 cursor-pointer">
+                        <label class="block font-bold text-sm mb-1.5 text-slate-700">Milnor Waschmaschine auswählen:</label>
+                        <select id="machine-select" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 cursor-pointer focus:ring-2 focus:ring-ecbGreen focus:outline-none">
                             <option value="Milnor Waschmaschine 1">Milnor Waschmaschine 1</option>
                             <option value="Milnor Waschmaschine 2">Milnor Waschmaschine 2</option>
                             <option value="Milnor Waschmaschine 3">Milnor Waschmaschine 3</option>
@@ -702,7 +719,7 @@
                     ${renderCheckPoint(4, 'Maschine auf Mängelfreiheit überprüfen')}
                     ${renderCheckPoint(5, 'Keine Mängel festgestellt')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl shadow-lg cursor-pointer">Protokoll speichern &amp; PDF</button>
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white font-bold rounded-xl shadow-lg transition cursor-pointer">Protokoll speichern &amp; PDF</button>
                 </form>
             `;
             activePhotos = []; switchTab('form');
@@ -710,12 +727,12 @@
 
         window.openDryerMenu = function() {
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6">Trockner Wartung</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Trockner Wartung</h2>
                 <form onsubmit="submitProtocol(event, 'Trockner')" class="space-y-6">
                     ${renderCommonHeaderFields()}
                     <div>
-                        <label class="block font-bold text-sm mb-1.5">Trockner auswählen:</label>
-                        <select id="machine-select" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 cursor-pointer">
+                        <label class="block font-bold text-sm mb-1.5 text-slate-700">Trockner auswählen:</label>
+                        <select id="machine-select" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 cursor-pointer focus:ring-2 focus:ring-ecbGreen focus:outline-none">
                             <option value="Trockner 1">Trockner 1</option>
                             <option value="Trockner 2">Trockner 2</option>
                             <option value="Trockner 3">Trockner 3</option>
@@ -728,7 +745,7 @@
                     ${renderCheckPoint(4, 'Abluftrohre reinigen ggf. Flexrohr erneuern')}
                     ${renderCheckPoint(5, 'Sicht- und Funktionsprüfung auf Mängel')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl shadow-lg cursor-pointer">Protokoll speichern &amp; PDF</button>
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white font-bold rounded-xl shadow-lg transition cursor-pointer">Protokoll speichern &amp; PDF</button>
                 </form>
             `;
             activePhotos = []; switchTab('form');
@@ -736,17 +753,17 @@
 
         window.openCompressorRoutine = function() {
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6">Kompressor Wartung (2-Wochen)</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Wartung (2-Wochen)</h2>
                 <form onsubmit="submitProtocol(event, 'Kompressor 2-Wochen')" class="space-y-6">
                     ${renderCommonHeaderFields()}
                     <input type="hidden" id="machine-select" value="Kompressor (2-Wochen)">
-                    <div class="space-y-1"><label class="block font-bold text-sm">Betriebsstunden:</label><input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm" placeholder="Betriebsstunden"></div>
+                    <div class="space-y-1"><label class="block font-bold text-sm text-slate-700">Betriebsstunden:</label><input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Betriebsstunden"></div>
                     ${renderCheckPoint(1, 'Ölstand am Schauglas prüfen und bei Bedarf öl auffüllen.')}
                     ${renderCheckPoint(2, 'Ansaugfilter reinigen ggf. erneuern')}
                     ${renderCheckPoint(3, 'Kältetrockner reinigen')}
                     ${renderCheckPoint(4, 'Kompressor & Umgebung reinigen')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl shadow-lg cursor-pointer">Protokoll speichern &amp; PDF</button>
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white font-bold rounded-xl shadow-lg transition cursor-pointer">Protokoll speichern &amp; PDF</button>
                 </form>
             `;
             activePhotos = []; switchTab('form');
@@ -754,11 +771,11 @@
 
         window.openCompressorAnnual = function() {
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6">Kompressor Jahreswartung</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Jahreswartung</h2>
                 <form onsubmit="submitProtocol(event, 'Kompressor Jahreswartung')" class="space-y-6">
                     ${renderCommonHeaderFields()}
                     <input type="hidden" id="machine-select" value="Kompressor (Jahreswartung)">
-                    <div class="space-y-1"><label class="block font-bold text-sm">Betriebsstunden:</label><input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm" placeholder="Betriebsstunden"></div>
+                    <div class="space-y-1"><label class="block font-bold text-sm text-slate-700">Betriebsstunden:</label><input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Betriebsstunden"></div>
                     ${renderCheckPoint(1, 'Kompletten Ölwechsel durchführen (Altöl ablassen, spülen, neues Kompressoröl einfüllen)')}
                     ${renderCheckPoint(2, 'Ölfilter erneuern und auf Dichtigkeit achten')}
                     ${renderCheckPoint(3, 'Luftfilter / Ansaugfilter komplett erneuern & reinigen')}
@@ -772,14 +789,29 @@
                     ${renderCheckPoint(11, 'Gesamtanlage auf Dichtigkeit, ungewöhnliche Geräusche und Vibrationsfreiheit prüfen')}
                     ${renderCheckPoint(12, 'Nachlauf- und Probelauf unter Betriebsdruck durchführen')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl shadow-lg cursor-pointer">Protokoll speichern &amp; PDF</button>
+                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white font-bold rounded-xl shadow-lg transition cursor-pointer">Protokoll speichern &amp; PDF</button>
                 </form>
             `;
             activePhotos = []; switchTab('form');
         };
 
         function renderCheckPoint(i, title) {
-            return `<div class="p-4 bg-slate-50 rounded-xl border" data-title="${title}"><div class="font-bold text-sm mb-2">${i}. ${title}</div><div class="flex gap-4"><label class="cursor-pointer font-medium"><input type="radio" name="point_${i}" value="erledigt" checked class="mr-1"> OK</label><label class="cursor-pointer font-medium"><input type="radio" name="point_${i}" value="nicht in Ordnung" class="mr-1"> Mangel</label></div></div>`;
+            return `
+                <div class="checkpoint-card p-4 bg-white rounded-2xl border border-slate-200/90 shadow-sm space-y-3" data-title="${title}">
+                    <div class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-emerald-50 text-ecbDarkGreen flex items-center justify-center text-xs">${i}</span>
+                        ${title}
+                    </div>
+                    <div class="flex gap-4 pt-1">
+                        <label class="cursor-pointer font-semibold text-xs px-4 py-2 rounded-xl bg-emerald-50/70 hover:bg-emerald-100 text-ecbDarkGreen border border-emerald-200 transition flex items-center gap-1.5">
+                            <input type="radio" name="point_${i}" value="erledigt" checked class="accent-ecbGreen"> OK
+                        </label>
+                        <label class="cursor-pointer font-semibold text-xs px-4 py-2 rounded-xl bg-red-50/70 hover:bg-red-100 text-red-700 border border-red-200 transition flex items-center gap-1.5">
+                            <input type="radio" name="point_${i}" value="nicht in Ordnung" class="accent-red-600"> Mangel
+                        </label>
+                    </div>
+                </div>
+            `;
         }
 
         function renderPhotoSection() {
@@ -801,8 +833,8 @@
             `;
         }
 
-        function renderRemarksSection() { return `<div class="space-y-1"><label class="block font-bold text-sm">Bemerkungen / Feststellungen:</label><textarea id="remarks-input" class="w-full border rounded-xl p-3 text-sm" placeholder="Zusätzliche Notizen..."></textarea></div>`; }
-        function renderSignatureSection() { return `<div class="space-y-1"><div class="flex justify-between items-center"><label class="font-bold text-sm">Unterschrift des Technikers:</label><button type="button" onclick="clearSignature()" class="text-xs font-bold text-red-600 hover:underline">Löschen</button></div><canvas id="signature-canvas" class="signature-canvas w-full h-36 border rounded-xl bg-white shadow-inner"></canvas></div>`; }
+        function renderRemarksSection() { return `<div class="space-y-1"><label class="block font-bold text-sm text-slate-700">Bemerkungen / Feststellungen:</label><textarea id="remarks-input" class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Zusätzliche Notizen..."></textarea></div>`; }
+        function renderSignatureSection() { return `<div class="space-y-1"><div class="flex justify-between items-center"><label class="font-bold text-sm text-slate-700">Unterschrift des Technikers:</label><button type="button" onclick="clearSignature()" class="text-xs font-bold text-red-600 hover:underline cursor-pointer">Löschen</button></div><canvas id="signature-canvas" class="signature-canvas w-full h-36 border rounded-xl bg-white shadow-inner"></canvas></div>`; }
 
         window.handlePhotoCapture = function(e) {
             Array.from(e.target.files).forEach(f => {
@@ -882,7 +914,7 @@
                         <div class="flex justify-between items-start">
                             <div>
                                 <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold">${p.category}</span>
-                                <h3 class="text-xl font-bold mt-2">${p.machine}</h3>
+                                <h3 class="text-xl font-bold mt-2 text-slate-900">${p.machine}</h3>
                                 <p class="text-xs text-slate-500 mt-1">Nr.: ${p.id} | ${p.date} | ${p.employee} ${p.runtime ? `| ${p.runtime} Std.` : ''}</p>
                             </div>
                             <div class="flex gap-2">
@@ -911,7 +943,7 @@
                 <div class="bg-white rounded-3xl p-6 border shadow-sm flex flex-col justify-between">
                     <div>
                         <div class="flex justify-between"><span class="px-3 py-1 rounded-full text-xs font-bold ${d.status==='Erledigt'?'bg-emerald-50 text-ecbGreen':'bg-amber-50 text-amber-600'}">${d.status}</span><button onclick="deleteDguvDevice('${d.firestoreId||''}', ${i})" class="text-red-500 cursor-pointer"><i class="fa-solid fa-trash"></i></button></div>
-                        <h3 class="text-xl font-bold mt-2">${d.name}</h3>
+                        <h3 class="text-xl font-bold mt-2 text-slate-900">${d.name}</h3>
                         <p class="text-xs text-sky-700 mt-1">Nr.: ${d.inventoryNumber} | ${d.location}</p>
                         <p class="text-xs text-slate-500 mt-1">Fällig: ${d.dueDate}</p>
                     </div>
@@ -945,10 +977,10 @@
             let y = 15;
 
             // Green Header Background
-            doc.setFillColor(101, 163, 13); // #65a30d
+            doc.setFillColor(101, 163, 13);
             doc.rect(0, 0, pageWidth, 32, 'F');
 
-            // Draw exact SVG Logo on PDF Header
+            // Draw exact ECB Logo on PDF Header
             try {
                 const canvasLogo = document.createElement('canvas');
                 canvasLogo.width = 120; canvasLogo.height = 120;
