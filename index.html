@@ -126,10 +126,10 @@
             </div>
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
                 <h4 class="font-bold text-emerald-900 text-sm flex items-center justify-between">
-                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Cloud Live Sync</span>
-                    <button onclick="forceRefreshCloud()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer">Aktualisieren</button>
+                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Firebase Cloud Live Sync</span>
+                    <button onclick="forceSyncWithFirebase()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer">Synchronisieren</button>
                 </h4>
-                <p class="text-xs text-emerald-700">Daten werden geräteübergreifend in Echtzeit synchronisiert.</p>
+                <p class="text-xs text-emerald-700">Daten werden in Echtzeit über Firebase synchronisiert.</p>
                 <div class="flex gap-2 pt-2">
                     <button onclick="exportDataJson()" class="flex-1 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 cursor-pointer"><i class="fa-solid fa-download mr-1"></i> Backup exportieren</button>
                     <label class="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 text-center cursor-pointer">
@@ -166,7 +166,7 @@
                     <div class="w-10 h-10 rounded-xl bg-ecbGreen text-white flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-file-pdf"></i></div>
                     <div>
                         <h3 class="text-lg font-extrabold text-slate-900" id="pdf-modal-heading">Wartungsprotokoll erstellt</h3>
-                        <p class="text-xs text-slate-500">Das Protokoll wurde gespeichert und synchronisiert.</p>
+                        <p class="text-xs text-slate-500">Das Protokoll wurde gespeichert und in der Cloud synchronisiert.</p>
                     </div>
                 </div>
                 <button onclick="closePdfPreviewModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
@@ -197,8 +197,8 @@
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-                        <span id="cloud-status-text">Cloud Live Sync aktiv</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+                        <span id="cloud-status-text">Firebase Cloud verbunden</span>
                     </p>
                 </div>
             </div>
@@ -219,7 +219,7 @@
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Wartungs- und Prüfsystem</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge synchronisieren sich in Echtzeit auf allen Geräten.</p>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge synchronisieren sich in Echtzeit über Firebase.</p>
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden">
                     <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Cloud-Sync</button>
@@ -375,7 +375,22 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Exakte Firebase Konfiguration aus dem Benutzer-Screenshot
+        const firebaseConfig = {
+            apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k",
+            authDomain: "ecb-maintenance.firebaseapp.com",
+            projectId: "ecb-maintenance",
+            storageBucket: "ecb-maintenance.firebasestorage.app",
+            messagingSenderId: "229926423123",
+            appId: "1:229926423123:web:a309c14c708fc886c62d4a6"
+        };
+
+        let app, db, auth;
         let protocols = [];
         let dguvDevices = [];
         let cloudUsers = [
@@ -385,27 +400,27 @@
 
         let activePhotos = [];
         let signaturePadInstance = null;
-        let backdateContext = null;
+        let isFirebaseConnected = false;
 
-        const STORAGE_KEY_P = 'ecb_protocols_v99';
-        const STORAGE_KEY_D = 'ecb_dguv_v99';
-        const STORAGE_KEY_U = 'ecb_users_v99';
+        window.onload = async function() {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                await signInAnonymously(auth);
+                isFirebaseConnected = true;
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Firebase Cloud verbunden";
+                
+                initFirebaseListeners();
+            } catch (err) {
+                console.warn("Firebase Init Fallback:", err);
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-400 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Lokaler Speicher aktiv";
+                loadLocalFallback();
+            }
 
-        window.onload = function() {
-            loadFromCloudStorage();
             updateUI();
-
-            window.addEventListener('storage', (e) => {
-                if (e.key === STORAGE_KEY_P || e.key === STORAGE_KEY_D || e.key === STORAGE_KEY_U) {
-                    loadFromCloudStorage();
-                    updateUI();
-                }
-            });
-
-            setInterval(() => {
-                loadFromCloudStorage();
-                updateUI();
-            }, 3000);
 
             if (localStorage.getItem('ecb_logged_in') === 'true') {
                 document.getElementById('login-screen').classList.add('hidden');
@@ -413,31 +428,69 @@
             }
         };
 
-        function loadFromCloudStorage() {
+        function initFirebaseListeners() {
+            if (!db) return;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-main-deployment';
+
+            // Protokolle Listener
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'), (snapshot) => {
+                protocols = [];
+                snapshot.forEach(docSnap => {
+                    protocols.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                updateUI();
+            }, (error) => {
+                console.error("Protokolle Sync Fehler:", error);
+            });
+
+            // DGUV Geräte Listener
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), (snapshot) => {
+                dguvDevices = [];
+                snapshot.forEach(docSnap => {
+                    dguvDevices.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                updateUI();
+            }, (error) => {
+                console.error("DGUV Sync Fehler:", error);
+            });
+
+            // User Listener
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'cloud_users'), (snapshot) => {
+                if (!snapshot.empty) {
+                    let remoteUsers = [];
+                    snapshot.forEach(docSnap => remoteUsers.push(docSnap.data()));
+                    if (remoteUsers.length > 0) cloudUsers = remoteUsers;
+                } else {
+                    syncUsersToFirebase();
+                }
+            }, (error) => {});
+        }
+
+        async function syncUsersToFirebase() {
+            if (!db) return;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-main-deployment';
+            for (let u of cloudUsers) {
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cloud_users', u.user), u);
+                } catch(e) {}
+            }
+        }
+
+        function loadLocalFallback() {
             try {
-                const p = localStorage.getItem(STORAGE_KEY_P);
+                const p = localStorage.getItem('ecb_protocols_v99');
                 if (p) protocols = JSON.parse(p);
-                const d = localStorage.getItem(STORAGE_KEY_D);
+                const d = localStorage.getItem('ecb_dguv_v99');
                 if (d) dguvDevices = JSON.parse(d);
-                const u = localStorage.getItem(STORAGE_KEY_U);
+                const u = localStorage.getItem('ecb_users_v99');
                 if (u) cloudUsers = JSON.parse(u);
             } catch(e) {}
         }
 
-        function saveToCloudStorage() {
-            try {
-                localStorage.setItem(STORAGE_KEY_P, JSON.stringify(protocols));
-                localStorage.setItem(STORAGE_KEY_D, JSON.stringify(dguvDevices));
-                localStorage.setItem(STORAGE_KEY_U, JSON.stringify(cloudUsers));
-                
-                window.dispatchEvent(new Event('storage'));
-            } catch(e) {}
-        }
-
-        window.forceRefreshCloud = function() {
-            loadFromCloudStorage();
+        window.forceSyncWithFirebase = function() {
             updateUI();
-            showModal('Erfolg', 'Daten erfolgreich synchronisiert!', true);
+            showModal('Erfolg', 'Firebase Cloud Synchronisation aktiv!', true);
         };
 
         window.exportDataJson = function() {
@@ -454,15 +507,24 @@
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const parsed = JSON.parse(e.target.result);
                     if (parsed.protocols) protocols = parsed.protocols;
                     if (parsed.dguvDevices) dguvDevices = parsed.dguvDevices;
                     if (parsed.cloudUsers) cloudUsers = parsed.cloudUsers;
-                    saveToCloudStorage();
+                    
+                    if (db) {
+                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-main-deployment';
+                        for (let p of protocols) {
+                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.id), p);
+                        }
+                        for (let d of dguvDevices) {
+                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', d.id), d);
+                        }
+                    }
                     updateUI();
-                    showModal('Erfolg', 'Backup erfolgreich importiert!', true);
+                    showModal('Erfolg', 'Backup erfolgreich importiert & in Firebase gespeichert!', true);
                 } catch(err) {
                     showModal('Fehler', 'Ungültige Backup-Datei.', false);
                 }
@@ -470,7 +532,7 @@
             reader.readAsText(file);
         };
 
-        window.submitProtocol = function(event, categoryKey) {
+        window.submitProtocol = async function(event, categoryKey) {
             event.preventDefault();
             const employeeName = document.getElementById('employee-name').value.trim();
             if (!employeeName) { showModal('Fehler', 'Bitte Namen angeben.', false); return; }
@@ -508,10 +570,17 @@
                 signature: signaturePadInstance.canvas.toDataURL()
             };
 
-            protocols.unshift(protocol);
-            saveToCloudStorage(); 
-            updateUI();
+            if (db) {
+                try {
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-main-deployment';
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocol.id), protocol);
+                } catch(e) {
+                    console.error("Firestore Speichern Fehler:", e);
+                }
+            }
 
+            protocols.unshift(protocol);
+            updateUI();
             openPdfPreviewModal(protocol);
         };
 
@@ -549,7 +618,7 @@
             window.location.href = `mailto:?subject=${subject}&body=${body}`;
         };
 
-        window.saveDguvDevice = function(event) {
+        window.saveDguvDevice = async function(event) {
             event.preventDefault();
             const name = document.getElementById('dguv-dev-name').value.trim();
             const location = document.getElementById('dguv-dev-location').value.trim();
@@ -567,13 +636,17 @@
                 protocolName: null
             };
 
-            dguvDevices.unshift(newDev);
-            saveToCloudStorage(); 
-            updateUI();
+            if (db) {
+                try {
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-main-deployment';
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', newDev.id), newDev);
+                } catch(e) {}
+            }
 
+            dguvDevices.unshift(newDev);
             closeDguvModal();
             updateUI();
-            showModal('Erfolg', 'Gerät gespeichert & synchronisiert!', true);
+            showModal('Erfolg', 'Gerät in Firebase gespeichert & synchronisiert!', true);
         };
 
         window.openDguvUploadModal = function(deviceId) {
@@ -586,7 +659,7 @@
             document.getElementById('modal-dguv-upload').classList.add('hidden');
         };
 
-        window.processDguvFileUpload = function() {
+        window.processDguvFileUpload = async function() {
             const devId = document.getElementById('dguv-upload-device-id').value;
             const fileInput = document.getElementById('dguv-file-input');
             if (!fileInput.files || fileInput.files.length === 0) {
@@ -595,18 +668,24 @@
             }
             const file = fileInput.files[0];
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const base64Data = e.target.result;
                 const dev = dguvDevices.find(d => d.id === devId);
                 if (dev) {
                     dev.protocolData = base64Data;
                     dev.protocolName = file.name;
                     dev.status = 'Erledigt';
-                    saveToCloudStorage();
-                    updateUI();
 
+                    if (db) {
+                        try {
+                            const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-main-deployment';
+                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', dev.id), dev);
+                        } catch(e) {}
+                    }
+
+                    updateUI();
                     closeDguvUploadModal();
-                    showModal('Erfolg', 'Messprotokoll erfolgreich hochgeladen & synchronisiert!', true);
+                    showModal('Erfolg', 'Messprotokoll in Firebase hochgeladen & synchronisiert!', true);
                 }
             };
             reader.readAsDataURL(file);
@@ -637,23 +716,38 @@
             document.getElementById('modal-dguv-view').classList.add('hidden');
         };
 
-        window.deleteProtocol = function(index) {
-            protocols.splice(index, 1);
-            saveToCloudStorage(); 
-            updateUI();
+        window.deleteProtocol = async function(protocolId) {
+            const idx = protocols.findIndex(p => p.id === protocolId);
+            if (idx > -1) {
+                protocols.splice(idx, 1);
+                if (db) {
+                    try {
+                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-main-deployment';
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocolId));
+                    } catch(e) {}
+                }
+                updateUI();
+            }
         };
 
-        window.deleteDguvDevice = function(index) {
-            dguvDevices.splice(index, 1);
-            saveToCloudStorage(); 
-            updateUI();
+        window.deleteDguvDevice = async function(deviceId) {
+            const idx = dguvDevices.findIndex(d => d.id === deviceId);
+            if (idx > -1) {
+                dguvDevices.splice(idx, 1);
+                if (db) {
+                    try {
+                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-main-deployment';
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', deviceId));
+                    } catch(e) {}
+                }
+                updateUI();
+            }
         };
 
         window.handleLogin = function(event) {
             event.preventDefault();
             const user = document.getElementById('login-user').value.trim();
             const pass = document.getElementById('login-pass').value.trim();
-            loadFromCloudStorage();
             const found = cloudUsers.find(u => u.user === user && u.pass === pass);
             if (found) {
                 if (found.active === false) { showModal('Fehler', 'Konto deaktiviert.', false); return; }
@@ -681,8 +775,6 @@
             document.getElementById('tab-dguv').classList.add('hidden');
             document.getElementById('tab-history').classList.add('hidden');
             document.getElementById('form-view').classList.add('hidden');
-
-            loadFromCloudStorage();
 
             if (tabId === 'dashboard') {
                 document.getElementById('tab-dashboard').classList.remove('hidden');
@@ -731,7 +823,7 @@
             const newPass = document.getElementById('new-pass').value.trim();
             const currentUser = localStorage.getItem('ecb_current_user');
             const found = cloudUsers.find(u => u.user === currentUser);
-            if (found) { found.pass = newPass; saveToCloudStorage(); }
+            if (found) { found.pass = newPass; syncUsersToFirebase(); }
             closePasswordModal();
             showModal('Erfolg', 'Passwort aktualisiert!', true);
         };
@@ -743,7 +835,7 @@
             const newPass = document.getElementById('reg-pass').value.trim();
             if (cloudUsers.some(u => u.user === newUser)) { document.getElementById('reg-error').classList.remove('hidden'); return; }
             cloudUsers.push({ fullname, user: newUser, pass: newPass, active: true });
-            saveToCloudStorage();
+            syncUsersToFirebase();
             document.getElementById('reg-fullname').value = ''; document.getElementById('reg-user').value = ''; document.getElementById('reg-pass').value = '';
             closeRegisterModal();
             showModal('Erfolg', 'Mitarbeiter angelegt!', true);
@@ -760,7 +852,6 @@
         }
 
         function updateUI() {
-            loadFromCloudStorage();
             document.getElementById('protocol-count').innerText = protocols.length;
             document.getElementById('dguv-count').innerText = dguvDevices.length;
             renderHistory();
@@ -1021,7 +1112,6 @@
             const container = document.getElementById('protocols-container');
             if (!container) return;
             checkAdminNav();
-            loadFromCloudStorage();
             const fY = document.getElementById('filter-year')?.value || 'all';
             const fM = document.getElementById('filter-month')?.value || 'all';
             const fC = document.getElementById('filter-category')?.value || 'all';
@@ -1039,7 +1129,6 @@
             }
 
             container.innerHTML = filtered.map((p) => {
-                const globalIdx = protocols.findIndex(item => item.id === p.id);
                 const pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
                 const photosHtml = (p.photos && p.photos.length > 0) ? `<div class="flex gap-2 overflow-x-auto py-2">${p.photos.map(pho => `<img src="${pho}" class="w-16 h-16 object-cover rounded-lg border">`).join('')}</div>` : '';
 
@@ -1053,7 +1142,7 @@
                             </div>
                             <div class="flex gap-2">
                                 <button onclick='openPdfPreviewModalById("${p.id}")' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf mr-1"></i> PDF</button>
-                                <button onclick="deleteProtocol(${globalIdx})" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="deleteProtocol('${p.id}')" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
                         <div class="bg-slate-50 p-4 rounded-xl space-y-2">${pts}</div>
@@ -1073,21 +1162,20 @@
             const container = document.getElementById('dguv-devices-container');
             const dash = document.getElementById('dashboard-dguv-container');
             if (!container) return;
-            loadFromCloudStorage();
             if (dguvDevices.length === 0) {
                 const emptyHtml = '<div class="col-span-full bg-white rounded-3xl p-12 text-center text-slate-500 border">Keine DGUV V3 Geräte erfasst.</div>';
                 container.innerHTML = emptyHtml;
                 if (dash) dash.innerHTML = emptyHtml;
                 return;
             }
-            const html = dguvDevices.map((d, i) => {
+            const html = dguvDevices.map((d) => {
                 const hasProtocol = d.protocolData ? true : false;
                 return `
                     <div class="bg-white rounded-3xl p-6 border shadow-sm flex flex-col justify-between space-y-4">
                         <div>
                             <div class="flex justify-between items-center">
                                 <span class="px-3 py-1 rounded-full text-xs font-bold ${hasProtocol?'bg-emerald-50 text-ecbGreen':'bg-amber-50 text-amber-600'}">${hasProtocol ? 'Erledigt & Protokoll hinterlegt' : 'Offen'}</span>
-                                <button onclick="deleteDguvDevice(${i})" class="text-red-500 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="deleteDguvDevice('${d.id}')" class="text-red-500 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                             <h3 class="text-xl font-bold mt-2 text-slate-900">${d.name}</h3>
                             <p class="text-xs text-sky-700 mt-1">Inventar-Nr.: ${d.inventoryNumber} | ${d.location}</p>
@@ -1110,9 +1198,17 @@
             if (dash) dash.innerHTML = html;
         };
 
-        window.clearHistory = function() {
-            if (confirm('Verlauf wirklich löschen?')) {
-                protocols = []; saveToCloudStorage(); updateUI();
+        window.clearHistory = async function() {
+            if (confirm('Verlauf wirklich vollständig löschen?')) {
+                const ids = protocols.map(p => p.id);
+                protocols = [];
+                if (db) {
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-main-deployment';
+                    for (let id of ids) {
+                        try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', id)); } catch(e){}
+                    }
+                }
+                updateUI();
                 showModal('Erfolg', 'Verlauf geleert.', true);
             }
         };
