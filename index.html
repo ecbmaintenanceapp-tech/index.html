@@ -126,10 +126,10 @@
             </div>
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
                 <h4 class="font-bold text-emerald-900 text-sm flex items-center justify-between">
-                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Cloud &amp; Live Sync</span>
-                    <button onclick="triggerCloudSync()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer">Synchronisieren</button>
+                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Firebase Live Sync</span>
+                    <button onclick="forceRefreshCloud()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer">Aktualisieren</button>
                 </h4>
-                <p class="text-xs text-emerald-700">Alle Protokolle und DGUV-Geräte synchronisieren sich automatisch in Echtzeit zwischen allen Endgeräten.</p>
+                <p class="text-xs text-emerald-700">Daten werden in Echtzeit über die Firebase Cloud synchronisiert.</p>
                 <div class="flex gap-2 pt-2">
                     <button onclick="exportDataJson()" class="flex-1 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 cursor-pointer"><i class="fa-solid fa-download mr-1"></i> Backup exportieren</button>
                     <label class="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 text-center cursor-pointer">
@@ -197,8 +197,8 @@
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Cloud Live Sync aktiv</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+                        <span id="cloud-status-text">Verbinde mit Firebase Cloud...</span>
                     </p>
                 </div>
             </div>
@@ -378,7 +378,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-maintenance-cloud';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
@@ -406,7 +406,6 @@
         let activePhotos = [];
         let signaturePadInstance = null;
         let backdateContext = null;
-        let broadcastChannel = null;
 
         window.onload = async function() {
             loadLocalCache();
@@ -427,7 +426,7 @@
                     if (user) {
                         userId = user.uid;
                         document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse";
-                        document.getElementById('cloud-status-text').innerText = "Cloud Live Sync aktiv";
+                        document.getElementById('cloud-status-text').innerText = "Firebase Live Sync aktiv";
                         initRealtimeCloudSync();
                     } else {
                         await signInAnonymously(auth);
@@ -436,21 +435,9 @@
 
             } catch (err) {
                 console.warn("Firebase initialization warning:", err);
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-400 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Lokal / Broadcast Modus";
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-red-500 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Cloud-Verbindung fehlgeschlagen";
             }
-
-            try {
-                broadcastChannel = new BroadcastChannel('ecb_maintenance_sync_channel');
-                broadcastChannel.onmessage = (event) => {
-                    if (event.data && event.data.type === 'SYNC_DATA') {
-                        if (event.data.protocols) protocols = event.data.protocols;
-                        if (event.data.dguvDevices) dguvDevices = event.data.dguvDevices;
-                        saveLocalCache();
-                        updateUI();
-                    }
-                };
-            } catch(e) {}
 
             if (localStorage.getItem('ecb_logged_in') === 'true') {
                 document.getElementById('login-screen').classList.add('hidden');
@@ -474,9 +461,6 @@
                 localStorage.setItem('ecb_protocols_v77', JSON.stringify(protocols));
                 localStorage.setItem('ecb_dguv_v77', JSON.stringify(dguvDevices));
                 localStorage.setItem('ecb_users_v77', JSON.stringify(cloudUsers));
-                if (broadcastChannel) {
-                    broadcastChannel.postMessage({ type: 'SYNC_DATA', protocols, dguvDevices });
-                }
             } catch(e) {}
         }
 
@@ -512,7 +496,7 @@
             }, (error) => { console.warn("DGUV sync warning:", error); });
         }
 
-        window.triggerCloudSync = async function() {
+        window.forceRefreshCloud = async function() {
             if (!db) { showModal('Hinweis', 'Cloud nicht verfügbar.', false); return; }
             try {
                 const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
@@ -585,8 +569,10 @@
             const protocolDate = backdateContext ? backdateContext.dateString : new Date().toLocaleString('de-DE');
             const protocolTimestamp = backdateContext ? backdateContext.timestamp : new Date().getTime();
 
+            const protocolIdGen = 'ECB-' + Math.floor(100000 + Math.random() * 900000);
+
             const protocol = {
-                id: 'ECB-' + Math.floor(100000 + Math.random() * 900000),
+                id: protocolIdGen,
                 category: categoryKey,
                 machine: machineName,
                 employee: employeeName,
@@ -1381,4 +1367,4 @@
         }
     </script>
 </body>
-</html> 
+</html>
