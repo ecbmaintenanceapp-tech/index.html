@@ -91,7 +91,6 @@
 </head>
 <body class="text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
-    <!-- Login Screen -->
     <div id="login-screen" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 space-y-6 animate-fade-in">
             <div class="text-center space-y-2">
@@ -121,7 +120,6 @@
         </div>
     </div>
 
-    <!-- Admin & Register Modal -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -150,7 +148,6 @@
         </div>
     </div>
 
-    <!-- Password Modal -->
     <div id="modal-password" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4"><h3 class="text-xl font-extrabold text-slate-900">Passwort ändern</h3><button onclick="closePasswordModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
@@ -161,7 +158,6 @@
         </div>
     </div>
 
-    <!-- PDF Preview & Share Modal -->
     <div id="modal-pdf-preview" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl border max-h-[92vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3">
@@ -186,7 +182,6 @@
         </div>
     </div>
 
-    <!-- Header -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
@@ -201,8 +196,8 @@
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Cloud Live Sync aktiv</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+                        <span id="cloud-status-text">Verbinde mit Firebase Cloud...</span>
                     </p>
                 </div>
             </div>
@@ -217,7 +212,6 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
         <!-- Dashboard Tab -->
         <div id="tab-dashboard" class="space-y-8 animate-fade-in">
@@ -337,7 +331,6 @@
         </div>
     </main>
 
-    <!-- DGUV Modal -->
     <div id="modal-dguv" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border">
             <div class="flex justify-between items-center border-b pb-4"><h3 class="text-xl font-extrabold">DGUV V3 Gerät erfassen</h3><button onclick="closeDguvModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
@@ -395,7 +388,6 @@
         </div>
     </div>
 
-    <!-- Firebase & App Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -469,20 +461,20 @@
 
         function loadLocalCache() {
             try {
-                const p = localStorage.getItem('ecb_protocols_v70');
+                const p = localStorage.getItem('ecb_protocols_v75');
                 if (p) protocols = JSON.parse(p);
-                const d = localStorage.getItem('ecb_dguv_v70');
+                const d = localStorage.getItem('ecb_dguv_v75');
                 if (d) dguvDevices = JSON.parse(d);
-                const u = localStorage.getItem('ecb_users_v70');
+                const u = localStorage.getItem('ecb_users_v75');
                 if (u) cloudUsers = JSON.parse(u);
             } catch(e) {}
         }
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_v70', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v70', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v70', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_v75', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v75', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v75', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
@@ -1150,7 +1142,7 @@
                                 <p class="text-xs text-slate-500 mt-1">Nr.: ${p.id} | ${p.date} | ${p.employee} ${p.runtime ? `| ${p.runtime} Std.` : ''}</p>
                             </div>
                             <div class="flex gap-2">
-                                <button onclick='generatePDFById("${p.id}")' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf mr-1"></i> PDF</button>
+                                <button onclick='openPdfPreviewModalById("${p.id}")' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf mr-1"></i> PDF</button>
                                 <button onclick="deleteProtocol('${p.firestoreId || ''}', ${globalIdx})" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
@@ -1160,6 +1152,13 @@
                     </div>
                 `;
             }).join('');
+        };
+
+        window.openPdfPreviewModalById = function(protocolId) {
+            const p = protocols.find(item => item.id === protocolId);
+            if (p) {
+                openPdfPreviewModal(p);
+            }
         };
 
         window.renderDguvDevices = function() {
