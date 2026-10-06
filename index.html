@@ -25,26 +25,74 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top right, #f4fbf1, #f1f5f9); }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #f4fbf1 0%, #f1f5f9 50%, #f8fafc 100%);
+            background-attachment: fixed;
+        }
         .signature-canvas { touch-action: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .checkpoint-card { transition: all 0.25s ease-in-out; }
-        .checkpoint-card:hover { background-color: #f7fee7; border-color: #65a30d; transform: translateY(-1px); box-shadow: 0 4px 12px -2px rgba(101, 163, 13, 0.12); }
-        /* Interactive Dashboard Cards Custom Colors */
-        .card-washer { background: linear-gradient(135deg, #ffffff 0%, #f7fee7 100%); }
-        .card-washer:hover { background: linear-gradient(135deg, #ffffff 0%, #ecfccb 100%); border-color: #65a30d; }
-        .card-dryer { background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%); }
-        .card-dryer:hover { background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%); border-color: #f59e0b; }
-        .card-comp2w { background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); }
-        .card-comp2w:hover { background: linear-gradient(135deg, #ffffff 0%, #dcfce7 100%); border-color: #10b981; }
-        .card-compyear { background: linear-gradient(135deg, #ffffff 0%, #faf5ff 100%); }
-        .card-compyear:hover { background: linear-gradient(135deg, #ffffff 0%, #f3e8ff 100%); border-color: #a855f7; }
+        
+        /* Dezent gestaltete Checkpoint-Karten mit sanftem Farbwechsel beim Hover & Auswahl */
+        .checkpoint-card { 
+            transition: all 0.25s ease-in-out; 
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e2e8f0;
+        }
+        .checkpoint-card:hover { 
+            background: linear-gradient(135deg, #f7fee7 0%, #ecfccb 100%); 
+            border-color: #65a30d; 
+            transform: translateY(-1px); 
+            box-shadow: 0 4px 12px -2px rgba(101, 163, 13, 0.15); 
+        }
+
+        /* Hervorgehobene Interaktionsflächen im Dashboard mit satten, schönen Farbverläufen */
+        .card-washer { 
+            background: linear-gradient(135deg, #ffffff 0%, #f4fbf1 100%); 
+            border: 1px solid #d9f99d;
+        }
+        .card-washer:hover { 
+            background: linear-gradient(135deg, #ecfccb 0%, #d9f99d 100%); 
+            border-color: #65a30d; 
+            box-shadow: 0 10px 25px -5px rgba(101, 163, 13, 0.2);
+        }
+
+        .card-dryer { 
+            background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%); 
+            border: 1px solid #fde68a;
+        }
+        .card-dryer:hover { 
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); 
+            border-color: #f59e0b; 
+            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.2);
+        }
+
+        .card-comp2w { 
+            background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%); 
+            border: 1px solid #a7f3d0;
+        }
+        .card-comp2w:hover { 
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
+            border-color: #10b981; 
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.2);
+        }
+
+        .card-compyear { 
+            background: linear-gradient(135deg, #ffffff 0%, #f3e8ff 100%); 
+            border: 1px solid #e9d5ff;
+        }
+        .card-compyear:hover { 
+            background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%); 
+            border-color: #a855f7; 
+            box-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.2);
+        }
     </style>
 </head>
 <body class="text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
-    <div id="login-screen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <!-- Login Screen -->
+    <div id="login-screen" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 space-y-6 animate-fade-in">
             <div class="text-center space-y-2">
                 <div class="w-16 h-16 rounded-2xl bg-[#65a30d] p-1 mx-auto shadow-md flex items-center justify-center overflow-hidden">
@@ -73,6 +121,7 @@
         </div>
     </div>
 
+    <!-- Admin & Register Modal -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -81,7 +130,7 @@
             </div>
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-2">
                 <h4 class="font-bold text-emerald-900 text-sm"><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Cloud-Live-Sync aktiv</h4>
-                <p class="text-xs text-emerald-700">Alle Protokolle und Prüfungen werden in Echtzeit zwischen sämtlichen Endgeräten synchronisiert.</p>
+                <p class="text-xs text-emerald-700">Alle Protokolle und Prüfungen werden vollautomatisch in Echtzeit zwischen sämtlichen Endgeräten synchronisiert.</p>
             </div>
             <form onsubmit="handleRegister(event)" class="space-y-4 pb-6 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-user-plus mr-1 text-ecbGreen"></i> Neuen Mitarbeiter anlegen</h4>
@@ -101,6 +150,7 @@
         </div>
     </div>
 
+    <!-- Password Modal -->
     <div id="modal-password" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4"><h3 class="text-xl font-extrabold text-slate-900">Passwort ändern</h3><button onclick="closePasswordModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
@@ -111,6 +161,32 @@
         </div>
     </div>
 
+    <!-- PDF Preview & Share Modal -->
+    <div id="modal-pdf-preview" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl border max-h-[92vh] flex flex-col">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 rounded-xl bg-ecbGreen text-white flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-file-pdf"></i></div>
+                    <div>
+                        <h3 class="text-lg font-extrabold text-slate-900" id="pdf-modal-heading">Wartungsprotokoll erstellt</h3>
+                        <p class="text-xs text-slate-500">Das Protokoll wurde erfolgreich in der Cloud gespeichert und synchronisiert.</p>
+                    </div>
+                </div>
+                <button onclick="closePdfPreviewModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <input type="hidden" id="current-preview-pdf-id">
+            <div id="pdf-preview-container" class="flex-grow overflow-auto flex items-center justify-center bg-slate-100 rounded-2xl p-4 min-h-[400px]"></div>
+            <div class="flex flex-wrap justify-between items-center gap-3 pt-2">
+                <button type="button" onclick="shareProtocolEmail()" class="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-sm shadow transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-envelope"><span>Per E-Mail versenden</span></i></button>
+                <div class="flex gap-2">
+                    <button type="button" onclick="downloadCurrentProtocolPDF()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-download"></i> Herunterladen</button>
+                    <button type="button" onclick="closePdfPreviewModal(); switchTab('history');" class="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold text-sm transition cursor-pointer">Zu den Protokollen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
@@ -141,14 +217,15 @@
         </div>
     </header>
 
+    <!-- Main Content -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
         <!-- Dashboard Tab -->
         <div id="tab-dashboard" class="space-y-8 animate-fade-in">
-            <div class="bg-gradient-to-br from-white via-emerald-50/30 to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
+            <div class="bg-gradient-to-br from-white via-emerald-50/40 to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Wartungs- und Prüfsystem</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge synchronisieren sich vollautomatisch in Echtzeit.</p>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge synchronisieren sich vollautomatisch in Echtzeit auf allen Geräten.</p>
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden">
                     <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Backup</button>
@@ -158,57 +235,58 @@
             <!-- Interaktive Dashboard Karten mit farbiger Hinterlegung -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Waschmaschinen Card -->
-                <div onclick="openWashingMachineMenu()" class="card-washer rounded-3xl p-6 shadow-sm border border-lime-200 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openWashingMachineMenu()" class="card-washer rounded-3xl p-6 shadow-sm transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Waschmaschine" class="absolute top-4 right-4"></div>
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-[#ecfccb] text-[#3f6212] flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-shirt"></i></div>
+                        <div class="w-14 h-14 rounded-2xl bg-lime-100 text-[#3f6212] flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-shirt"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Milnor Waschmaschinen</h3>
                         <p class="text-xs font-semibold text-ecbDarkGreen mt-1 uppercase tracking-wider">4 Maschinen (1-4)</p>
-                        <div id="due-Waschmaschine" class="mt-3 text-xs font-bold text-slate-700 bg-white/80 p-2.5 rounded-xl border border-lime-100 shadow-sm">Berechne...</div>
+                        <div id="due-Waschmaschine" class="mt-3 text-xs font-bold text-slate-700 bg-white/90 p-2.5 rounded-xl border border-lime-200 shadow-sm">Berechne...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-ecbDarkGreen"><span>Starten</span><div class="w-8 h-8 rounded-full bg-[#ecfccb] flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-ecbDarkGreen"><span>Starten</span><div class="w-8 h-8 rounded-full bg-lime-200 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
                 <!-- Trockner Card -->
-                <div onclick="openDryerMenu()" class="card-dryer rounded-3xl p-6 shadow-sm border border-amber-200 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openDryerMenu()" class="card-dryer rounded-3xl p-6 shadow-sm transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Trockner" class="absolute top-4 right-4"></div>
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-wind"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Trockner</h3>
                         <p class="text-xs font-semibold text-amber-800 mt-1 uppercase tracking-wider">4 Trockner (1-4)</p>
-                        <div id="due-Trockner" class="mt-3 text-xs font-bold text-slate-700 bg-white/80 p-2.5 rounded-xl border border-amber-100 shadow-sm">Berechne...</div>
+                        <div id="due-Trockner" class="mt-3 text-xs font-bold text-slate-700 bg-white/90 p-2.5 rounded-xl border border-amber-200 shadow-sm">Berechne...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-amber-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-amber-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
                 <!-- Kompressor 2-Wochen Card -->
-                <div onclick="openCompressorRoutine()" class="card-comp2w rounded-3xl p-6 shadow-sm border border-emerald-200 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openCompressorRoutine()" class="card-comp2w rounded-3xl p-6 shadow-sm transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor 2-Wochen" class="absolute top-4 right-4"></div>
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-gauge-high"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Kompressor 2-Wochen</h3>
                         <p class="text-xs font-semibold text-emerald-800 mt-1 uppercase tracking-wider">Intervall: 2 Wochen</p>
-                        <div id="due-Kompressor 2-Wochen" class="mt-3 text-xs font-bold text-slate-700 bg-white/80 p-2.5 rounded-xl border border-emerald-100 shadow-sm">Berechne...</div>
+                        <div id="due-Kompressor 2-Wochen" class="mt-3 text-xs font-bold text-slate-700 bg-white/90 p-2.5 rounded-xl border border-emerald-200 shadow-sm">Berechne...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-emerald-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-emerald-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
                 <!-- Kompressor Jahreswartung Card -->
-                <div onclick="openCompressorAnnual()" class="card-compyear rounded-3xl p-6 shadow-sm border border-purple-200 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openCompressorAnnual()" class="card-compyear rounded-3xl p-6 shadow-sm transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor Jahreswartung" class="absolute top-4 right-4"></div>
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-calendar-days"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Kompressor Jahreswartung</h3>
                         <p class="text-xs font-semibold text-purple-800 mt-1 uppercase tracking-wider">Umfassend • 180 Tage</p>
-                        <div id="due-Kompressor Jahreswartung" class="mt-3 text-xs font-bold text-slate-700 bg-white/80 p-2.5 rounded-xl border border-purple-100 shadow-sm">Berechne...</div>
+                        <div id="due-Kompressor Jahreswartung" class="mt-3 text-xs font-bold text-slate-700 bg-white/90 p-2.5 rounded-xl border border-purple-200 shadow-sm">Berechne...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-purple-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-purple-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
             </div>
 
+            <!-- Dashboard DGUV Section -->
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border space-y-6">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b pb-5">
-                    <div><span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase">Prüfmanagement</span><h3 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen</h3></div>
+                    <div><span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase">Prüfmanagement</span><h3 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen &amp; Messprotokolle</h3></div>
                     <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm shadow-lg transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plus"></i> Gerät erfassen</button>
                 </div>
                 <div id="dashboard-dguv-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -232,7 +310,7 @@
         <!-- DGUV Tab -->
         <div id="tab-dguv" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border flex justify-between items-center">
-                <h2 class="text-2xl font-extrabold text-slate-900">DGUV V3 Prüfungen</h2>
+                <h2 class="text-2xl font-extrabold text-slate-900">DGUV V3 Prüfungen &amp; Messprotokolle</h2>
                 <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm shadow-lg transition cursor-pointer"><i class="fa-solid fa-plus"></i> Neues Gerät</button>
             </div>
             <div id="dguv-devices-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -272,6 +350,41 @@
         </div>
     </div>
 
+    <!-- DGUV Protocol Upload Modal -->
+    <div id="modal-dguv-upload" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border">
+            <div class="flex justify-between items-center border-b pb-4">
+                <h3 class="text-xl font-extrabold" id="dguv-upload-title">Messprotokoll hochladen</h3>
+                <button onclick="closeDguvUploadModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <input type="hidden" id="dguv-upload-device-id">
+            <div class="space-y-4">
+                <div class="p-4 bg-sky-50 rounded-2xl border border-sky-100 text-xs text-sky-800">
+                    Laden Sie hier das DGUV V3 Messprotokoll (Bild oder PDF) hoch. Nach dem Hochladen ist es direkt für alle Nutzer auf allen Endgeräten abrufbar.
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Messprotokoll auswählen:</label>
+                    <input type="file" id="dguv-file-input" accept="image/*,application/pdf" class="w-full border rounded-xl p-3 text-sm bg-slate-50">
+                </div>
+                <button type="button" onclick="processDguvFileUpload()" class="w-full py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold shadow-lg cursor-pointer transition">Protokoll speichern &amp; synchronisieren</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View DGUV Protocol Modal -->
+    <div id="modal-dguv-view" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl border max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-extrabold" id="dguv-view-title">Messprotokoll ansehen</h3>
+                <button onclick="closeDguvViewModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="dguv-view-content" class="flex-grow overflow-auto flex items-center justify-center bg-slate-100 rounded-2xl p-4 min-h-[350px]"></div>
+            <div class="flex justify-end gap-3 pt-2">
+                <a id="dguv-download-link" href="#" download="DGUV_Messprotokoll" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-sm shadow transition"><i class="fa-solid fa-download mr-1"></i> Herunterladen</a>
+            </div>
+        </div>
+    </div>
+
     <!-- Message Modal -->
     <div id="modal-message" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl text-center">
@@ -282,6 +395,7 @@
         </div>
     </div>
 
+    <!-- Firebase & App Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -312,6 +426,8 @@
         let activePhotos = [];
         let signaturePadInstance = null;
         let backdateContext = null;
+        let lastCreatedProtocol = null;
+        let lastGeneratedPdfDataUrl = null;
 
         window.onload = async function() {
             loadLocalCache();
@@ -330,7 +446,6 @@
 
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
-                        console.log("Firebase authenticated successfully:", user.uid);
                         document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse";
                         document.getElementById('cloud-status-text').innerText = "Cloud Live Sync aktiv";
                         initRealtimeCloudSync();
@@ -354,20 +469,20 @@
 
         function loadLocalCache() {
             try {
-                const p = localStorage.getItem('ecb_protocols_v64');
+                const p = localStorage.getItem('ecb_protocols_v70');
                 if (p) protocols = JSON.parse(p);
-                const d = localStorage.getItem('ecb_dguv_v64');
+                const d = localStorage.getItem('ecb_dguv_v70');
                 if (d) dguvDevices = JSON.parse(d);
-                const u = localStorage.getItem('ecb_users_v64');
+                const u = localStorage.getItem('ecb_users_v70');
                 if (u) cloudUsers = JSON.parse(u);
             } catch(e) {}
         }
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_v64', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v64', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v64', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_v70', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v70', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v70', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
@@ -452,9 +567,42 @@
                 } catch(e) { console.warn("Cloud write warning:", e); }
             }
 
-            generatePDF(protocol);
-            showModal('Erfolg', 'Wartungsprotokoll erfolgreich in Cloud gespeichert & im Kalender aktualisiert!', true);
+            lastCreatedProtocol = protocol;
+            lastGeneratedPdfDataUrl = generatePDFDataUri(protocol);
+            openPdfPreviewModal(protocol);
+        };
+
+        window.openPdfPreviewModal = function(p) {
+            document.getElementById('pdf-modal-heading').innerText = `Protokoll ${p.id} (${p.machine})`;
+            document.getElementById('current-preview-pdf-id').value = p.id;
+            const container = document.getElementById('pdf-preview-container');
+            
+            if (lastGeneratedPdfDataUrl) {
+                container.innerHTML = `<iframe src="${lastGeneratedPdfDataUrl}" class="w-full h-[450px] rounded-xl border"></iframe>`;
+            } else {
+                container.innerHTML = `<div class="text-slate-500 font-bold">PDF konnte nicht geladen werden.</div>`;
+            }
+            document.getElementById('modal-pdf-preview').classList.remove('hidden');
+        };
+
+        window.closePdfPreviewModal = function() {
+            document.getElementById('modal-pdf-preview').classList.add('hidden');
             switchTab('history');
+        };
+
+        window.downloadCurrentProtocolPDF = function() {
+            const pId = document.getElementById('current-preview-pdf-id').value;
+            const p = protocols.find(item => item.id === pId);
+            if (p) generatePDF(p);
+        };
+
+        window.shareProtocolEmail = function() {
+            const pId = document.getElementById('current-preview-pdf-id').value;
+            const p = protocols.find(item => item.id === pId);
+            if (!p) return;
+            const subject = encodeURIComponent(`Wartungsprotokoll ${p.id} - ${p.machine}`);
+            const body = encodeURIComponent(`Hallo,\n\nanbei die Daten des Wartungsprotokolls:\n\nProtokoll-Nr: ${p.id}\nAnlage: ${p.machine}\nKategorie: ${p.category}\nDatum: ${p.date}\nTechniker: ${p.employee}\n\nMit freundlichen Grüßen,\nECB Reinigungssysteme`);
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
         };
 
         window.saveDguvDevice = async function(event) {
@@ -471,7 +619,8 @@
                 location,
                 dueDate,
                 status: 'Offen',
-                protocolHistory: []
+                protocolData: null,
+                protocolName: null
             };
 
             dguvDevices.unshift(newDev);
@@ -491,17 +640,91 @@
             showModal('Erfolg', 'Gerät gespeichert & synchronisiert!', true);
         };
 
+        window.openDguvUploadModal = function(deviceId) {
+            document.getElementById('dguv-upload-device-id').value = deviceId;
+            document.getElementById('dguv-file-input').value = '';
+            document.getElementById('modal-dguv-upload').classList.remove('hidden');
+        };
+
+        window.closeDguvUploadModal = function() {
+            document.getElementById('modal-dguv-upload').classList.add('hidden');
+        };
+
+        window.processDguvFileUpload = async function() {
+            const devId = document.getElementById('dguv-upload-device-id').value;
+            const fileInput = document.getElementById('dguv-file-input');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showModal('Fehler', 'Bitte wählen Sie eine Datei aus.', false);
+                return;
+            }
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const base64Data = e.target.result;
+                const dev = dguvDevices.find(d => d.id === devId || d.firestoreId === devId);
+                if (dev) {
+                    dev.protocolData = base64Data;
+                    dev.protocolName = file.name;
+                    dev.status = 'Erledigt';
+                    saveLocalCache();
+                    updateUI();
+
+                    if (db && auth && auth.currentUser && dev.firestoreId) {
+                        try {
+                            const devRef = doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', dev.firestoreId);
+                            await updateDoc(devRef, {
+                                protocolData: base64Data,
+                                protocolName: file.name,
+                                status: 'Erledigt'
+                            });
+                        } catch(err) { console.warn("DGUV Cloud update error:", err); }
+                    }
+
+                    closeDguvUploadModal();
+                    showModal('Erfolg', 'Messprotokoll erfolgreich hochgeladen und synchronisiert!', true);
+                }
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.viewDguvProtocol = function(devId) {
+            const dev = dguvDevices.find(d => d.id === devId || d.firestoreId === devId);
+            if (!dev || !dev.protocolData) {
+                showModal('Hinweis', 'Kein Messprotokoll vorhanden.', false);
+                return;
+            }
+            document.getElementById('dguv-view-title').innerText = `Messprotokoll: ${dev.name}`;
+            const contentDiv = document.getElementById('dguv-view-content');
+            const downloadLink = document.getElementById('dguv-download-link');
+
+            downloadLink.href = dev.protocolData;
+            downloadLink.download = dev.protocolName || 'DGUV_Messprotokoll';
+
+            if (dev.protocolData.startsWith('data:application/pdf')) {
+                contentDiv.innerHTML = `<iframe src="${dev.protocolData}" class="w-full h-[500px] rounded-xl border"></iframe>`;
+            } else {
+                contentDiv.innerHTML = `<img src="${dev.protocolData}" class="max-h-[500px] max-w-full object-contain rounded-xl shadow">`;
+            }
+            document.getElementById('modal-dguv-view').classList.remove('hidden');
+        };
+
+        window.closeDguvViewModal = function() {
+            document.getElementById('modal-dguv-view').classList.add('hidden');
+        };
+
         window.deleteProtocol = async function(firestoreId, index) {
-            if (firestoreId && db) {
-                try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', firestoreId)); } catch(e) {}
+            const target = protocols[index];
+            if (target && target.firestoreId && db) {
+                try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', target.firestoreId)); } catch(e) {}
             }
             protocols.splice(index, 1);
             saveLocalCache(); updateUI();
         };
 
         window.deleteDguvDevice = async function(firestoreId, index) {
-            if (firestoreId && db) {
-                try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', firestoreId)); } catch(e) {}
+            const target = dguvDevices[index];
+            if (target && target.firestoreId && db) {
+                try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', target.firestoreId)); } catch(e) {}
             }
             dguvDevices.splice(index, 1);
             saveLocalCache(); updateUI();
@@ -805,16 +1028,16 @@
 
         function renderCheckPoint(i, title) {
             return `
-                <div class="checkpoint-card p-4 bg-white rounded-2xl border border-slate-200/90 shadow-sm space-y-3" data-title="${title}">
+                <div class="checkpoint-card p-4 rounded-2xl shadow-sm space-y-3" data-title="${title}">
                     <div class="font-bold text-sm text-slate-800 flex items-center gap-2">
-                        <span class="w-6 h-6 rounded-lg bg-emerald-50 text-ecbDarkGreen flex items-center justify-center text-xs font-bold">${i}</span>
+                        <span class="w-6 h-6 rounded-lg bg-emerald-100 text-ecbDarkGreen flex items-center justify-center text-xs font-bold">${i}</span>
                         ${title}
                     </div>
                     <div class="flex gap-4 pt-1">
-                        <label class="cursor-pointer font-semibold text-xs px-4 py-2 rounded-xl bg-emerald-50/80 hover:bg-emerald-100 text-ecbDarkGreen border border-emerald-200 transition flex items-center gap-1.5">
+                        <label class="cursor-pointer font-semibold text-xs px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-ecbDarkGreen border border-emerald-200 transition flex items-center gap-1.5">
                             <input type="radio" name="point_${i}" value="erledigt" checked class="accent-ecbGreen"> OK
                         </label>
-                        <label class="cursor-pointer font-semibold text-xs px-4 py-2 rounded-xl bg-red-50/80 hover:bg-red-100 text-red-700 border border-red-200 transition flex items-center gap-1.5">
+                        <label class="cursor-pointer font-semibold text-xs px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 transition flex items-center gap-1.5">
                             <input type="radio" name="point_${i}" value="nicht in Ordnung" class="accent-red-600"> Mangel
                         </label>
                     </div>
@@ -943,20 +1166,37 @@
             const dash = document.getElementById('dashboard-dguv-container');
             if (!container) return;
             if (dguvDevices.length === 0) {
-                container.innerHTML = '<div class="col-span-full bg-white rounded-3xl p-12 text-center text-slate-500 border">Keine Geräte.</div>';
-                if (dash) dash.innerHTML = container.innerHTML;
+                const emptyHtml = '<div class="col-span-full bg-white rounded-3xl p-12 text-center text-slate-500 border">Keine DGUV V3 Geräte erfasst.</div>';
+                container.innerHTML = emptyHtml;
+                if (dash) dash.innerHTML = emptyHtml;
                 return;
             }
-            const html = dguvDevices.map((d, i) => `
-                <div class="bg-white rounded-3xl p-6 border shadow-sm flex flex-col justify-between">
-                    <div>
-                        <div class="flex justify-between"><span class="px-3 py-1 rounded-full text-xs font-bold ${d.status==='Erledigt'?'bg-emerald-50 text-ecbGreen':'bg-amber-50 text-amber-600'}">${d.status}</span><button onclick="deleteDguvDevice('${d.firestoreId||''}', ${i})" class="text-red-500 cursor-pointer"><i class="fa-solid fa-trash"></i></button></div>
-                        <h3 class="text-xl font-bold mt-2 text-slate-900">${d.name}</h3>
-                        <p class="text-xs text-sky-700 mt-1">Nr.: ${d.inventoryNumber} | ${d.location}</p>
-                        <p class="text-xs text-slate-500 mt-1">Fällig: ${d.dueDate}</p>
+            const html = dguvDevices.map((d, i) => {
+                const hasProtocol = d.protocolData ? true : false;
+                return `
+                    <div class="bg-white rounded-3xl p-6 border shadow-sm flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex justify-between items-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold ${hasProtocol?'bg-emerald-50 text-ecbGreen':'bg-amber-50 text-amber-600'}">${hasProtocol ? 'Erledigt & Protokoll hinterlegt' : 'Offen'}</span>
+                                <button onclick="deleteDguvDevice('${d.firestoreId||''}', ${i})" class="text-red-500 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                            <h3 class="text-xl font-bold mt-2 text-slate-900">${d.name}</h3>
+                            <p class="text-xs text-sky-700 mt-1">Inventar-Nr.: ${d.inventoryNumber} | ${d.location}</p>
+                            <p class="text-xs text-slate-500 mt-1">Prüftermin (Fällig): ${d.dueDate}</p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 flex flex-wrap gap-2">
+                            <button onclick="openDguvUploadModal('${d.id || d.firestoreId}')" class="flex-1 py-2.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-upload"></i> Protokoll hochladen
+                            </button>
+                            ${hasProtocol ? `
+                                <button onclick="viewDguvProtocol('${d.id || d.firestoreId}')" class="py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-eye"></i> Ansehen
+                                </button>
+                            ` : ''}
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             container.innerHTML = html;
             if (dash) dash.innerHTML = html;
         };
@@ -977,7 +1217,7 @@
             generatePDF(p);
         };
 
-        window.generatePDF = function(p) {
+        function generatePDFDataUri(p) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -1110,7 +1350,15 @@
                 try { doc.addImage(p.signature, 'PNG', 15, y, 55, 22); } catch(e) {}
             }
 
-            doc.save(`ECB_Wartungsprotokoll_${p.id}.pdf`);
+            return doc.output('datauristring');
+        }
+
+        window.generatePDF = function(p) {
+            const uri = generatePDFDataUri(p);
+            const link = document.createElement('a');
+            link.href = uri;
+            link.download = `ECB_Wartungsprotokoll_${p.id}.pdf`;
+            link.click();
         }
     </script>
 </body>
