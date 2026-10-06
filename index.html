@@ -577,6 +577,7 @@
             document.getElementById('current-preview-pdf-id').value = p.id;
             const container = document.getElementById('pdf-preview-container');
             
+            lastGeneratedPdfDataUrl = generatePDFDataUri(p);
             if (lastGeneratedPdfDataUrl) {
                 container.innerHTML = `<iframe src="${lastGeneratedPdfDataUrl}" class="w-full h-[450px] rounded-xl border"></iframe>`;
             } else {
