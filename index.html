@@ -34,20 +34,18 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        /* Dezent gestaltete Checkpoint-Karten mit sanftem Farbwechsel beim Hover & Auswahl */
         .checkpoint-card { 
             transition: all 0.25s ease-in-out; 
             background: rgba(255, 255, 255, 0.95);
             border: 1px solid #e2e8f0;
         }
-        .checkpoint-card:hover { 
+        .checkpoint-card:hover, .checkpoint-card:focus-within { 
             background: linear-gradient(135deg, #f7fee7 0%, #ecfccb 100%); 
             border-color: #65a30d; 
             transform: translateY(-1px); 
             box-shadow: 0 4px 12px -2px rgba(101, 163, 13, 0.15); 
         }
 
-        /* Hervorgehobene Interaktionsflächen im Dashboard mit satten, schönen Farbverläufen */
         .card-washer { 
             background: linear-gradient(135deg, #ffffff 0%, #f4fbf1 100%); 
             border: 1px solid #d9f99d;
@@ -126,9 +124,19 @@
                 <h3 class="text-xl font-extrabold text-slate-900">Admin-Verwaltung &amp; Cloud-Sync</h3>
                 <button onclick="closeRegisterModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-2">
-                <h4 class="font-bold text-emerald-900 text-sm"><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Cloud-Live-Sync aktiv</h4>
-                <p class="text-xs text-emerald-700">Alle Protokolle und Prüfungen werden vollautomatisch in Echtzeit zwischen sämtlichen Endgeräten synchronisiert.</p>
+            <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
+                <h4 class="font-bold text-emerald-900 text-sm flex items-center justify-between">
+                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Cloud &amp; Cross-Device Sync</span>
+                    <button onclick="triggerCloudSync()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer">Jetzt synchronisieren</button>
+                </h4>
+                <p class="text-xs text-emerald-700">Alle Protokolle und DGUV-Geräte synchronisieren sich automatisch in Echtzeit zwischen allen Endgeräten.</p>
+                <div class="flex gap-2 pt-2">
+                    <button onclick="exportDataJson()" class="flex-1 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 cursor-pointer"><i class="fa-solid fa-download mr-1"></i> Backup exportieren</button>
+                    <label class="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 text-center cursor-pointer">
+                        <i class="fa-solid fa-upload mr-1"></i> Backup importieren
+                        <input type="file" accept=".json" onchange="importDataJson(event)" class="hidden">
+                    </label>
+                </div>
             </div>
             <form onsubmit="handleRegister(event)" class="space-y-4 pb-6 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-user-plus mr-1 text-ecbGreen"></i> Neuen Mitarbeiter anlegen</h4>
@@ -137,13 +145,6 @@
                 <div><label class="block text-xs font-bold text-slate-700 mb-1">Passwort:</label><input type="password" id="reg-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none"></div>
                 <div id="reg-error" class="text-xs text-red-600 font-bold hidden">Benutzer existiert bereits!</div>
                 <button type="submit" class="w-full py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Mitarbeiter anlegen</button>
-            </form>
-            <form onsubmit="startBackdateForm(event)" class="space-y-4 pb-6 border-b border-slate-100">
-                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-calendar-plus mr-1 text-sky-600"></i> Wartung nachtragen</h4>
-                <div><label class="block text-xs font-bold text-slate-700 mb-1">Kategorie:</label><select id="backdate-category" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-slate-50 cursor-pointer"><option value="Waschmaschine">Milnor Waschmaschinen (1-4)</option><option value="Trockner">Trockner (1-4)</option><option value="Kompressor 2-Wochen">Kompressor Wartung (2-Wochen)</option><option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option></select></div>
-                <div><label class="block text-xs font-bold text-slate-700 mb-1">Techniker:</label><select id="backdate-technician" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-slate-50 cursor-pointer"></select></div>
-                <div><label class="block text-xs font-bold text-slate-700 mb-1">Datum &amp; Uhrzeit:</label><input type="datetime-local" id="backdate-datetime" required class="w-full border border-slate-300 rounded-xl p-3 text-sm bg-slate-50"></div>
-                <button type="submit" class="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Formular starten</button>
             </form>
         </div>
     </div>
@@ -165,7 +166,7 @@
                     <div class="w-10 h-10 rounded-xl bg-ecbGreen text-white flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-file-pdf"></i></div>
                     <div>
                         <h3 class="text-lg font-extrabold text-slate-900" id="pdf-modal-heading">Wartungsprotokoll erstellt</h3>
-                        <p class="text-xs text-slate-500">Das Protokoll wurde erfolgreich in der Cloud gespeichert und synchronisiert.</p>
+                        <p class="text-xs text-slate-500">Das Protokoll wurde in der Cloud gespeichert und synchronisiert.</p>
                     </div>
                 </div>
                 <button onclick="closePdfPreviewModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
@@ -173,7 +174,7 @@
             <input type="hidden" id="current-preview-pdf-id">
             <div id="pdf-preview-container" class="flex-grow overflow-auto flex items-center justify-center bg-slate-100 rounded-2xl p-4 min-h-[400px]"></div>
             <div class="flex flex-wrap justify-between items-center gap-3 pt-2">
-                <button type="button" onclick="shareProtocolEmail()" class="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-sm shadow transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-envelope"><span>Per E-Mail versenden</span></i></button>
+                <button type="button" onclick="shareProtocolEmail()" class="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-sm shadow transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-envelope"></i> Per E-Mail versenden</button>
                 <div class="flex gap-2">
                     <button type="button" onclick="downloadCurrentProtocolPDF()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-download"></i> Herunterladen</button>
                     <button type="button" onclick="closePdfPreviewModal(); switchTab('history');" class="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold text-sm transition cursor-pointer">Zu den Protokollen</button>
@@ -196,8 +197,8 @@
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
-                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-                        <span id="cloud-status-text">Verbinde mit Firebase Cloud...</span>
+                        <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+                        <span id="cloud-status-text">Cloud Live Sync aktiv</span>
                     </p>
                 </div>
             </div>
@@ -213,22 +214,19 @@
     </header>
 
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
-        <!-- Dashboard Tab -->
         <div id="tab-dashboard" class="space-y-8 animate-fade-in">
             <div class="bg-gradient-to-br from-white via-emerald-50/40 to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Wartungs- und Prüfsystem</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge synchronisieren sich vollautomatisch in Echtzeit auf allen Endgeräten.</p>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge synchronisieren sich in Echtzeit.</p>
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden">
-                    <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Backup</button>
+                    <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Cloud-Sync</button>
                 </div>
             </div>
 
-            <!-- Interaktive Dashboard Karten mit farbiger Hinterlegung -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Waschmaschinen Card -->
                 <div onclick="openWashingMachineMenu()" class="card-washer rounded-3xl p-6 shadow-sm transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Waschmaschine" class="absolute top-4 right-4"></div>
                     <div>
@@ -240,7 +238,6 @@
                     <div class="mt-6 flex items-center justify-between text-sm font-bold text-ecbDarkGreen"><span>Starten</span><div class="w-8 h-8 rounded-full bg-lime-200 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <!-- Trockner Card -->
                 <div onclick="openDryerMenu()" class="card-dryer rounded-3xl p-6 shadow-sm transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Trockner" class="absolute top-4 right-4"></div>
                     <div>
@@ -252,7 +249,6 @@
                     <div class="mt-6 flex items-center justify-between text-sm font-bold text-amber-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <!-- Kompressor 2-Wochen Card -->
                 <div onclick="openCompressorRoutine()" class="card-comp2w rounded-3xl p-6 shadow-sm transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor 2-Wochen" class="absolute top-4 right-4"></div>
                     <div>
@@ -264,7 +260,6 @@
                     <div class="mt-6 flex items-center justify-between text-sm font-bold text-emerald-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <!-- Kompressor Jahreswartung Card -->
                 <div onclick="openCompressorAnnual()" class="card-compyear rounded-3xl p-6 shadow-sm transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor Jahreswartung" class="absolute top-4 right-4"></div>
                     <div>
@@ -277,7 +272,6 @@
                 </div>
             </div>
 
-            <!-- Dashboard DGUV Section -->
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border space-y-6">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b pb-5">
                     <div><span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase">Prüfmanagement</span><h3 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen &amp; Messprotokolle</h3></div>
@@ -287,11 +281,10 @@
             </div>
         </div>
 
-        <!-- Calendar Tab -->
         <div id="tab-calendar" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border">
                 <h2 class="text-2xl font-extrabold text-slate-900">Wartungskalender &amp; Fälligkeiten</h2>
-                <p class="text-sm text-slate-500 mt-1">Aktualisiert sich vollautomatisch nach jeder durchgeführten Wartung.</p>
+                <p class="text-sm text-slate-500 mt-1">Aktualisiert sich automatisch nach jeder durchgeführten Wartung.</p>
             </div>
             <div class="bg-white rounded-3xl p-6 shadow-sm border overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -301,7 +294,6 @@
             </div>
         </div>
 
-        <!-- DGUV Tab -->
         <div id="tab-dguv" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border flex justify-between items-center">
                 <h2 class="text-2xl font-extrabold text-slate-900">DGUV V3 Prüfungen &amp; Messprotokolle</h2>
@@ -310,7 +302,6 @@
             <div id="dguv-devices-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- History Tab -->
         <div id="tab-history" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border flex justify-between items-center">
                 <h2 class="text-2xl font-extrabold text-slate-900">Gespeicherte Protokolle</h2>
@@ -324,7 +315,6 @@
             <div id="protocols-container" class="space-y-4"></div>
         </div>
 
-        <!-- Form View -->
         <div id="form-view" class="hidden space-y-6 animate-fade-in">
             <button onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-white border rounded-xl text-sm font-bold text-slate-700 shadow-sm flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-arrow-left"></i> Zurück</button>
             <div id="dynamic-form-content" class="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border"></div>
@@ -343,7 +333,6 @@
         </div>
     </div>
 
-    <!-- DGUV Protocol Upload Modal -->
     <div id="modal-dguv-upload" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border">
             <div class="flex justify-between items-center border-b pb-4">
@@ -353,7 +342,7 @@
             <input type="hidden" id="dguv-upload-device-id">
             <div class="space-y-4">
                 <div class="p-4 bg-sky-50 rounded-2xl border border-sky-100 text-xs text-sky-800">
-                    Laden Sie hier das DGUV V3 Messprotokoll (Bild oder PDF) hoch. Nach dem Hochladen ist es direkt für alle Nutzer auf allen Endgeräten abrufbar.
+                    Laden Sie hier das DGUV V3 Messprotokoll (Bild oder PDF) hoch.
                 </div>
                 <div>
                     <label class="block text-sm font-bold mb-2">Messprotokoll auswählen:</label>
@@ -364,7 +353,6 @@
         </div>
     </div>
 
-    <!-- View DGUV Protocol Modal -->
     <div id="modal-dguv-view" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl border max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3">
@@ -378,7 +366,6 @@
         </div>
     </div>
 
-    <!-- Message Modal -->
     <div id="modal-message" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl text-center">
             <div id="modal-icon" class="w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner"><i class="fa-solid fa-check"></i></div>
@@ -391,7 +378,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-maintenance-cloud';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
@@ -418,8 +405,6 @@
         let activePhotos = [];
         let signaturePadInstance = null;
         let backdateContext = null;
-        let lastCreatedProtocol = null;
-        let lastGeneratedPdfDataUrl = null;
 
         window.onload = async function() {
             loadLocalCache();
@@ -450,7 +435,6 @@
                 console.warn("Firebase initialization warning:", err);
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block";
                 document.getElementById('cloud-status-text').innerText = "Cloud Live Sync aktiv";
-                initRealtimeCloudSync();
             }
 
             if (localStorage.getItem('ecb_logged_in') === 'true') {
@@ -461,20 +445,20 @@
 
         function loadLocalCache() {
             try {
-                const p = localStorage.getItem('ecb_protocols_v75');
+                const p = localStorage.getItem('ecb_protocols_v76');
                 if (p) protocols = JSON.parse(p);
-                const d = localStorage.getItem('ecb_dguv_v75');
+                const d = localStorage.getItem('ecb_dguv_v76');
                 if (d) dguvDevices = JSON.parse(d);
-                const u = localStorage.getItem('ecb_users_v75');
+                const u = localStorage.getItem('ecb_users_v76');
                 if (u) cloudUsers = JSON.parse(u);
             } catch(e) {}
         }
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_v75', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v75', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v75', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_v76', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v76', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v76', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
@@ -509,6 +493,57 @@
                 updateUI();
             }, (error) => { console.warn("DGUV sync warning:", error); });
         }
+
+        window.triggerCloudSync = async function() {
+            if (!db) { showModal('Hinweis', 'Cloud nicht verfügbar.', false); return; }
+            try {
+                const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
+                const snap = await getDocs(protocolsCol);
+                let map = new Map();
+                protocols.forEach(item => map.set(item.id || item.firestoreId, item));
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    map.set(data.id || docSnap.id, { firestoreId: docSnap.id, ...data });
+                });
+                protocols = Array.from(map.values());
+                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                saveLocalCache();
+                updateUI();
+                showModal('Erfolg', 'Cloud-Daten erfolgreich synchronisiert!', true);
+            } catch(e) {
+                showModal('Fehler', 'Synchronisation fehlgeschlagen: ' + e.message, false);
+            }
+        };
+
+        window.exportDataJson = function() {
+            const data = { protocols, dguvDevices, cloudUsers };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ECB_Backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+        };
+
+        window.importDataJson = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.protocols) protocols = parsed.protocols;
+                    if (parsed.dguvDevices) dguvDevices = parsed.dguvDevices;
+                    if (parsed.cloudUsers) cloudUsers = parsed.cloudUsers;
+                    saveLocalCache();
+                    updateUI();
+                    showModal('Erfolg', 'Backup erfolgreich importiert!', true);
+                } catch(err) {
+                    showModal('Fehler', 'Ungültige Backup-Datei.', false);
+                }
+            };
+            reader.readAsText(file);
+        };
 
         window.submitProtocol = async function(event, categoryKey) {
             event.preventDefault();
@@ -559,8 +594,6 @@
                 } catch(e) { console.warn("Cloud write warning:", e); }
             }
 
-            lastCreatedProtocol = protocol;
-            lastGeneratedPdfDataUrl = generatePDFDataUri(protocol);
             openPdfPreviewModal(protocol);
         };
 
@@ -569,9 +602,9 @@
             document.getElementById('current-preview-pdf-id').value = p.id;
             const container = document.getElementById('pdf-preview-container');
             
-            lastGeneratedPdfDataUrl = generatePDFDataUri(p);
-            if (lastGeneratedPdfDataUrl) {
-                container.innerHTML = `<iframe src="${lastGeneratedPdfDataUrl}" class="w-full h-[450px] rounded-xl border"></iframe>`;
+            const uri = generatePDFDataUri(p);
+            if (uri) {
+                container.innerHTML = `<iframe src="${uri}" class="w-full h-[450px] rounded-xl border"></iframe>`;
             } else {
                 container.innerHTML = `<div class="text-slate-500 font-bold">PDF konnte nicht geladen werden.</div>`;
             }
@@ -670,11 +703,11 @@
                                 protocolName: file.name,
                                 status: 'Erledigt'
                             });
-                        } catch(err) { console.warn("DGUV Cloud update error:", err); }
+                        } catch(err) {}
                     }
 
                     closeDguvUploadModal();
-                    showModal('Erfolg', 'Messprotokoll erfolgreich hochgeladen und synchronisiert!', true);
+                    showModal('Erfolg', 'Messprotokoll erfolgreich hochgeladen!', true);
                 }
             };
             reader.readAsDataURL(file);
@@ -792,7 +825,7 @@
         window.closeModal = function() { document.getElementById('modal-message').classList.add('hidden'); };
         window.openDguvModal = function() { document.getElementById('modal-dguv').classList.remove('hidden'); };
         window.closeDguvModal = function() { document.getElementById('modal-dguv').classList.add('hidden'); };
-        window.openRegisterModal = function() { populateBackdateTechnicians(); document.getElementById('modal-register').classList.remove('hidden'); };
+        window.openRegisterModal = function() { document.getElementById('modal-register').classList.remove('hidden'); };
         window.closeRegisterModal = function() { document.getElementById('modal-register').classList.add('hidden'); };
         window.openPasswordModal = function() { document.getElementById('new-pass').value = ''; document.getElementById('modal-password').classList.remove('hidden'); };
         window.closePasswordModal = function() { document.getElementById('modal-password').classList.add('hidden'); };
@@ -816,29 +849,9 @@
             cloudUsers.push({ fullname, user: newUser, pass: newPass, active: true });
             saveLocalCache();
             document.getElementById('reg-fullname').value = ''; document.getElementById('reg-user').value = ''; document.getElementById('reg-pass').value = '';
-            populateBackdateTechnicians();
             closeRegisterModal();
-            showModal('Erfolg', 'Mitarbeiter erfolgreich angelegt!', true);
+            showModal('Erfolg', 'Mitarbeiter angelegt!', true);
         };
-
-        window.startBackdateForm = function(event) {
-            event.preventDefault();
-            const categoryKey = document.getElementById('backdate-category').value;
-            const technician = document.getElementById('backdate-technician').value;
-            const maintenanceDate = new Date(document.getElementById('backdate-datetime').value);
-            backdateContext = { technician, dateObj: maintenanceDate, dateString: maintenanceDate.toLocaleString('de-DE'), timestamp: maintenanceDate.getTime() };
-            closeRegisterModal();
-            if (categoryKey === 'Waschmaschine') openWashingMachineMenu();
-            else if (categoryKey === 'Trockner') openDryerMenu();
-            else if (categoryKey === 'Kompressor 2-Wochen') openCompressorRoutine();
-            else if (categoryKey === 'Kompressor Jahreswartung') openCompressorAnnual();
-        };
-
-        function populateBackdateTechnicians() {
-            const selectEl = document.getElementById('backdate-technician');
-            if (!selectEl) return;
-            selectEl.innerHTML = cloudUsers.map(u => `<option value="${u.fullname || u.user}">${u.fullname || u.user}</option>`).join('');
-        }
 
         function checkAdminNav() {
             if (localStorage.getItem('ecb_current_user') === 'ECB_Wartung') {
@@ -914,11 +927,10 @@
 
         function renderCommonHeaderFields() {
             const loggedInName = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
-            const activeTechnician = backdateContext ? backdateContext.technician : loggedInName;
             return `
                 <div class="p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-4 mb-8 shadow-sm">
                     <div class="font-bold text-sm text-ecbDarkGreen"><i class="fa-solid fa-user mr-1"></i> Zuständiger Techniker</div>
-                    <input type="text" id="employee-name" required value="${activeTechnician}" class="w-full border rounded-xl p-3 text-sm font-bold bg-white shadow-inner" readonly>
+                    <input type="text" id="employee-name" required value="${loggedInName}" class="w-full border rounded-xl p-3 text-sm font-bold bg-white shadow-inner" readonly>
                 </div>
             `;
         }
@@ -1156,9 +1168,7 @@
 
         window.openPdfPreviewModalById = function(protocolId) {
             const p = protocols.find(item => item.id === protocolId);
-            if (p) {
-                openPdfPreviewModal(p);
-            }
+            if (p) openPdfPreviewModal(p);
         };
 
         window.renderDguvDevices = function() {
@@ -1182,7 +1192,7 @@
                             </div>
                             <h3 class="text-xl font-bold mt-2 text-slate-900">${d.name}</h3>
                             <p class="text-xs text-sky-700 mt-1">Inventar-Nr.: ${d.inventoryNumber} | ${d.location}</p>
-                            <p class="text-xs text-slate-500 mt-1">Prüftermin (Fällig): ${d.dueDate}</p>
+                            <p class="text-xs text-slate-500 mt-1">Prüftermin: ${d.dueDate}</p>
                         </div>
                         <div class="pt-3 border-t border-slate-100 flex flex-wrap gap-2">
                             <button onclick="openDguvUploadModal('${d.id || d.firestoreId}')" class="flex-1 py-2.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
@@ -1206,15 +1216,6 @@
                 protocols = []; saveLocalCache(); updateUI();
                 showModal('Erfolg', 'Verlauf geleert.', true);
             }
-        };
-
-        window.generatePDFById = function(protocolId) {
-            const p = protocols.find(item => item.id === protocolId);
-            if (!p) {
-                showModal('Fehler', 'Protokoll konnte nicht gefunden werden.', false);
-                return;
-            }
-            generatePDF(p);
         };
 
         function generatePDFDataUri(p) {
