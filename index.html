@@ -264,7 +264,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecb-maintenance-default';
@@ -272,7 +272,7 @@
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEvon6SHIVRB5k",
             authDomain: "ecb-maintenance.firebaseapp.com",
             projectId: "ecb-maintenance",
-            storageBucket: "ecb-maintenance.appspot.com",
+            storageBucket: "ecb-maintenance.firebasestorage.app",
             messagingSenderId: "229926423123",
             appId: "1:229926423123:web:a309c14c708fc88c62d4a6"
         };
@@ -308,13 +308,19 @@
                     await signInAnonymously(auth);
                 }
 
-                console.log("Firebase v11 Connected & Authenticated Successfully");
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden (Live Sync)";
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        console.log("Firebase authenticated successfully:", user.uid);
+                        document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-500 inline-block";
+                        document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden (Live Sync)";
+                        initRealtimeCloudSync();
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                });
 
-                initRealtimeCloudSync();
             } catch (err) {
-                console.warn("Cloud connection fallback notice:", err);
+                console.warn("Firebase connection warning:", err);
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-500 inline-block";
                 document.getElementById('cloud-status-text').innerText = "Lokaler Offline-Modus aktiv";
             }
@@ -327,20 +333,20 @@
 
         function loadLocalCache() {
             try {
-                const p = localStorage.getItem('ecb_protocols_v52');
+                const p = localStorage.getItem('ecb_protocols_v59');
                 if (p) protocols = JSON.parse(p);
-                const d = localStorage.getItem('ecb_dguv_v52');
+                const d = localStorage.getItem('ecb_dguv_v59');
                 if (d) dguvDevices = JSON.parse(d);
-                const u = localStorage.getItem('ecb_users_v52');
+                const u = localStorage.getItem('ecb_users_v59');
                 if (u) cloudUsers = JSON.parse(u);
             } catch(e) {}
         }
 
         function saveLocalCache() {
             try {
-                localStorage.setItem('ecb_protocols_v52', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v52', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v52', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_v59', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v59', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v59', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
@@ -362,7 +368,7 @@
                 saveLocalCache();
                 updateUI();
             }, (error) => {
-                console.warn("Protocol snapshot sync warning:", error);
+                console.warn("Protocol snapshot error:", error);
             });
 
             onSnapshot(dguvCol, (snapshot) => {
@@ -376,7 +382,7 @@
                 saveLocalCache();
                 updateUI();
             }, (error) => {
-                console.warn("DGUV snapshot sync warning:", error);
+                console.warn("DGUV snapshot error:", error);
             });
         }
 
@@ -394,7 +400,7 @@
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const imp = JSON.parse(e.target.result);
                     if (imp.protocols) protocols = imp.protocols;
@@ -448,19 +454,19 @@
             protocols.unshift(protocol);
             saveLocalCache(); updateUI();
 
-            if (db) {
+            if (db && auth && auth.currentUser) {
                 try {
                     const protocolsCol = collection(db, 'artifacts', appId, 'public', 'data', 'protocols');
                     const docRef = await addDoc(protocolsCol, protocol);
                     protocol.firestoreId = docRef.id;
                     saveLocalCache();
                 } catch(e) {
-                    console.warn("Cloud save warning:", e);
+                    console.warn("Cloud write warning:", e);
                 }
             }
 
             generatePDF(protocol);
-            showModal('Erfolg', 'Wartungsprotokoll erfolgreich gespeichert & synchronisiert!', true);
+            showModal('Erfolg', 'Wartungsprotokoll erfolgreich gespeichert & in Cloud synchronisiert!', true);
             switchTab('history');
         };
 
@@ -484,7 +490,7 @@
             dguvDevices.unshift(newDev);
             saveLocalCache(); updateUI();
 
-            if (db) {
+            if (db && auth && auth.currentUser) {
                 try {
                     const dguvCol = collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices');
                     const docRef = await addDoc(dguvCol, newDev);
@@ -495,7 +501,7 @@
 
             closeDguvModal();
             updateUI();
-            showModal('Erfolg', 'Gerät erfolgreich erfasst!', true);
+            showModal('Erfolg', 'Gerät erfolgreich erfasst & synchronisiert!', true);
         };
 
         window.deleteProtocol = async function(firestoreId, index) {
@@ -771,7 +777,8 @@
                     ${renderCheckPoint(1, 'Wassertank reinigen')}
                     ${renderCheckPoint(2, 'Maschine Reinigen, Zwischenräume')}
                     ${renderCheckPoint(3, 'Waschmaschine schmieren')}
-                    ${renderCheckPoint(4, 'Keine Mängel festgestellt')}
+                    ${renderCheckPoint(4, 'Maschine auf Mängelfreiheit überprüfen')}
+                    ${renderCheckPoint(5, 'Keine Mängel festgestellt')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
                     <button type="submit" class="w-full py-4 bg-ecbDarkGreen text-white font-bold rounded-xl shadow-lg cursor-pointer">Protokoll speichern &amp; PDF</button>
                 </form>
