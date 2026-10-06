@@ -25,17 +25,25 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top right, #f8fafc, #f1f5f9); }
+        body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top right, #f4fbf1, #f1f5f9); }
         .signature-canvas { touch-action: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .checkpoint-card { transition: all 0.2s ease-in-out; }
-        .checkpoint-card:hover { background-color: #f7fee7; border-color: #bef264; transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(101, 163, 13, 0.08); }
+        .checkpoint-card { transition: all 0.25s ease-in-out; }
+        .checkpoint-card:hover { background-color: #f7fee7; border-color: #65a30d; transform: translateY(-1px); box-shadow: 0 4px 12px -2px rgba(101, 163, 13, 0.12); }
+        /* Interactive Dashboard Cards Custom Colors */
+        .card-washer { background: linear-gradient(135deg, #ffffff 0%, #f7fee7 100%); }
+        .card-washer:hover { background: linear-gradient(135deg, #ffffff 0%, #ecfccb 100%); border-color: #65a30d; }
+        .card-dryer { background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%); }
+        .card-dryer:hover { background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%); border-color: #f59e0b; }
+        .card-comp2w { background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); }
+        .card-comp2w:hover { background: linear-gradient(135deg, #ffffff 0%, #dcfce7 100%); border-color: #10b981; }
+        .card-compyear { background: linear-gradient(135deg, #ffffff 0%, #faf5ff 100%); }
+        .card-compyear:hover { background: linear-gradient(135deg, #ffffff 0%, #f3e8ff 100%); border-color: #a855f7; }
     </style>
 </head>
 <body class="text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
-    <!-- Login Screen -->
     <div id="login-screen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 space-y-6 animate-fade-in">
             <div class="text-center space-y-2">
@@ -65,7 +73,6 @@
         </div>
     </div>
 
-    <!-- Admin & Register Modal -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -94,7 +101,6 @@
         </div>
     </div>
 
-    <!-- Password Modal -->
     <div id="modal-password" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4"><h3 class="text-xl font-extrabold text-slate-900">Passwort ändern</h3><button onclick="closePasswordModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
@@ -105,7 +111,6 @@
         </div>
     </div>
 
-    <!-- Header -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
@@ -136,11 +141,10 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
         <!-- Dashboard Tab -->
         <div id="tab-dashboard" class="space-y-8 animate-fade-in">
-            <div class="bg-gradient-to-br from-white via-emerald-50/20 to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
+            <div class="bg-gradient-to-br from-white via-emerald-50/30 to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Wartungs- und Prüfsystem</h2>
@@ -151,49 +155,54 @@
                 </div>
             </div>
 
+            <!-- Interaktive Dashboard Karten mit farbiger Hinterlegung -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div onclick="openWashingMachineMenu()" class="bg-white rounded-3xl p-6 shadow-sm border hover:border-ecbGreen transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <!-- Waschmaschinen Card -->
+                <div onclick="openWashingMachineMenu()" class="card-washer rounded-3xl p-6 shadow-sm border border-lime-200 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Waschmaschine" class="absolute top-4 right-4"></div>
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition"><i class="fa-solid fa-shirt"></i></div>
+                        <div class="w-14 h-14 rounded-2xl bg-[#ecfccb] text-[#3f6212] flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-shirt"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Milnor Waschmaschinen</h3>
-                        <p class="text-xs font-semibold text-ecbGreen mt-1 uppercase">4 Maschinen (1-4)</p>
-                        <div id="due-Waschmaschine" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border">Berechne...</div>
+                        <p class="text-xs font-semibold text-ecbDarkGreen mt-1 uppercase tracking-wider">4 Maschinen (1-4)</p>
+                        <div id="due-Waschmaschine" class="mt-3 text-xs font-bold text-slate-700 bg-white/80 p-2.5 rounded-xl border border-lime-100 shadow-sm">Berechne...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-ecbDarkGreen"><span>Starten</span><div class="w-8 h-8 rounded-full bg-ecbLightGreen flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-ecbDarkGreen"><span>Starten</span><div class="w-8 h-8 rounded-full bg-[#ecfccb] flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <div onclick="openDryerMenu()" class="bg-white rounded-3xl p-6 shadow-sm border hover:border-amber-500 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <!-- Trockner Card -->
+                <div onclick="openDryerMenu()" class="card-dryer rounded-3xl p-6 shadow-sm border border-amber-200 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Trockner" class="absolute top-4 right-4"></div>
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition"><i class="fa-solid fa-wind"></i></div>
+                        <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-wind"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Trockner</h3>
-                        <p class="text-xs font-semibold text-amber-600 mt-1 uppercase">4 Trockner (1-4)</p>
-                        <div id="due-Trockner" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border">Berechne...</div>
+                        <p class="text-xs font-semibold text-amber-800 mt-1 uppercase tracking-wider">4 Trockner (1-4)</p>
+                        <div id="due-Trockner" class="mt-3 text-xs font-bold text-slate-700 bg-white/80 p-2.5 rounded-xl border border-amber-100 shadow-sm">Berechne...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-amber-700"><span>Starten</span><div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-amber-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <div onclick="openCompressorRoutine()" class="bg-white rounded-3xl p-6 shadow-sm border hover:border-sky-500 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <!-- Kompressor 2-Wochen Card -->
+                <div onclick="openCompressorRoutine()" class="card-comp2w rounded-3xl p-6 shadow-sm border border-emerald-200 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor 2-Wochen" class="absolute top-4 right-4"></div>
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition"><i class="fa-solid fa-gauge-high"></i></div>
+                        <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-gauge-high"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Kompressor 2-Wochen</h3>
-                        <p class="text-xs font-semibold text-sky-600 mt-1 uppercase">Intervall: 2 Wochen</p>
-                        <div id="due-Kompressor 2-Wochen" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border">Berechne...</div>
+                        <p class="text-xs font-semibold text-emerald-800 mt-1 uppercase tracking-wider">Intervall: 2 Wochen</p>
+                        <div id="due-Kompressor 2-Wochen" class="mt-3 text-xs font-bold text-slate-700 bg-white/80 p-2.5 rounded-xl border border-emerald-100 shadow-sm">Berechne...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-sky-700"><span>Starten</span><div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-emerald-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <div onclick="openCompressorAnnual()" class="bg-white rounded-3xl p-6 shadow-sm border hover:border-purple-500 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <!-- Kompressor Jahreswartung Card -->
+                <div onclick="openCompressorAnnual()" class="card-compyear rounded-3xl p-6 shadow-sm border border-purple-200 transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor Jahreswartung" class="absolute top-4 right-4"></div>
                     <div>
-                        <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition"><i class="fa-solid fa-calendar-days"></i></div>
+                        <div class="w-14 h-14 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-calendar-days"></i></div>
                         <h3 class="text-xl font-bold text-slate-900">Kompressor Jahreswartung</h3>
-                        <p class="text-xs font-semibold text-purple-600 mt-1 uppercase">Umfassend • 180 Tage</p>
-                        <div id="due-Kompressor Jahreswartung" class="mt-2 text-xs font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border">Berechne...</div>
+                        <p class="text-xs font-semibold text-purple-800 mt-1 uppercase tracking-wider">Umfassend • 180 Tage</p>
+                        <div id="due-Kompressor Jahreswartung" class="mt-3 text-xs font-bold text-slate-700 bg-white/80 p-2.5 rounded-xl border border-purple-100 shadow-sm">Berechne...</div>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-purple-700"><span>Starten</span><div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
+                    <div class="mt-6 flex items-center justify-between text-sm font-bold text-purple-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
             </div>
 
@@ -273,7 +282,6 @@
         </div>
     </div>
 
-    <!-- Firebase & App Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -650,14 +658,14 @@
                 if (!dueEl || !badgeEl) return;
                 if (matching.length === 0) {
                     dueEl.innerHTML = `Noch keine Wartung`;
-                    badgeEl.innerHTML = `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold">Offen</span>`;
+                    badgeEl.innerHTML = `<span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold shadow-sm">Offen</span>`;
                 } else {
                     const latest = matching.reduce((prev, curr) => (Number(curr.timestamp || 0) > Number(prev.timestamp || 0)) ? curr : prev);
                     const nextDueDate = new Date(Number(latest.timestamp || Date.now()) + (cat.days * 24 * 60 * 60 * 1000));
                     nextDueDate.setHours(0,0,0,0);
                     const isOverdue = now.getTime() > nextDueDate.getTime();
                     dueEl.innerHTML = `Nächster Termin: <strong>${nextDueDate.toLocaleDateString('de-DE')}</strong>`;
-                    badgeEl.innerHTML = isOverdue ? `<span class="px-2 py-0.5 bg-red-600 text-white rounded-full text-[10px] font-bold animate-pulse">ÜBERFÄLLIG</span>` : `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold">OK</span>`;
+                    badgeEl.innerHTML = isOverdue ? `<span class="px-2.5 py-1 bg-red-600 text-white rounded-full text-[10px] font-bold animate-pulse shadow-sm">ÜBERFÄLLIG</span>` : `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold shadow-sm">OK</span>`;
                 }
             });
         }
@@ -676,13 +684,13 @@
             cats.forEach(cat => {
                 const matching = protocols.filter(p => p.category === cat.key);
                 if (matching.length === 0) {
-                    html += `<tr class="border-b"><td class="py-3 px-4 font-bold">${cat.name}</td><td class="py-3 px-4 text-slate-400">-</td><td class="py-3 px-4 text-amber-600 font-bold">Sofort fällig</td><td><span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">Offen</span></td></tr>`;
+                    html += `<tr class="border-b"><td class="py-3 px-4 font-bold">${cat.name}</td><td class="py-3 px-4 text-slate-400">-</td><td class="py-3 px-4 text-amber-600 font-bold">Sofort fällig</td><td><span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full">Offen</span></td></tr>`;
                 } else {
                     const latest = matching.reduce((prev, curr) => (Number(curr.timestamp || 0) > Number(prev.timestamp || 0)) ? curr : prev);
                     const lastDate = new Date(Number(latest.timestamp || Date.now()));
                     const nextDueDate = new Date(lastDate.getTime() + (cat.days * 24 * 60 * 60 * 1000));
                     const isOverdue = now.getTime() > nextDueDate.getTime();
-                    html += `<tr class="border-b"><td class="py-3 px-4 font-bold">${cat.name}</td><td class="py-3 px-4">${lastDate.toLocaleDateString('de-DE')}</td><td class="py-3 px-4 font-bold">${nextDueDate.toLocaleDateString('de-DE')}</td><td>${isOverdue ? '<span class="bg-red-600 text-white text-xs px-2 py-1 rounded-full">Überfällig</span>' : '<span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full">OK</span>'}</td></tr>`;
+                    html += `<tr class="border-b"><td class="py-3 px-4 font-bold">${cat.name}</td><td class="py-3 px-4">${lastDate.toLocaleDateString('de-DE')}</td><td class="py-3 px-4 font-bold">${nextDueDate.toLocaleDateString('de-DE')}</td><td>${isOverdue ? '<span class="bg-red-600 text-white text-xs px-2.5 py-1 rounded-full">Überfällig</span>' : '<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full">OK</span>'}</td></tr>`;
                 }
             });
             tableBody.innerHTML = html;
@@ -692,7 +700,7 @@
             const loggedInName = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
             const activeTechnician = backdateContext ? backdateContext.technician : loggedInName;
             return `
-                <div class="p-6 bg-emerald-50/40 rounded-2xl border border-emerald-100 space-y-4 mb-8 shadow-sm">
+                <div class="p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-4 mb-8 shadow-sm">
                     <div class="font-bold text-sm text-ecbDarkGreen"><i class="fa-solid fa-user mr-1"></i> Zuständiger Techniker</div>
                     <input type="text" id="employee-name" required value="${activeTechnician}" class="w-full border rounded-xl p-3 text-sm font-bold bg-white shadow-inner" readonly>
                 </div>
@@ -799,14 +807,14 @@
             return `
                 <div class="checkpoint-card p-4 bg-white rounded-2xl border border-slate-200/90 shadow-sm space-y-3" data-title="${title}">
                     <div class="font-bold text-sm text-slate-800 flex items-center gap-2">
-                        <span class="w-6 h-6 rounded-lg bg-emerald-50 text-ecbDarkGreen flex items-center justify-center text-xs">${i}</span>
+                        <span class="w-6 h-6 rounded-lg bg-emerald-50 text-ecbDarkGreen flex items-center justify-center text-xs font-bold">${i}</span>
                         ${title}
                     </div>
                     <div class="flex gap-4 pt-1">
-                        <label class="cursor-pointer font-semibold text-xs px-4 py-2 rounded-xl bg-emerald-50/70 hover:bg-emerald-100 text-ecbDarkGreen border border-emerald-200 transition flex items-center gap-1.5">
+                        <label class="cursor-pointer font-semibold text-xs px-4 py-2 rounded-xl bg-emerald-50/80 hover:bg-emerald-100 text-ecbDarkGreen border border-emerald-200 transition flex items-center gap-1.5">
                             <input type="radio" name="point_${i}" value="erledigt" checked class="accent-ecbGreen"> OK
                         </label>
-                        <label class="cursor-pointer font-semibold text-xs px-4 py-2 rounded-xl bg-red-50/70 hover:bg-red-100 text-red-700 border border-red-200 transition flex items-center gap-1.5">
+                        <label class="cursor-pointer font-semibold text-xs px-4 py-2 rounded-xl bg-red-50/80 hover:bg-red-100 text-red-700 border border-red-200 transition flex items-center gap-1.5">
                             <input type="radio" name="point_${i}" value="nicht in Ordnung" class="accent-red-600"> Mangel
                         </label>
                     </div>
@@ -976,11 +984,9 @@
             const pageHeight = doc.internal.pageSize.getHeight();
             let y = 15;
 
-            // Green Header Background
             doc.setFillColor(101, 163, 13);
             doc.rect(0, 0, pageWidth, 32, 'F');
 
-            // Draw exact ECB Logo on PDF Header
             try {
                 const canvasLogo = document.createElement('canvas');
                 canvasLogo.width = 120; canvasLogo.height = 120;
