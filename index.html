@@ -49,41 +49,49 @@
         .card-washer { 
             background: linear-gradient(135deg, #ffffff 0%, #f4fbf1 100%); 
             border: 1px solid #d9f99d;
+            transition: all 0.3s ease;
         }
         .card-washer:hover { 
-            background: linear-gradient(135deg, #ecfccb 0%, #d9f99d 100%); 
+            background: linear-gradient(135deg, #ecfccb 0%, #bef264 100%); 
             border-color: #65a30d; 
-            box-shadow: 0 10px 25px -5px rgba(101, 163, 13, 0.2);
+            box-shadow: 0 10px 25px -5px rgba(101, 163, 13, 0.25);
+            transform: translateY(-2px);
         }
 
         .card-dryer { 
             background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%); 
             border: 1px solid #fde68a;
+            transition: all 0.3s ease;
         }
         .card-dryer:hover { 
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); 
+            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%); 
             border-color: #f59e0b; 
-            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.2);
+            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.25);
+            transform: translateY(-2px);
         }
 
         .card-comp2w { 
             background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%); 
             border: 1px solid #a7f3d0;
+            transition: all 0.3s ease;
         }
         .card-comp2w:hover { 
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
+            background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%); 
             border-color: #10b981; 
-            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.2);
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.25);
+            transform: translateY(-2px);
         }
 
         .card-compyear { 
             background: linear-gradient(135deg, #ffffff 0%, #f3e8ff 100%); 
             border: 1px solid #e9d5ff;
+            transition: all 0.3s ease;
         }
         .card-compyear:hover { 
             background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%); 
             border-color: #a855f7; 
-            box-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.2);
+            box-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.25);
+            transform: translateY(-2px);
         }
     </style>
 </head>
@@ -227,7 +235,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div onclick="openWashingMachineMenu()" class="card-washer rounded-3xl p-6 shadow-sm transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openWashingMachineMenu()" class="card-washer rounded-3xl p-6 shadow-sm cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Waschmaschine" class="absolute top-4 right-4"></div>
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-lime-100 text-[#3f6212] flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-shirt"></i></div>
@@ -238,7 +246,7 @@
                     <div class="mt-6 flex items-center justify-between text-sm font-bold text-ecbDarkGreen"><span>Starten</span><div class="w-8 h-8 rounded-full bg-lime-200 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <div onclick="openDryerMenu()" class="card-dryer rounded-3xl p-6 shadow-sm transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openDryerMenu()" class="card-dryer rounded-3xl p-6 shadow-sm cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Trockner" class="absolute top-4 right-4"></div>
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-wind"></i></div>
@@ -249,7 +257,7 @@
                     <div class="mt-6 flex items-center justify-between text-sm font-bold text-amber-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <div onclick="openCompressorRoutine()" class="card-comp2w rounded-3xl p-6 shadow-sm transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openCompressorRoutine()" class="card-comp2w rounded-3xl p-6 shadow-sm cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor 2-Wochen" class="absolute top-4 right-4"></div>
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-gauge-high"></i></div>
@@ -260,7 +268,7 @@
                     <div class="mt-6 flex items-center justify-between text-sm font-bold text-emerald-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <div onclick="openCompressorAnnual()" class="card-compyear rounded-3xl p-6 shadow-sm transition-all duration-300 cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openCompressorAnnual()" class="card-compyear rounded-3xl p-6 shadow-sm cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor Jahreswartung" class="absolute top-4 right-4"></div>
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-calendar-days"></i></div>
@@ -378,9 +386,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Exakte Firebase Konfiguration aus Ihrem Screenshot (ecb-maintenance)
+        // Exakte Firebase Konfiguration (ecb-maintenance)
         const firebaseConfig = {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k",
             authDomain: "ecb-maintenance.firebaseapp.com",
@@ -463,20 +471,20 @@
 
         function loadPersistentStorage() {
             try {
-                const p = localStorage.getItem('ecb_protocols_v103');
+                const p = localStorage.getItem('ecb_protocols_v104');
                 if (p) protocols = JSON.parse(p);
-                const d = localStorage.getItem('ecb_dguv_v103');
+                const d = localStorage.getItem('ecb_dguv_v104');
                 if (d) dguvDevices = JSON.parse(d);
-                const u = localStorage.getItem('ecb_users_v103');
+                const u = localStorage.getItem('ecb_users_v104');
                 if (u) cloudUsers = JSON.parse(u);
             } catch(e) {}
         }
 
         function savePersistentStorage() {
             try {
-                localStorage.setItem('ecb_protocols_v103', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v103', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v103', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_v104', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v104', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v104', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
