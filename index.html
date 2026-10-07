@@ -330,8 +330,8 @@
                             <option value="Trockner-2">Trockner 2</option>
                             <option value="Trockner-3">Trockner 3</option>
                             <option value="Trockner-4">Trockner 4</option>
-                            <option value="Kompressor-2Wochen">Kompressor 2-Wochen Wartung</option>
-                            <option value="Kompressor-Jahreswartung">Kompressor Jahreswartung</option>
+                            <option value="Kompressor 2-Wochen">Kompressor 2-Wochen Wartung</option>
+                            <option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option>
                         </select>
                     </div>
                     <div>
@@ -465,7 +465,7 @@
         let retroCustomDate = null;
         let retroCustomTime = null;
         let retroCustomTechnician = null;
-        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v25';
+        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v28';
 
         window.onload = async function() {
             loadPersistentStorage();
@@ -689,7 +689,10 @@
         };
 
         window.submitProtocol = async function(event, categoryKey) {
-            if (event) event.preventDefault();
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             const employeeNameEl = document.getElementById('employee-name');
             const employeeName = employeeNameEl ? employeeNameEl.value.trim() : (localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter');
             if (!employeeName) { showModal('Fehler', 'Bitte Namen angeben.', false); return; }
@@ -1174,9 +1177,9 @@
             } else if (selectVal.startsWith('Trockner')) {
                 const num = selectVal.split('-')[1];
                 openDryerMenu(num, techVal);
-            } else if (selectVal === 'Kompressor-2Wochen') {
+            } else if (selectVal === 'Kompressor 2-Wochen') {
                 openCompressorRoutine(techVal);
-            } else if (selectVal === 'Kompressor-Jahreswartung') {
+            } else if (selectVal === 'Kompressor Jahreswartung') {
                 openCompressorAnnual(techVal);
             }
         };
