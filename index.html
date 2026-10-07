@@ -134,7 +134,7 @@
             </div>
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
                 <h4 class="font-bold text-emerald-900 text-sm flex items-center justify-between">
-                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Cloud Live Sync (Firestore Aktiv)</span>
+                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Cloud Live Sync (Firebase Aktiv)</span>
                     <button onclick="forceSyncWithCloud()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer">Synchronisieren</button>
                 </h4>
                 <p class="text-xs text-emerald-700">Daten sind über Ihre Firebase-Datenbank dauerhaft verbunden.</p>
@@ -213,8 +213,9 @@
             <nav class="flex items-center space-x-2 mt-3 sm:mt-0 flex-wrap gap-2">
                 <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-layer-group"></i> Dashboard</button>
                 <button onclick="switchTab('calendar')" id="nav-calendar" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-calendar-check"></i> Kalender</button>
+                <button onclick="switchTab('retro')" id="nav-retro" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-clock-rotate-left"></i> Nachtragen</button>
                 <button onclick="switchTab('dguv')" id="nav-dguv" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plug-circle-check"></i> DGUV V3 <span id="dguv-count" class="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">0</span></button>
-                <button onclick="switchTab('history')" id="nav-history" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-clock-rotate-left"></i> Protokolle <span id="protocol-count" class="bg-ecbGreen text-white text-xs px-2 py-0.5 rounded-full">0</span></button>
+                <button onclick="switchTab('history')" id="nav-history" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-folder-open"></i> Protokolle <span id="protocol-count" class="bg-ecbGreen text-white text-xs px-2 py-0.5 rounded-full">0</span></button>
                 <button onclick="openPasswordModal()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-white/20 hover:bg-white/30 transition flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-key"></i></button>
                 <button onclick="handleLogout()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-red-600/80 hover:bg-red-600 transition flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-right-from-bracket"></i></button>
             </nav>
@@ -302,6 +303,46 @@
             </div>
         </div>
 
+        <div id="tab-retro" class="hidden space-y-6 animate-fade-in">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border space-y-6">
+                <div>
+                    <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-bold uppercase">Rückwirkend Erfassen</span>
+                    <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartung nachtragen</h2>
+                    <p class="text-sm text-slate-500 mt-1">Wählen Sie unten die Maschine, das Datum sowie den Techniker aus und springen Sie direkt in das vollständige Prüfprotokoll mit allen Punkten, Bildern und Unterschrift.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                    <div>
+                        <label class="block font-bold text-sm text-slate-700 mb-1.5">Wartungs-Kategorie &amp; Anlage:</label>
+                        <select id="retro-category-select" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 cursor-pointer focus:ring-2 focus:ring-ecbGreen focus:outline-none">
+                            <option value="Waschmaschine-1">Milnor Waschmaschine 1</option>
+                            <option value="Waschmaschine-2">Milnor Waschmaschine 2</option>
+                            <option value="Waschmaschine-3">Milnor Waschmaschine 3</option>
+                            <option value="Waschmaschine-4">Milnor Waschmaschine 4</option>
+                            <option value="Trockner-1">Trockner 1</option>
+                            <option value="Trockner-2">Trockner 2</option>
+                            <option value="Trockner-3">Trockner 3</option>
+                            <option value="Trockner-4">Trockner 4</option>
+                            <option value="Kompressor-2Wochen">Kompressor 2-Wochen Wartung</option>
+                            <option value="Kompressor-Jahreswartung">Kompressor Jahreswartung</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-sm text-slate-700 mb-1.5">Durchführungsdatum:</label>
+                        <input type="date" id="retro-date-input" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 focus:ring-2 focus:ring-ecbGreen focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-sm text-slate-700 mb-1.5">Zuständiger Techniker:</label>
+                        <input type="text" id="retro-technician-input" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Name des Technikers">
+                    </div>
+                </div>
+                <div class="pt-4">
+                    <button type="button" onclick="startRetroactiveForm()" class="px-6 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-bold text-sm shadow-lg transition flex items-center justify-center gap-2 cursor-pointer w-full md:w-auto">
+                        <i class="fa-solid fa-arrow-right"></i> Wartung erfassen &amp; Prüfpunkte öffnen
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div id="tab-dguv" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border flex justify-between items-center">
                 <h2 class="text-2xl font-extrabold text-slate-900">DGUV V3 Prüfungen &amp; Messprotokolle</h2>
@@ -385,9 +426,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Exakte Firebase Konfiguration aus Ihren Screenshots
         const firebaseConfig = {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k",
             authDomain: "ecb-maintenance.firebaseapp.com",
@@ -407,12 +447,15 @@
 
         let activePhotos = [];
         let signaturePadInstance = null;
-        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v6';
+        let retroCustomDate = null;
+        let retroCustomTechnician = null;
+        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v7';
 
         window.onload = async function() {
             loadPersistentStorage();
+            document.getElementById('retro-date-input').valueAsDate = new Date();
+            document.getElementById('retro-technician-input').value = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
 
-            // BroadcastChannel & Storage Event listener for multi-tab sync
             window.addEventListener('storage', (e) => {
                 if (e.key === SYNC_CHANNEL_KEY && e.newValue) {
                     try {
@@ -451,7 +494,6 @@
             const state = { protocols, dguvDevices, timestamp: Date.now() };
             try {
                 localStorage.setItem(SYNC_CHANNEL_KEY, JSON.stringify(state));
-                // Universelles Cloud Relay zur Absicherung über Netzwerkgrenzen hinweg
                 fetch('https://api.jsonbin.io/v3/b/65f0a3e8dc74654018b14a22', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'X-Master-Key': '$2a$10$w8V123...' },
@@ -464,7 +506,6 @@
             if (!db) return;
             const appId = 'ecb-maintenance-live';
 
-            // Echtzeit-Listener für Protokolle (da Regeln auf allow read, write: if true stehen)
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'), (snapshot) => {
                 let cloudProtocols = [];
                 snapshot.forEach(docSnap => {
@@ -477,11 +518,8 @@
                 savePersistentStorage(false);
                 broadcastState();
                 updateUI();
-            }, (error) => {
-                console.error("Firestore Protokolle Fehler:", error);
-            });
+            }, (error) => {});
 
-            // Echtzeit-Listener für DGUV Geräte
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), (snapshot) => {
                 let cloudDevices = [];
                 snapshot.forEach(docSnap => {
@@ -493,9 +531,7 @@
                 savePersistentStorage(false);
                 broadcastState();
                 updateUI();
-            }, (error) => {
-                console.error("Firestore DGUV Fehler:", error);
-            });
+            }, (error) => {});
         }
 
         function loadPersistentStorage() {
@@ -603,9 +639,18 @@
                 pointsData.push({ pointNumber: idx + 1, title: titleText, status: r.value });
             });
 
-            const now = new Date();
-            const protocolDate = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-            const protocolTimestamp = now.getTime();
+            let protocolDate, protocolTimestamp;
+            if (retroCustomDate) {
+                const dObj = new Date(retroCustomDate);
+                protocolDate = dObj.toLocaleDateString('de-DE') + ' (Nachträglich erfasst)';
+                protocolTimestamp = dObj.getTime();
+                retroCustomDate = null;
+            } else {
+                const now = new Date();
+                protocolDate = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                protocolTimestamp = now.getTime();
+            }
+
             const protocolIdGen = 'ECB-' + Math.floor(100000 + Math.random() * 900000);
 
             const protocol = {
@@ -833,6 +878,7 @@
         window.switchTab = function(tabId) {
             document.getElementById('tab-dashboard').classList.add('hidden');
             document.getElementById('tab-calendar').classList.add('hidden');
+            document.getElementById('tab-retro').classList.add('hidden');
             document.getElementById('tab-dguv').classList.add('hidden');
             document.getElementById('tab-history').classList.add('hidden');
             document.getElementById('form-view').classList.add('hidden');
@@ -843,6 +889,8 @@
             } else if (tabId === 'calendar') {
                 document.getElementById('tab-calendar').classList.remove('hidden');
                 renderMaintenanceCalendar();
+            } else if (tabId === 'retro') {
+                document.getElementById('tab-retro').classList.remove('hidden');
             } else if (tabId === 'dguv') {
                 document.getElementById('tab-dguv').classList.remove('hidden');
                 renderDguvDevices();
@@ -974,28 +1022,53 @@
             tableBody.innerHTML = html;
         }
 
-        function renderCommonHeaderFields() {
-            const loggedInName = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
+        window.startRetroactiveForm = function() {
+            const selectVal = document.getElementById('retro-category-select').value;
+            const dateVal = document.getElementById('retro-date-input').value;
+            const techVal = document.getElementById('retro-technician-input').value.trim();
+
+            if (!dateVal) { showModal('Fehler', 'Bitte ein Datum auswählen.', false); return; }
+            if (!techVal) { showModal('Fehler', 'Bitte einen Techniker angeben.', false); return; }
+
+            retroCustomDate = dateVal;
+            retroCustomTechnician = techVal;
+
+            if (selectVal.startsWith('Waschmaschine')) {
+                const num = selectVal.split('-')[1];
+                openWashingMachineMenu(num, techVal);
+            } else if (selectVal.startsWith('Trockner')) {
+                const num = selectVal.split('-')[1];
+                openDryerMenu(num, techVal);
+            } else if (selectVal === 'Kompressor-2Wochen') {
+                openCompressorRoutine(techVal);
+            } else if (selectVal === 'Kompressor-Jahreswartung') {
+                openCompressorAnnual(techVal);
+            }
+        };
+
+        function renderCommonHeaderFields(customTech) {
+            const techName = customTech || localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
             return `
                 <div class="p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-4 mb-8 shadow-sm">
                     <div class="font-bold text-sm text-ecbDarkGreen"><i class="fa-solid fa-user mr-1"></i> Zuständiger Techniker</div>
-                    <input type="text" id="employee-name" required value="${loggedInName}" class="w-full border rounded-xl p-3 text-sm font-bold bg-white shadow-inner" readonly>
+                    <input type="text" id="employee-name" required value="${techName}" class="w-full border rounded-xl p-3 text-sm font-bold bg-white shadow-inner" readonly>
                 </div>
             `;
         }
 
-        window.openWashingMachineMenu = function() {
+        window.openWashingMachineMenu = function(preselectedNum, customTech) {
+            const defaultNum = preselectedNum || '1';
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Milnor Waschmaschinen Wartung</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Milnor Waschmaschinen Wartung ${retroCustomDate ? `(Nachträglich für ${retroCustomDate})` : ''}</h2>
                 <form onsubmit="submitProtocol(event, 'Waschmaschine')" class="space-y-6">
-                    ${renderCommonHeaderFields()}
+                    ${renderCommonHeaderFields(customTech)}
                     <div>
                         <label class="block font-bold text-sm mb-1.5 text-slate-700">Milnor Waschmaschine auswählen:</label>
                         <select id="machine-select" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 cursor-pointer focus:ring-2 focus:ring-ecbGreen focus:outline-none">
-                            <option value="Milnor Waschmaschine 1">Milnor Waschmaschine 1</option>
-                            <option value="Milnor Waschmaschine 2">Milnor Waschmaschine 2</option>
-                            <option value="Milnor Waschmaschine 3">Milnor Waschmaschine 3</option>
-                            <option value="Milnor Waschmaschine 4">Milnor Waschmaschine 4</option>
+                            <option value="Milnor Waschmaschine 1" ${defaultNum==='1'?'selected':''}>Milnor Waschmaschine 1</option>
+                            <option value="Milnor Waschmaschine 2" ${defaultNum==='2'?'selected':''}>Milnor Waschmaschine 2</option>
+                            <option value="Milnor Waschmaschine 3" ${defaultNum==='3'?'selected':''}>Milnor Waschmaschine 3</option>
+                            <option value="Milnor Waschmaschine 4" ${defaultNum==='4'?'selected':''}>Milnor Waschmaschine 4</option>
                         </select>
                     </div>
                     ${renderCheckPoint(1, 'Wassertank reinigen')}
@@ -1010,18 +1083,19 @@
             activePhotos = []; switchTab('form');
         };
 
-        window.openDryerMenu = function() {
+        window.openDryerMenu = function(preselectedNum, customTech) {
+            const defaultNum = preselectedNum || '1';
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Trockner Wartung</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Trockner Wartung ${retroCustomDate ? `(Nachträglich für ${retroCustomDate})` : ''}</h2>
                 <form onsubmit="submitProtocol(event, 'Trockner')" class="space-y-6">
-                    ${renderCommonHeaderFields()}
+                    ${renderCommonHeaderFields(customTech)}
                     <div>
                         <label class="block font-bold text-sm mb-1.5 text-slate-700">Trockner auswählen:</label>
                         <select id="machine-select" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 cursor-pointer focus:ring-2 focus:ring-ecbGreen focus:outline-none">
-                            <option value="Trockner 1">Trockner 1</option>
-                            <option value="Trockner 2">Trockner 2</option>
-                            <option value="Trockner 3">Trockner 3</option>
-                            <option value="Trockner 4">Trockner 4</option>
+                            <option value="Trockner 1" ${defaultNum==='1'?'selected':''}>Trockner 1</option>
+                            <option value="Trockner 2" ${defaultNum==='2'?'selected':''}>Trockner 2</option>
+                            <option value="Trockner 3" ${defaultNum==='3'?'selected':''}>Trockner 3</option>
+                            <option value="Trockner 4" ${defaultNum==='4'?'selected':''}>Trockner 4</option>
                         </select>
                     </div>
                     ${renderCheckPoint(1, 'Gründliche Reinigung der Flusssiebe & Abluftkanäle')}
@@ -1036,11 +1110,11 @@
             activePhotos = []; switchTab('form');
         };
 
-        window.openCompressorRoutine = function() {
+        window.openCompressorRoutine = function(customTech) {
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Wartung (2-Wochen)</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Wartung (2-Wochen) ${retroCustomDate ? `(Nachträglich für ${retroCustomDate})` : ''}</h2>
                 <form onsubmit="submitProtocol(event, 'Kompressor 2-Wochen')" class="space-y-6">
-                    ${renderCommonHeaderFields()}
+                    ${renderCommonHeaderFields(customTech)}
                     <input type="hidden" id="machine-select" value="Kompressor (2-Wochen)">
                     <div class="space-y-1"><label class="block font-bold text-sm text-slate-700">Betriebsstunden:</label><input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Betriebsstunden"></div>
                     ${renderCheckPoint(1, 'Ölstand am Schauglas prüfen und bei Bedarf öl auffüllen.')}
@@ -1054,11 +1128,11 @@
             activePhotos = []; switchTab('form');
         };
 
-        window.openCompressorAnnual = function() {
+        window.openCompressorAnnual = function(customTech) {
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Jahreswartung</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Jahreswartung ${retroCustomDate ? `(Nachträglich für ${retroCustomDate})` : ''}</h2>
                 <form onsubmit="submitProtocol(event, 'Kompressor Jahreswartung')" class="space-y-6">
-                    ${renderCommonHeaderFields()}
+                    ${renderCommonHeaderFields(customTech)}
                     <input type="hidden" id="machine-select" value="Kompressor (Jahreswartung)">
                     <div class="space-y-1"><label class="block font-bold text-sm text-slate-700">Betriebsstunden:</label><input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Betriebsstunden"></div>
                     ${renderCheckPoint(1, 'Kompletten Ölwechsel durchführen (Altöl ablassen, spülen, neues Kompressoröl einfüllen)')}
