@@ -315,9 +315,9 @@
                 <div>
                     <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-bold uppercase">Rückwirkend Erfassen</span>
                     <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartung nachtragen</h2>
-                    <p class="text-sm text-slate-500 mt-1">Wählen Sie unten die Maschine, das Datum sowie den Techniker aus und springen Sie direkt in das vollständige Prüfprotokoll mit allen Punkten, Bildern und Unterschrift.</p>
+                    <p class="text-sm text-slate-500 mt-1">Wählen Sie unten die Maschine, das Datum, die Uhrzeit sowie den Techniker aus und springen Sie direkt in das vollständige Prüfprotokoll mit allen Punkten, Bildern und Unterschrift.</p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                     <div>
                         <label class="block font-bold text-sm text-slate-700 mb-1.5">Wartungs-Kategorie &amp; Anlage:</label>
                         <select id="retro-category-select" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 cursor-pointer focus:ring-2 focus:ring-ecbGreen focus:outline-none">
@@ -336,6 +336,10 @@
                     <div>
                         <label class="block font-bold text-sm text-slate-700 mb-1.5">Durchführungsdatum:</label>
                         <input type="date" id="retro-date-input" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 focus:ring-2 focus:ring-ecbGreen focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-sm text-slate-700 mb-1.5">Uhrzeit:</label>
+                        <input type="time" id="retro-time-input" class="w-full border rounded-xl p-3.5 text-sm font-medium bg-slate-50 focus:ring-2 focus:ring-ecbGreen focus:outline-none">
                     </div>
                     <div>
                         <label class="block font-bold text-sm text-slate-700 mb-1.5">Zuständiger Techniker:</label>
@@ -455,12 +459,14 @@
         let activePhotos = [];
         let signaturePadInstance = null;
         let retroCustomDate = null;
+        let retroCustomTime = null;
         let retroCustomTechnician = null;
-        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v8';
+        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v9';
 
         window.onload = async function() {
             loadPersistentStorage();
             document.getElementById('retro-date-input').valueAsDate = new Date();
+            document.getElementById('retro-time-input').value = new Date().toTimeString().slice(0,5);
             document.getElementById('retro-technician-input').value = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
 
             window.addEventListener('storage', (e) => {
@@ -672,13 +678,15 @@
 
             let protocolDate, protocolTimestamp;
             if (retroCustomDate) {
-                const dObj = new Date(retroCustomDate);
-                protocolDate = dObj.toLocaleDateString('de-DE') + ' (Nachträglich erfasst)';
+                const timeStr = retroCustomTime || '00:00';
+                const dObj = new Date(`${retroCustomDate}T${timeStr}:00`);
+                protocolDate = `${dObj.toLocaleDateString('de-DE')}, ${timeStr} Uhr (Nachträglich erfasst)`;
                 protocolTimestamp = dObj.getTime();
                 retroCustomDate = null;
+                retroCustomTime = null;
             } else {
                 const now = new Date();
-                protocolDate = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                protocolDate = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
                 protocolTimestamp = now.getTime();
             }
 
@@ -1116,12 +1124,15 @@
         window.startRetroactiveForm = function() {
             const selectVal = document.getElementById('retro-category-select').value;
             const dateVal = document.getElementById('retro-date-input').value;
+            const timeVal = document.getElementById('retro-time-input').value;
             const techVal = document.getElementById('retro-technician-input').value.trim();
 
             if (!dateVal) { showModal('Fehler', 'Bitte ein Datum auswählen.', false); return; }
+            if (!timeVal) { showModal('Fehler', 'Bitte eine Uhrzeit auswählen.', false); return; }
             if (!techVal) { showModal('Fehler', 'Bitte einen Techniker angeben.', false); return; }
 
             retroCustomDate = dateVal;
+            retroCustomTime = timeVal;
             retroCustomTechnician = techVal;
 
             if (selectVal.startsWith('Waschmaschine')) {
@@ -1150,7 +1161,7 @@
         window.openWashingMachineMenu = function(preselectedNum, customTech) {
             const defaultNum = preselectedNum || '1';
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Milnor Waschmaschinen Wartung ${retroCustomDate ? `(Nachträglich für ${retroCustomDate})` : ''}</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Milnor Waschmaschinen Wartung ${retroCustomDate ? `(Nachträglich für ${retroCustomDate} um ${retroCustomTime} Uhr)` : ''}</h2>
                 <form onsubmit="submitProtocol(event, 'Waschmaschine')" class="space-y-6">
                     ${renderCommonHeaderFields(customTech)}
                     <div>
@@ -1177,7 +1188,7 @@
         window.openDryerMenu = function(preselectedNum, customTech) {
             const defaultNum = preselectedNum || '1';
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Trockner Wartung ${retroCustomDate ? `(Nachträglich für ${retroCustomDate})` : ''}</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Trockner Wartung ${retroCustomDate ? `(Nachträglich für ${retroCustomDate} um ${retroCustomTime} Uhr)` : ''}</h2>
                 <form onsubmit="submitProtocol(event, 'Trockner')" class="space-y-6">
                     ${renderCommonHeaderFields(customTech)}
                     <div>
@@ -1203,7 +1214,7 @@
 
         window.openCompressorRoutine = function(customTech) {
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Wartung (2-Wochen) ${retroCustomDate ? `(Nachträglich für ${retroCustomDate})` : ''}</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Wartung (2-Wochen) ${retroCustomDate ? `(Nachträglich für ${retroCustomDate} um ${retroCustomTime} Uhr)` : ''}</h2>
                 <form onsubmit="submitProtocol(event, 'Kompressor 2-Wochen')" class="space-y-6">
                     ${renderCommonHeaderFields(customTech)}
                     <input type="hidden" id="machine-select" value="Kompressor (2-Wochen)">
@@ -1221,7 +1232,7 @@
 
         window.openCompressorAnnual = function(customTech) {
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Jahreswartung ${retroCustomDate ? `(Nachträglich für ${retroCustomDate})` : ''}</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Jahreswartung ${retroCustomDate ? `(Nachträglich für ${retroCustomDate} um ${retroCustomTime} Uhr)` : ''}</h2>
                 <form onsubmit="submitProtocol(event, 'Kompressor Jahreswartung')" class="space-y-6">
                     ${renderCommonHeaderFields(customTech)}
                     <input type="hidden" id="machine-select" value="Kompressor (Jahreswartung)">
@@ -1585,4 +1596,4 @@
         }
     </script>
 </body>
-</html> 
+</html>
