@@ -192,7 +192,7 @@
                 <button type="button" onclick="shareProtocolEmail()" class="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-sm shadow transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-envelope"></i> Per E-Mail versenden</button>
                 <div class="flex gap-2">
                     <button type="button" onclick="downloadCurrentProtocolPDF()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-download"></i> Herunterladen</button>
-                    <button type="button" onclick="closePdfPreviewModal(); switchTab('history');" class="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold text-sm transition cursor-pointer">Zu den Protokollen</button>
+                    <button type="button" onclick="closePdfPreviewModal()" class="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold text-sm transition cursor-pointer">Zu den Protokollen</button>
                 </div>
             </div>
         </div>
@@ -437,6 +437,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -448,7 +449,7 @@
             appId: "1:229926423123:web:a309c14c708fc886c62d4a6"
         };
 
-        let app, db;
+        let app, db, auth;
         let protocols = [];
         let dguvDevices = [];
         let cloudUsers = [
@@ -461,13 +462,16 @@
         let retroCustomDate = null;
         let retroCustomTime = null;
         let retroCustomTechnician = null;
-        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v9';
+        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v12';
 
         window.onload = async function() {
             loadPersistentStorage();
-            document.getElementById('retro-date-input').valueAsDate = new Date();
-            document.getElementById('retro-time-input').value = new Date().toTimeString().slice(0,5);
-            document.getElementById('retro-technician-input').value = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
+            const dateInp = document.getElementById('retro-date-input');
+            const timeInp = document.getElementById('retro-time-input');
+            const techInp = document.getElementById('retro-technician-input');
+            if (dateInp) dateInp.valueAsDate = new Date();
+            if (timeInp) timeInp.value = new Date().toTimeString().slice(0,5);
+            if (techInp) techInp.value = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
 
             window.addEventListener('storage', (e) => {
                 if (e.key === SYNC_CHANNEL_KEY && e.newValue) {
@@ -485,6 +489,8 @@
             try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
+                auth = getAuth(app);
+                await signInAnonymously(auth);
                 
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block";
                 document.getElementById('cloud-status-text').innerText = "Cloud Live Sync Aktiv";
@@ -658,14 +664,15 @@
         };
 
         window.submitProtocol = async function(event, categoryKey) {
-            event.preventDefault();
-            const employeeName = document.getElementById('employee-name').value.trim();
+            if (event) event.preventDefault();
+            const employeeNameEl = document.getElementById('employee-name');
+            const employeeName = employeeNameEl ? employeeNameEl.value.trim() : (localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter');
             if (!employeeName) { showModal('Fehler', 'Bitte Namen angeben.', false); return; }
             if (!signaturePadInstance || !signaturePadInstance.hasSigned) { showModal('Fehler', 'Bitte unterschreiben.', false); return; }
 
             const machineSelect = document.getElementById('machine-select');
             const machineName = machineSelect ? machineSelect.value : categoryKey;
-            const remarks = document.getElementById('remarks-input').value;
+            const remarks = document.getElementById('remarks-input') ? document.getElementById('remarks-input').value : '';
             const runtimeHours = document.getElementById('runtime-hours') ? document.getElementById('runtime-hours').value : null;
 
             const radios = document.querySelectorAll('input[type="radio"]:checked');
@@ -1325,12 +1332,17 @@
             canvas.width = canvas.parentElement.clientWidth || 400; canvas.height = 144;
             const ctx = canvas.getContext('2d'); ctx.lineWidth = 3; ctx.lineCap = 'round';
             let drawing = false;
-            const pos = (e) => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX || e.touches[0].clientX) - r.left, y: (e.clientY || e.touches[0].clientY) - r.top }; };
+            const pos = (e) => { 
+                const r = canvas.getBoundingClientRect(); 
+                const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+                const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+                return { x: clientX - r.left, y: clientY - r.top }; 
+            };
             canvas.onmousedown = (e) => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
             canvas.onmousemove = (e) => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); signaturePadInstance.hasSigned = true; };
             canvas.onmouseup = () => drawing = false;
-            canvas.ontouchstart = (e) => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
-            canvas.ontouchmove = (e) => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); signaturePadInstance.hasSigned = true; };
+            canvas.ontouchstart = (e) => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); };
+            canvas.ontouchmove = (e) => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); signaturePadInstance.hasSigned = true; e.preventDefault(); };
             canvas.ontouchend = () => drawing = false;
             signaturePadInstance = { canvas, ctx, hasSigned: false };
         }
@@ -1354,7 +1366,7 @@
             const fC = document.getElementById('filter-category')?.value || 'all';
 
             const filtered = protocols.filter(p => {
-                if (fC !== 'all' && p.category !== fC) return false;
+                if (fC !== 'all' && !p.category.includes(fC)) return false;
                 if (fY !== 'all' && !p.date?.includes(fY)) return false;
                 if (fM !== 'all' && p.date?.split('.')[1]?.padStart(2, '0') !== fM) return false;
                 return true;
