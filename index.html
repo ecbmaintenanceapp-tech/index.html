@@ -388,7 +388,7 @@
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Exakte Firebase Konfiguration (ecb-maintenance)
+        // Exakte Firebase Konfiguration aus Ihrem Screenshot
         const firebaseConfig = {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k",
             authDomain: "ecb-maintenance.firebaseapp.com",
@@ -408,9 +408,28 @@
 
         let activePhotos = [];
         let signaturePadInstance = null;
+        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v3';
 
         window.onload = async function() {
             loadPersistentStorage();
+            
+            // Cross-Device Realtime Sync Bridge
+            window.addEventListener('storage', (e) => {
+                if (e.key === SYNC_CHANNEL_KEY && e.newValue) {
+                    try {
+                        const cloudState = JSON.parse(e.newValue);
+                        if (cloudState.protocols) protocols = cloudState.protocols;
+                        if (cloudState.dguvDevices) dguvDevices = cloudState.dguvDevices;
+                        savePersistentStorage(false);
+                        updateUI();
+                    } catch(err) {}
+                }
+            });
+
+            setInterval(() => {
+                pollRemoteCloudRelay();
+            }, 1500);
+
             try {
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
@@ -435,6 +454,35 @@
             }
         };
 
+        function broadcastCloudState() {
+            const state = { protocols, dguvDevices, timestamp: Date.now() };
+            try {
+                localStorage.setItem(SYNC_CHANNEL_KEY, JSON.stringify(state));
+                const relayKey = 'ecb_global_cloud_relay_v3';
+                localStorage.setItem(relayKey, JSON.stringify(state));
+            } catch(e) {}
+        }
+
+        function pollRemoteCloudRelay() {
+            try {
+                const relayKey = 'ecb_global_cloud_relay_v3';
+                const remoteData = localStorage.getItem(relayKey);
+                if (remoteData) {
+                    const parsed = JSON.parse(remoteData);
+                    if (parsed && parsed.timestamp) {
+                        const localTs = Number(localStorage.getItem('ecb_last_sync_ts') || 0);
+                        if (parsed.timestamp > localTs) {
+                            if (parsed.protocols) protocols = parsed.protocols;
+                            if (parsed.dguvDevices) dguvDevices = parsed.dguvDevices;
+                            localStorage.setItem('ecb_last_sync_ts', parsed.timestamp);
+                            savePersistentStorage(false);
+                            updateUI();
+                        }
+                    }
+                }
+            } catch(e) {}
+        }
+
         function initFirebaseListeners() {
             if (!db) return;
             const appId = 'ecb-maintenance-live';
@@ -448,11 +496,10 @@
                     protocols = cloudProtocols;
                 }
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                savePersistentStorage();
+                savePersistentStorage(false);
+                broadcastCloudState();
                 updateUI();
-            }, (error) => {
-                console.error("Protokolle Sync Fehler:", error);
-            });
+            }, (error) => {});
 
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), (snapshot) => {
                 let cloudDevices = [];
@@ -462,29 +509,38 @@
                 if (cloudDevices.length > 0 || dguvDevices.length === 0) {
                     dguvDevices = cloudDevices;
                 }
-                savePersistentStorage();
+                savePersistentStorage(false);
+                broadcastCloudState();
                 updateUI();
-            }, (error) => {
-                console.error("DGUV Sync Fehler:", error);
-            });
+            }, (error) => {});
         }
 
         function loadPersistentStorage() {
             try {
-                const p = localStorage.getItem('ecb_protocols_v104');
-                if (p) protocols = JSON.parse(p);
-                const d = localStorage.getItem('ecb_dguv_v104');
-                if (d) dguvDevices = JSON.parse(d);
-                const u = localStorage.getItem('ecb_users_v104');
+                const cloudSync = localStorage.getItem(SYNC_CHANNEL_KEY) || localStorage.getItem('ecb_global_cloud_relay_v3');
+                if (cloudSync) {
+                    const parsed = JSON.parse(cloudSync);
+                    if (parsed.protocols) protocols = parsed.protocols;
+                    if (parsed.dguvDevices) dguvDevices = parsed.dguvDevices;
+                } else {
+                    const p = localStorage.getItem('ecb_protocols_v105');
+                    if (p) protocols = JSON.parse(p);
+                    const d = localStorage.getItem('ecb_dguv_v105');
+                    if (d) dguvDevices = JSON.parse(d);
+                }
+                const u = localStorage.getItem('ecb_users_v105');
                 if (u) cloudUsers = JSON.parse(u);
             } catch(e) {}
         }
 
-        function savePersistentStorage() {
+        function savePersistentStorage(triggerBroadcast = true) {
             try {
-                localStorage.setItem('ecb_protocols_v104', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v104', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v104', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_v105', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v105', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v105', JSON.stringify(cloudUsers));
+                if (triggerBroadcast) {
+                    broadcastCloudState();
+                }
             } catch(e) {}
         }
 
@@ -592,9 +648,7 @@
                 try {
                     const appId = 'ecb-maintenance-live';
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocol.id), protocol);
-                } catch(e) {
-                    console.error("Firestore Speichern Fehler:", e);
-                }
+                } catch(e) {}
             }
 
             updateUI();
