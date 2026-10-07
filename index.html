@@ -135,12 +135,12 @@
             
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
                 <h4 class="font-bold text-emerald-900 text-sm flex items-center justify-between">
-                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Cloud Live Sync (Firebase)</span>
-                    <button onclick="forceSyncWithCloud()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer">Synchronisieren</button>
+                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Firebase Cloud Recovery</span>
+                    <button type="button" onclick="forceCloudRecovery()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer"><i class="fa-solid fa-rotate mr-1"></i> Aus Cloud laden</button>
                 </h4>
-                <p class="text-xs text-emerald-700">Daten sind über Ihre Firebase-Datenbank dauerhaft verbunden.</p>
+                <p class="text-xs text-emerald-700">Laden Sie alle Protokolle und DGUV-Geräte aus Ihrer Firebase-Datenbank (`ecb-maintenance`).</p>
                 <div class="flex gap-2 pt-2">
-                    <button onclick="exportDataJson()" class="flex-1 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 cursor-pointer"><i class="fa-solid fa-download mr-1"></i> Backup exportieren</button>
+                    <button type="button" onclick="exportDataJson()" class="flex-1 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 cursor-pointer"><i class="fa-solid fa-download mr-1"></i> Backup exportieren</button>
                     <label class="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 text-center cursor-pointer">
                         <i class="fa-solid fa-upload mr-1"></i> Backup importieren
                         <input type="file" accept=".json" onchange="importDataJson(event)" class="hidden">
@@ -213,18 +213,18 @@
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
                         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Cloud Live Sync Aktiv</span>
+                        <span id="cloud-status-text">Firebase Cloud Live Sync Aktiv</span>
                     </p>
                 </div>
             </div>
             <nav class="flex items-center space-x-2 mt-3 sm:mt-0 flex-wrap gap-2">
-                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-layer-group"></i> Dashboard</button>
-                <button onclick="switchTab('calendar')" id="nav-calendar" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-calendar-check"></i> Kalender</button>
-                <button onclick="switchTab('retro')" id="nav-retro" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-clock-rotate-left"></i> Nachtragen</button>
-                <button onclick="switchTab('dguv')" id="nav-dguv" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plug-circle-check"></i> DGUV V3 <span id="dguv-count" class="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">0</span></button>
-                <button onclick="switchTab('history')" id="nav-history" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-folder-open"></i> Protokolle <span id="protocol-count" class="bg-ecbGreen text-white text-xs px-2 py-0.5 rounded-full">0</span></button>
-                <button onclick="openPasswordModal()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-white/20 hover:bg-white/30 transition flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-key"></i></button>
-                <button onclick="handleLogout()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-red-600/80 hover:bg-red-600 transition flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-right-from-bracket"></i></button>
+                <button type="button" onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/25 hover:bg-white/30 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-layer-group"></i> Dashboard</button>
+                <button type="button" onclick="switchTab('calendar')" id="nav-calendar" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-calendar-check"></i> Kalender</button>
+                <button type="button" onclick="switchTab('retro')" id="nav-retro" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-clock-rotate-left"></i> Nachtragen</button>
+                <button type="button" onclick="switchTab('dguv')" id="nav-dguv" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plug-circle-check"></i> DGUV V3 <span id="dguv-count" class="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full">0</span></button>
+                <button type="button" onclick="switchTab('history')" id="nav-history" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-folder-open"></i> Protokolle <span id="protocol-count" class="bg-ecbGreen text-white text-xs px-2 py-0.5 rounded-full">0</span></button>
+                <button type="button" onclick="openPasswordModal()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-white/20 hover:bg-white/30 transition flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-key"></i></button>
+                <button type="button" onclick="handleLogout()" class="px-3 py-2.5 rounded-xl text-sm font-semibold bg-red-600/80 hover:bg-red-600 transition flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-right-from-bracket"></i></button>
             </nav>
         </div>
     </header>
@@ -237,8 +237,9 @@
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Wartungs- und Prüfsystem</h2>
                     <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge synchronisieren sich in Echtzeit.</p>
                 </div>
-                <div id="dashboard-admin-btn-container" class="mt-6 hidden">
-                    <button onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Cloud-Sync</button>
+                <div id="dashboard-admin-btn-container" class="mt-6 hidden flex flex-wrap gap-3">
+                    <button type="button" onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Cloud-Sync</button>
+                    <button type="button" onclick="forceCloudRecovery()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-cloud-arrow-down"></i> Daten aus Cloud laden</button>
                 </div>
             </div>
 
@@ -291,7 +292,7 @@
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border space-y-6">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b pb-5">
                     <div><span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-bold uppercase">Prüfmanagement</span><h3 class="text-2xl font-extrabold text-slate-900 mt-2">DGUV V3 Prüfungen &amp; Messprotokolle</h3></div>
-                    <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm shadow-lg transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plus"></i> Gerät erfassen</button>
+                    <button type="button" onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm shadow-lg transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plus"></i> Gerät erfassen</button>
                 </div>
                 <div id="dashboard-dguv-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
@@ -315,7 +316,7 @@
                 <div>
                     <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-bold uppercase">Rückwirkend Erfassen</span>
                     <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartung nachtragen</h2>
-                    <p class="text-sm text-slate-500 mt-1">Wählen Sie unten die Maschine, das Datum, die Uhrzeit sowie den Techniker aus und springen Sie direkt in das vollständige Prüfprotokoll mit allen Punkten, Bildern und Unterschrift.</p>
+                    <p class="text-sm text-slate-500 mt-1">Wählen Sie unten die Maschine, das Datum, die Uhrzeit sowie den Techniker aus und springen Sie direkt in das vollständige Prüfprotokoll.</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                     <div>
@@ -357,15 +358,18 @@
         <div id="tab-dguv" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border flex justify-between items-center">
                 <h2 class="text-2xl font-extrabold text-slate-900">DGUV V3 Prüfungen &amp; Messprotokolle</h2>
-                <button onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm shadow-lg transition cursor-pointer"><i class="fa-solid fa-plus"></i> Neues Gerät</button>
+                <button type="button" onclick="openDguvModal()" class="px-5 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-bold text-sm shadow-lg transition cursor-pointer"><i class="fa-solid fa-plus"></i> Neues Gerät</button>
             </div>
             <div id="dguv-devices-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
         <div id="tab-history" class="hidden space-y-6 animate-fade-in">
-            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border flex justify-between items-center">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border flex flex-wrap justify-between items-center gap-4">
                 <h2 class="text-2xl font-extrabold text-slate-900">Gespeicherte Protokolle</h2>
-                <div id="history-admin-clear-container" class="hidden"><button onclick="clearHistory()" class="px-5 py-2.5 bg-red-50 text-red-600 rounded-xl text-sm font-bold cursor-pointer">Verlauf löschen</button></div>
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="forceCloudRecovery()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow transition cursor-pointer"><i class="fa-solid fa-cloud-arrow-down mr-1"></i> Cloud aktualisieren</button>
+                    <div id="history-admin-clear-container" class="hidden"><button type="button" onclick="clearHistory()" class="px-4 py-2.5 bg-red-50 text-red-600 rounded-xl text-sm font-bold cursor-pointer">Verlauf löschen</button></div>
+                </div>
             </div>
             <div class="bg-white p-5 rounded-3xl border shadow-sm flex flex-wrap items-center gap-4">
                 <div><label class="block text-xs font-bold text-slate-600 mb-1">Jahr:</label><select id="filter-year" onchange="renderHistory()" class="border rounded-xl px-4 py-2.5 text-sm bg-slate-50 cursor-pointer"><option value="all">Alle</option></select></div>
@@ -376,14 +380,14 @@
         </div>
 
         <div id="form-view" class="hidden space-y-6 animate-fade-in">
-            <button onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-white border rounded-xl text-sm font-bold text-slate-700 shadow-sm flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-arrow-left"></i> Zurück</button>
+            <button type="button" onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-white border rounded-xl text-sm font-bold text-slate-700 shadow-sm flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-arrow-left"></i> Zurück</button>
             <div id="dynamic-form-content" class="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border"></div>
         </div>
     </main>
 
     <div id="modal-dguv" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border">
-            <div class="flex justify-between items-center border-b pb-4"><h3 class="text-xl font-extrabold">DGUV V3 Gerät erfassen</h3><button onclick="closeDguvModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="flex justify-between items-center border-b pb-4"><h3 class="text-xl font-extrabold">DGUV V3 Gerät erfassen</h3><button type="button" onclick="closeDguvModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
             <form onsubmit="saveDguvDevice(event)" class="space-y-4">
                 <div><label class="block text-sm font-bold mb-1.5">Gerätebezeichnung:</label><input type="text" id="dguv-dev-name" required class="w-full border rounded-xl p-3.5 text-sm"></div>
                 <div><label class="block text-sm font-bold mb-1.5">Standort:</label><input type="text" id="dguv-dev-location" required class="w-full border rounded-xl p-3.5 text-sm"></div>
@@ -397,7 +401,7 @@
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border">
             <div class="flex justify-between items-center border-b pb-4">
                 <h3 class="text-xl font-extrabold" id="dguv-upload-title">Messprotokoll hochladen</h3>
-                <button onclick="closeDguvUploadModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeDguvUploadModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <input type="hidden" id="dguv-upload-device-id">
             <div class="space-y-4">
@@ -417,7 +421,7 @@
         <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl border max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3">
                 <h3 class="text-lg font-extrabold" id="dguv-view-title">Messprotokoll ansehen</h3>
-                <button onclick="closeDguvViewModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" onclick="closeDguvViewModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="dguv-view-content" class="flex-grow overflow-auto flex items-center justify-center bg-slate-100 rounded-2xl p-4 min-h-[350px]"></div>
             <div class="flex justify-end gap-3 pt-2">
@@ -431,14 +435,13 @@
             <div id="modal-icon" class="w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner"><i class="fa-solid fa-check"></i></div>
             <h3 id="modal-title" class="text-xl font-extrabold text-slate-900">Meldung</h3>
             <p id="modal-text" class="text-sm text-slate-600"></p>
-            <button onclick="closeModal()" class="w-full py-3.5 bg-ecbGreen text-white rounded-2xl font-bold shadow-lg cursor-pointer">Verstanden</button>
+            <button type="button" onclick="closeModal()" class="w-full py-3.5 bg-ecbGreen text-white rounded-2xl font-bold shadow-lg cursor-pointer">Verstanden</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k",
@@ -449,7 +452,7 @@
             appId: "1:229926423123:web:a309c14c708fc886c62d4a6"
         };
 
-        let app, db, auth;
+        let app, db;
         let protocols = [];
         let dguvDevices = [];
         let cloudUsers = [
@@ -462,7 +465,7 @@
         let retroCustomDate = null;
         let retroCustomTime = null;
         let retroCustomTechnician = null;
-        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v12';
+        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v25';
 
         window.onload = async function() {
             loadPersistentStorage();
@@ -489,17 +492,16 @@
             try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
-                auth = getAuth(app);
-                await signInAnonymously(auth);
                 
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Cloud Live Sync Aktiv";
+                document.getElementById('cloud-status-text').innerText = "Firebase Cloud Live Sync Aktiv";
                 
+                await forceCloudRecovery();
                 initFirebaseFirestoreListeners();
             } catch (err) {
                 console.error("Firebase Init Hinweis:", err);
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Cloud Live Sync Aktiv";
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-400 inline-block";
+                document.getElementById('cloud-status-text').innerText = "Lokaler Modus (Cloud Offline)";
             }
 
             updateUI();
@@ -517,6 +519,49 @@
             } catch(e) {}
         }
 
+        window.forceCloudRecovery = async function() {
+            if (!db) {
+                showModal('Hinweis', 'Keine aktive Firebase-Verbindung.', false);
+                return;
+            }
+            const appId = 'ecb-maintenance-live';
+            try {
+                const protoSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'));
+                let cloudProtocols = [];
+                protoSnap.forEach(docSnap => {
+                    cloudProtocols.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                if (cloudProtocols.length > 0) {
+                    protocols = cloudProtocols;
+                }
+
+                const dguvSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'));
+                let cloudDevices = [];
+                dguvSnap.forEach(docSnap => {
+                    cloudDevices.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                if (cloudDevices.length > 0) {
+                    dguvDevices = cloudDevices;
+                }
+
+                const userSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'cloud_users'));
+                let cloudUsrs = [];
+                userSnap.forEach(docSnap => {
+                    cloudUsrs.push(docSnap.data());
+                });
+                if (cloudUsrs.length > 0) {
+                    cloudUsers = cloudUsrs;
+                }
+
+                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                savePersistentStorage(false);
+                updateUI();
+                showModal('Erfolg', `Daten aus Cloud geladen! ${protocols.length} Protokolle & ${dguvDevices.length} DGUV-Geräte gefunden.`, true);
+            } catch(e) {
+                showModal('Fehler', 'Fehler beim Abrufen der Cloud-Daten: ' + e.message, false);
+            }
+        };
+
         function initFirebaseFirestoreListeners() {
             if (!db) return;
             const appId = 'ecb-maintenance-live';
@@ -526,13 +571,13 @@
                 snapshot.forEach(docSnap => {
                     cloudProtocols.push({ id: docSnap.id, ...docSnap.data() });
                 });
-                if (cloudProtocols.length > 0 || protocols.length === 0) {
+                if (cloudProtocols.length > 0) {
                     protocols = cloudProtocols;
+                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                    savePersistentStorage(false);
+                    broadcastState();
+                    updateUI();
                 }
-                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                savePersistentStorage(false);
-                broadcastState();
-                updateUI();
             }, (error) => {});
 
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), (snapshot) => {
@@ -540,12 +585,12 @@
                 snapshot.forEach(docSnap => {
                     cloudDevices.push({ id: docSnap.id, ...docSnap.data() });
                 });
-                if (cloudDevices.length > 0 || dguvDevices.length === 0) {
+                if (cloudDevices.length > 0) {
                     dguvDevices = cloudDevices;
+                    savePersistentStorage(false);
+                    broadcastState();
+                    updateUI();
                 }
-                savePersistentStorage(false);
-                broadcastState();
-                updateUI();
             }, (error) => {});
 
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'cloud_users'), (snapshot) => {
@@ -599,26 +644,6 @@
                 }
             } catch(e) {}
         }
-
-        window.forceSyncWithCloud = async function() {
-            if (db) {
-                const appId = 'ecb-maintenance-live';
-                try {
-                    for (let p of protocols) {
-                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.id), p);
-                    }
-                    for (let d of dguvDevices) {
-                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', d.id), d);
-                    }
-                    for (let usr of cloudUsers) {
-                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cloud_users', usr.user), usr);
-                    }
-                } catch(e) {}
-            }
-            savePersistentStorage();
-            updateUI();
-            showModal('Erfolg', 'Cloud-Daten erfolgreich synchronisiert!', true);
-        };
 
         window.exportDataJson = function() {
             const data = { protocols, dguvDevices, cloudUsers };
@@ -691,6 +716,7 @@
                 protocolTimestamp = dObj.getTime();
                 retroCustomDate = null;
                 retroCustomTime = null;
+                retroCustomTechnician = null;
             } else {
                 const now = new Date();
                 protocolDate = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
@@ -1390,8 +1416,8 @@
                                 <p class="text-xs text-slate-500 mt-1">Nr.: ${p.id} | ${p.date} | ${p.employee} ${p.runtime ? `| ${p.runtime} Std.` : ''}</p>
                             </div>
                             <div class="flex gap-2">
-                                <button onclick='openPdfPreviewModalById("${p.id}")' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf mr-1"></i> PDF</button>
-                                <button onclick="deleteProtocol('${p.id}')" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                <button type="button" onclick='openPdfPreviewModalById("${p.id}")' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf mr-1"></i> PDF</button>
+                                <button type="button" onclick="deleteProtocol('${p.id}')" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
                         <div class="bg-slate-50 p-4 rounded-xl space-y-2">${pts}</div>
@@ -1424,18 +1450,18 @@
                         <div>
                             <div class="flex justify-between items-center">
                                 <span class="px-3 py-1 rounded-full text-xs font-bold ${hasProtocol?'bg-emerald-50 text-ecbGreen':'bg-amber-50 text-amber-600'}">${hasProtocol ? 'Erledigt & Protokoll hinterlegt' : 'Offen'}</span>
-                                <button onclick="deleteDguvDevice('${d.id}')" class="text-red-500 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                <button type="button" onclick="deleteDguvDevice('${d.id}')" class="text-red-500 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
                             </div>
                             <h3 class="text-xl font-bold mt-2 text-slate-900">${d.name}</h3>
                             <p class="text-xs text-sky-700 mt-1">Inventar-Nr.: ${d.inventoryNumber} | ${d.location}</p>
                             <p class="text-xs text-slate-500 mt-1">Prüftermin: ${d.dueDate}</p>
                         </div>
                         <div class="pt-3 border-t border-slate-100 flex flex-wrap gap-2">
-                            <button onclick="openDguvUploadModal('${d.id}')" class="flex-1 py-2.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                            <button type="button" onclick="openDguvUploadModal('${d.id}')" class="flex-1 py-2.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
                                 <i class="fa-solid fa-upload"></i> Protokoll hochladen
                             </button>
                             ${hasProtocol ? `
-                                <button onclick="viewDguvProtocol('${d.id}')" class="py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                <button type="button" onclick="viewDguvProtocol('${d.id}')" class="py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
                                     <i class="fa-solid fa-eye"></i> Ansehen
                                 </button>
                             ` : ''}
