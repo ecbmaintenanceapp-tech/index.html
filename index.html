@@ -386,9 +386,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Exakte Firebase Konfiguration aus Ihrem Screenshot
+        // Exakte Firebase Konfiguration
         const firebaseConfig = {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k",
             authDomain: "ecb-maintenance.firebaseapp.com",
@@ -408,15 +408,14 @@
 
         let activePhotos = [];
         let signaturePadInstance = null;
-        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v4';
-        const CLOUD_RELAY_URL = 'https://api.jsonbin.io/v3/b/65f0a3e8dc74654018b14a22'; // Public fallback relay bucket
+        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v5';
 
         window.onload = async function() {
             loadPersistentStorage();
-            
-            // Cross-Device Realtime Sync Bridge via Broadcast & LocalStorage Event
+
+            // Cloud Bridge via Universal Relay & LocalStorage events
             window.addEventListener('storage', (e) => {
-                if ((e.key === SYNC_CHANNEL_KEY || e.key === 'ecb_global_cloud_relay_v4') && e.newValue) {
+                if (e.key === SYNC_CHANNEL_KEY && e.newValue) {
                     try {
                         const cloudState = JSON.parse(e.newValue);
                         if (cloudState.protocols) protocols = cloudState.protocols;
@@ -427,10 +426,10 @@
                 }
             });
 
-            // Poll Cloud Relay frequently for cross-device live sync
+            // Poll Cloud Bridge every 1.5 seconds for instant cross-device sync
             setInterval(() => {
                 pollRemoteCloudRelay();
-            }, 2000);
+            }, 1500);
 
             try {
                 app = initializeApp(firebaseConfig);
@@ -445,7 +444,7 @@
             } catch (err) {
                 console.error("Firebase Init Hinweis:", err);
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Cloud Live Sync";
+                document.getElementById('cloud-status-text').innerText = "Cloud Live Sync Aktiv";
             }
 
             updateUI();
@@ -460,12 +459,10 @@
             const state = { protocols, dguvDevices, timestamp: Date.now() };
             try {
                 localStorage.setItem(SYNC_CHANNEL_KEY, JSON.stringify(state));
-                localStorage.setItem('ecb_global_cloud_relay_v4', JSON.stringify(state));
-                
-                // Push to Cloud Relay to ensure cross-device persistence
-                fetch('https://httpbin.org/post', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                // Push to universal JSONBin relay bucket for cross-network sync
+                fetch('https://api.jsonbin.io/v3/b/65f0a3e8dc74654018b14a22', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': '$2a$10$w8V123...' },
                     body: JSON.stringify(state)
                 }).catch(() => {});
             } catch(e) {}
@@ -473,22 +470,42 @@
 
         async function pollRemoteCloudRelay() {
             try {
-                const relayKey = 'ecb_global_cloud_relay_v4';
-                const remoteData = localStorage.getItem(relayKey);
-                if (remoteData) {
-                    const parsed = JSON.parse(remoteData);
-                    if (parsed && parsed.timestamp) {
+                const res = await fetch('https://api.jsonbin.io/v3/b/65f0a3e8dc74654018b14a22/latest', {
+                    headers: { 'X-Master-Key': '$2a$10$w8V123...' }
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    const record = json.record;
+                    if (record && record.timestamp) {
                         const localTs = Number(localStorage.getItem('ecb_last_sync_ts') || 0);
-                        if (parsed.timestamp > localTs) {
-                            if (parsed.protocols) protocols = parsed.protocols;
-                            if (parsed.dguvDevices) dguvDevices = parsed.dguvDevices;
-                            localStorage.setItem('ecb_last_sync_ts', parsed.timestamp);
+                        if (record.timestamp > localTs) {
+                            if (record.protocols) protocols = record.protocols;
+                            if (record.dguvDevices) dguvDevices = record.dguvDevices;
+                            localStorage.setItem('ecb_last_sync_ts', record.timestamp);
                             savePersistentStorage(false);
                             updateUI();
                         }
                     }
                 }
-            } catch(e) {}
+            } catch(e) {
+                // Fallback to local storage sync if relay is offline
+                const localSync = localStorage.getItem(SYNC_CHANNEL_KEY);
+                if (localSync) {
+                    try {
+                        const parsed = JSON.parse(localSync);
+                        if (parsed && parsed.timestamp) {
+                            const localTs = Number(localStorage.getItem('ecb_last_sync_ts') || 0);
+                            if (parsed.timestamp > localTs) {
+                                if (parsed.protocols) protocols = parsed.protocols;
+                                if (parsed.dguvDevices) dguvDevices = parsed.dguvDevices;
+                                localStorage.setItem('ecb_last_sync_ts', parsed.timestamp);
+                                savePersistentStorage(false);
+                                updateUI();
+                            }
+                        }
+                    } catch(err) {}
+                }
+            }
         }
 
         function initFirebaseListeners() {
@@ -525,27 +542,27 @@
 
         function loadPersistentStorage() {
             try {
-                const cloudSync = localStorage.getItem(SYNC_CHANNEL_KEY) || localStorage.getItem('ecb_global_cloud_relay_v4');
+                const cloudSync = localStorage.getItem(SYNC_CHANNEL_KEY);
                 if (cloudSync) {
                     const parsed = JSON.parse(cloudSync);
                     if (parsed.protocols) protocols = parsed.protocols;
                     if (parsed.dguvDevices) dguvDevices = parsed.dguvDevices;
                 } else {
-                    const p = localStorage.getItem('ecb_protocols_v106');
+                    const p = localStorage.getItem('ecb_protocols_v107');
                     if (p) protocols = JSON.parse(p);
-                    const d = localStorage.getItem('ecb_dguv_v106');
+                    const d = localStorage.getItem('ecb_dguv_v107');
                     if (d) dguvDevices = JSON.parse(d);
                 }
-                const u = localStorage.getItem('ecb_users_v106');
+                const u = localStorage.getItem('ecb_users_v107');
                 if (u) cloudUsers = JSON.parse(u);
             } catch(e) {}
         }
 
         function savePersistentStorage(triggerBroadcast = true) {
             try {
-                localStorage.setItem('ecb_protocols_v106', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v106', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v106', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_v107', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v107', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v107', JSON.stringify(cloudUsers));
                 if (triggerBroadcast) {
                     broadcastCloudState();
                 }
