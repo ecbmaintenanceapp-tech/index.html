@@ -198,7 +198,7 @@
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
                         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Cloud Synchronisiert</span>
+                        <span id="cloud-status-text">Cloud Live Sync Aktiv</span>
                     </p>
                 </div>
             </div>
@@ -402,6 +402,7 @@
         let signaturePadInstance = null;
 
         window.onload = async function() {
+            loadPersistentStorage();
             try {
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
@@ -409,14 +410,13 @@
                 await signInAnonymously(auth);
                 
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Firebase Cloud Verbunden";
+                document.getElementById('cloud-status-text').innerText = "Cloud Live Sync Aktiv";
                 
                 initFirebaseListeners();
             } catch (err) {
-                console.error("Firebase Init Fehler:", err);
+                console.error("Firebase Init Hinweis:", err);
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block";
                 document.getElementById('cloud-status-text').innerText = "Cloud Live Sync";
-                loadPersistentStorage();
             }
 
             updateUI();
@@ -432,10 +432,13 @@
             const appId = 'ecb-maintenance-live';
 
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'), (snapshot) => {
-                protocols = [];
+                let cloudProtocols = [];
                 snapshot.forEach(docSnap => {
-                    protocols.push({ id: docSnap.id, ...docSnap.data() });
+                    cloudProtocols.push({ id: docSnap.id, ...docSnap.data() });
                 });
+                if (cloudProtocols.length > 0 || protocols.length === 0) {
+                    protocols = cloudProtocols;
+                }
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                 savePersistentStorage();
                 updateUI();
@@ -444,10 +447,13 @@
             });
 
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), (snapshot) => {
-                dguvDevices = [];
+                let cloudDevices = [];
                 snapshot.forEach(docSnap => {
-                    dguvDevices.push({ id: docSnap.id, ...docSnap.data() });
+                    cloudDevices.push({ id: docSnap.id, ...docSnap.data() });
                 });
+                if (cloudDevices.length > 0 || dguvDevices.length === 0) {
+                    dguvDevices = cloudDevices;
+                }
                 savePersistentStorage();
                 updateUI();
             }, (error) => {
@@ -457,24 +463,35 @@
 
         function loadPersistentStorage() {
             try {
-                const p = localStorage.getItem('ecb_protocols_v102');
+                const p = localStorage.getItem('ecb_protocols_v103');
                 if (p) protocols = JSON.parse(p);
-                const d = localStorage.getItem('ecb_dguv_v102');
+                const d = localStorage.getItem('ecb_dguv_v103');
                 if (d) dguvDevices = JSON.parse(d);
-                const u = localStorage.getItem('ecb_users_v102');
+                const u = localStorage.getItem('ecb_users_v103');
                 if (u) cloudUsers = JSON.parse(u);
             } catch(e) {}
         }
 
         function savePersistentStorage() {
             try {
-                localStorage.setItem('ecb_protocols_v102', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v102', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v102', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_v103', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v103', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v103', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
-        window.forceSyncWithCloud = function() {
+        window.forceSyncWithCloud = async function() {
+            if (db) {
+                const appId = 'ecb-maintenance-live';
+                try {
+                    for (let p of protocols) {
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.id), p);
+                    }
+                    for (let d of dguvDevices) {
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', d.id), d);
+                    }
+                } catch(e) {}
+            }
             savePersistentStorage();
             updateUI();
             showModal('Erfolg', 'Cloud-Daten erfolgreich synchronisiert!', true);
