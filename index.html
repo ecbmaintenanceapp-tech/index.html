@@ -46,53 +46,17 @@
             box-shadow: 0 4px 12px -2px rgba(101, 163, 13, 0.15); 
         }
 
-        .card-washer { 
-            background: linear-gradient(135deg, #ffffff 0%, #f4fbf1 100%); 
-            border: 1px solid #d9f99d;
-            transition: all 0.3s ease;
-        }
-        .card-washer:hover { 
-            background: linear-gradient(135deg, #ecfccb 0%, #bef264 100%); 
-            border-color: #65a30d; 
-            box-shadow: 0 10px 25px -5px rgba(101, 163, 13, 0.25);
-            transform: translateY(-2px);
-        }
+        .card-washer { background: linear-gradient(135deg, #ffffff 0%, #f4fbf1 100%); border: 1px solid #d9f99d; transition: all 0.3s ease; }
+        .card-washer:hover { background: linear-gradient(135deg, #ecfccb 0%, #bef264 100%); border-color: #65a30d; box-shadow: 0 10px 25px -5px rgba(101, 163, 13, 0.25); transform: translateY(-2px); }
 
-        .card-dryer { 
-            background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%); 
-            border: 1px solid #fde68a;
-            transition: all 0.3s ease;
-        }
-        .card-dryer:hover { 
-            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%); 
-            border-color: #f59e0b; 
-            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.25);
-            transform: translateY(-2px);
-        }
+        .card-dryer { background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%); border: 1px solid #fde68a; transition: all 0.3s ease; }
+        .card-dryer:hover { background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%); border-color: #f59e0b; box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.25); transform: translateY(-2px); }
 
-        .card-comp2w { 
-            background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%); 
-            border: 1px solid #a7f3d0;
-            transition: all 0.3s ease;
-        }
-        .card-comp2w:hover { 
-            background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%); 
-            border-color: #10b981; 
-            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.25);
-            transform: translateY(-2px);
-        }
+        .card-comp2w { background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%); border: 1px solid #a7f3d0; transition: all 0.3s ease; }
+        .card-comp2w:hover { background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%); border-color: #10b981; box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.25); transform: translateY(-2px); }
 
-        .card-compyear { 
-            background: linear-gradient(135deg, #ffffff 0%, #f3e8ff 100%); 
-            border: 1px solid #e9d5ff;
-            transition: all 0.3s ease;
-        }
-        .card-compyear:hover { 
-            background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%); 
-            border-color: #a855f7; 
-            box-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.25);
-            transform: translateY(-2px);
-        }
+        .card-compyear { background: linear-gradient(135deg, #ffffff 0%, #f3e8ff 100%); border: 1px solid #e9d5ff; transition: all 0.3s ease; }
+        .card-compyear:hover { background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%); border-color: #a855f7; box-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.25); transform: translateY(-2px); }
     </style>
 </head>
 <body class="text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
@@ -465,7 +429,7 @@
         let retroCustomDate = null;
         let retroCustomTime = null;
         let retroCustomTechnician = null;
-        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v28';
+        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v42';
 
         window.onload = async function() {
             loadPersistentStorage();
@@ -726,7 +690,13 @@
                 protocolTimestamp = now.getTime();
             }
 
-            const protocolIdGen = 'ECB-' + Math.floor(100000 + Math.random() * 900000);
+            let prefixId = 'ECB-GEN-';
+            if (categoryKey.includes('Waschmaschine')) prefixId = 'ECB-WASH-';
+            else if (categoryKey.includes('Trockner')) prefixId = 'ECB-DRY-';
+            else if (categoryKey.includes('2-Wochen')) prefixId = 'ECB-COMP2W-';
+            else if (categoryKey.includes('Jahreswartung')) prefixId = 'ECB-COMPYR-';
+
+            const protocolIdGen = prefixId + Math.floor(100000 + Math.random() * 900000);
 
             const protocol = {
                 id: protocolIdGen,
@@ -742,16 +712,25 @@
                 signature: signaturePadInstance.canvas.toDataURL()
             };
 
-            if (!protocols.some(p => p.id === protocol.id)) {
+            // Ensure unique protocol id
+            const existingIdx = protocols.findIndex(p => p.id === protocol.id);
+            if (existingIdx > -1) {
+                protocols[existingIdx] = protocol;
+            } else {
                 protocols.unshift(protocol);
             }
-            savePersistentStorage();
+            
+            // Persist locally first
+            await savePersistentStorage(true);
 
+            // Persist to Cloud immediately
             if (db) {
                 try {
                     const appId = 'ecb-maintenance-live';
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocol.id), protocol);
-                } catch(e) {}
+                } catch(e) {
+                    console.error("Firestore Save Error:", e);
+                }
             }
 
             updateUI();
@@ -813,7 +792,7 @@
             if (!dguvDevices.some(d => d.id === newDev.id)) {
                 dguvDevices.unshift(newDev);
             }
-            savePersistentStorage();
+            await savePersistentStorage(true);
 
             if (db) {
                 try {
@@ -854,7 +833,7 @@
                     dev.protocolName = file.name;
                     dev.status = 'Erledigt';
 
-                    savePersistentStorage();
+                    await savePersistentStorage(true);
                     if (db) {
                         try {
                             const appId = 'ecb-maintenance-live';
@@ -899,7 +878,7 @@
             const idx = protocols.findIndex(p => p.id === protocolId);
             if (idx > -1) {
                 protocols.splice(idx, 1);
-                savePersistentStorage();
+                await savePersistentStorage(true);
                 if (db) {
                     try {
                         const appId = 'ecb-maintenance-live';
@@ -914,7 +893,7 @@
             const idx = dguvDevices.findIndex(d => d.id === deviceId);
             if (idx > -1) {
                 dguvDevices.splice(idx, 1);
-                savePersistentStorage();
+                await savePersistentStorage(true);
                 if (db) {
                     try {
                         const appId = 'ecb-maintenance-live';
@@ -1010,7 +989,7 @@
             const newPass = document.getElementById('new-pass').value.trim();
             const currentUser = localStorage.getItem('ecb_current_user');
             const found = cloudUsers.find(u => u.user === currentUser);
-            if (found) { found.pass = newPass; savePersistentStorage(); }
+            if (found) { found.pass = newPass; savePersistentStorage(true); }
             closePasswordModal();
             showModal('Erfolg', 'Passwort aktualisiert!', true);
         };
@@ -1022,7 +1001,7 @@
             const newPass = document.getElementById('reg-pass').value.trim();
             if (cloudUsers.some(u => u.user === newUser)) { document.getElementById('reg-error').classList.remove('hidden'); return; }
             cloudUsers.push({ fullname, user: newUser, pass: newPass, active: true });
-            savePersistentStorage();
+            savePersistentStorage(true);
             document.getElementById('reg-fullname').value = ''; document.getElementById('reg-user').value = ''; document.getElementById('reg-pass').value = '';
             document.getElementById('reg-error').classList.add('hidden');
             renderAdminUsersList();
@@ -1033,7 +1012,7 @@
             const usr = cloudUsers.find(u => u.user === username);
             if (usr) {
                 usr.active = usr.active === false ? true : false;
-                savePersistentStorage();
+                savePersistentStorage(true);
                 renderAdminUsersList();
             }
         };
@@ -1047,7 +1026,7 @@
                 const idx = cloudUsers.findIndex(u => u.user === username);
                 if (idx > -1) {
                     cloudUsers.splice(idx, 1);
-                    savePersistentStorage();
+                    savePersistentStorage(true);
                     if (db) {
                         try {
                             const appId = 'ecb-maintenance-live';
@@ -1113,7 +1092,7 @@
             ];
             const now = new Date(); now.setHours(0,0,0,0);
             cats.forEach(cat => {
-                const matching = protocols.filter(p => p.category === cat.key);
+                const matching = protocols.filter(p => p.category === cat.key || (cat.key === 'Kompressor 2-Wochen' && p.category.includes('Kompressor 2-Wochen')));
                 const dueEl = document.getElementById(`due-${cat.key}`);
                 const badgeEl = document.getElementById(`badge-${cat.key}`);
                 if (!dueEl || !badgeEl) return;
@@ -1143,7 +1122,7 @@
             let html = '';
             const now = new Date(); now.setHours(0,0,0,0);
             cats.forEach(cat => {
-                const matching = protocols.filter(p => p.category === cat.key);
+                const matching = protocols.filter(p => p.category === cat.key || (cat.key === 'Kompressor 2-Wochen' && p.category.includes('Kompressor 2-Wochen')));
                 if (matching.length === 0) {
                     html += `<tr class="border-b"><td class="py-3 px-4 font-bold">${cat.name}</td><td class="py-3 px-4 text-slate-400">-</td><td class="py-3 px-4 text-amber-600 font-bold">Sofort fällig</td><td><span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full">Offen</span></td></tr>`;
                 } else {
@@ -1474,22 +1453,6 @@
             }).join('');
             container.innerHTML = html;
             if (dash) dash.innerHTML = html;
-        };
-
-        window.clearHistory = async function() {
-            if (confirm('Verlauf wirklich vollständig löschen?')) {
-                const ids = protocols.map(p => p.id);
-                protocols = [];
-                savePersistentStorage();
-                if (db) {
-                    const appId = 'ecb-maintenance-live';
-                    for (let id of ids) {
-                        try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', id)); } catch(e){}
-                    }
-                }
-                updateUI();
-                showModal('Erfolg', 'Verlauf geleert.', true);
-            }
         };
 
         function generatePDFDataUri(p) {
