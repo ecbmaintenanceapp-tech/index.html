@@ -120,21 +120,22 @@
                     <label class="block text-sm font-bold text-slate-700 mb-1">Passwort:</label>
                     <input type="password" id="login-pass" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Passwort">
                 </div>
-                <div id="login-error" class="text-xs text-red-600 font-bold hidden">Falscher Benutzername oder Passwort!</div>
+                <div id="login-error" class="text-xs text-red-600 font-bold hidden">Falscher Benutzername, Passwort oder Konto deaktiviert!</div>
                 <button type="submit" class="w-full py-3.5 bg-ecbGreen hover:bg-ecbDarkGreen text-white rounded-xl font-bold text-sm shadow-lg shadow-ecbGreen/20 transition cursor-pointer">Anmelden</button>
             </form>
         </div>
     </div>
 
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
                 <h3 class="text-xl font-extrabold text-slate-900">Admin-Verwaltung &amp; Cloud-Sync</h3>
                 <button onclick="closeRegisterModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
             </div>
+            
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
                 <h4 class="font-bold text-emerald-900 text-sm flex items-center justify-between">
-                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Cloud Live Sync (Firebase Aktiv)</span>
+                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Cloud Live Sync (Firebase)</span>
                     <button onclick="forceSyncWithCloud()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer">Synchronisieren</button>
                 </h4>
                 <p class="text-xs text-emerald-700">Daten sind über Ihre Firebase-Datenbank dauerhaft verbunden.</p>
@@ -146,7 +147,8 @@
                     </label>
                 </div>
             </div>
-            <form onsubmit="handleRegister(event)" class="space-y-4 pb-6 border-b border-slate-100">
+
+            <form onsubmit="handleRegister(event)" class="space-y-4 pb-4 border-b border-slate-100">
                 <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-user-plus mr-1 text-ecbGreen"></i> Neuen Mitarbeiter anlegen</h4>
                 <div><label class="block text-xs font-bold text-slate-700 mb-1">Vollname:</label><input type="text" id="reg-fullname" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none"></div>
                 <div><label class="block text-xs font-bold text-slate-700 mb-1">Benutzername:</label><input type="text" id="reg-user" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none"></div>
@@ -154,6 +156,11 @@
                 <div id="reg-error" class="text-xs text-red-600 font-bold hidden">Benutzer existiert bereits!</div>
                 <button type="submit" class="w-full py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer">Mitarbeiter anlegen</button>
             </form>
+
+            <div class="space-y-3">
+                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-users-gear mr-1 text-ecbGreen"></i> Mitarbeiter-Konten verwalten</h4>
+                <div id="admin-users-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+            </div>
         </div>
     </div>
 
@@ -449,7 +456,7 @@
         let signaturePadInstance = null;
         let retroCustomDate = null;
         let retroCustomTechnician = null;
-        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v7';
+        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v8';
 
         window.onload = async function() {
             loadPersistentStorage();
@@ -462,6 +469,7 @@
                         const state = JSON.parse(e.newValue);
                         if (state.protocols) protocols = state.protocols;
                         if (state.dguvDevices) dguvDevices = state.dguvDevices;
+                        if (state.cloudUsers) cloudUsers = state.cloudUsers;
                         savePersistentStorage(false);
                         updateUI();
                     } catch(err) {}
@@ -491,14 +499,9 @@
         };
 
         function broadcastState() {
-            const state = { protocols, dguvDevices, timestamp: Date.now() };
+            const state = { protocols, dguvDevices, cloudUsers, timestamp: Date.now() };
             try {
                 localStorage.setItem(SYNC_CHANNEL_KEY, JSON.stringify(state));
-                fetch('https://api.jsonbin.io/v3/b/65f0a3e8dc74654018b14a22', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': '$2a$10$w8V123...' },
-                    body: JSON.stringify(state)
-                }).catch(() => {});
             } catch(e) {}
         }
 
@@ -532,6 +535,18 @@
                 broadcastState();
                 updateUI();
             }, (error) => {});
+
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'cloud_users'), (snapshot) => {
+                let cloudUsrs = [];
+                snapshot.forEach(docSnap => {
+                    cloudUsrs.push(docSnap.data());
+                });
+                if (cloudUsrs.length > 0) {
+                    cloudUsers = cloudUsrs;
+                    savePersistentStorage(false);
+                    updateUI();
+                }
+            }, (error) => {});
         }
 
         function loadPersistentStorage() {
@@ -541,6 +556,7 @@
                     const parsed = JSON.parse(cloudSync);
                     if (parsed.protocols) protocols = parsed.protocols;
                     if (parsed.dguvDevices) dguvDevices = parsed.dguvDevices;
+                    if (parsed.cloudUsers) cloudUsers = parsed.cloudUsers;
                 } else {
                     const p = localStorage.getItem('ecb_protocols_v108');
                     if (p) protocols = JSON.parse(p);
@@ -548,17 +564,26 @@
                     if (d) dguvDevices = JSON.parse(d);
                 }
                 const u = localStorage.getItem('ecb_users_v108');
-                if (u) cloudUsers = JSON.parse(u);
+                if (u) {
+                    const parsedU = JSON.parse(u);
+                    if (parsedU.length > 0) cloudUsers = parsedU;
+                }
             } catch(e) {}
         }
 
-        function savePersistentStorage(triggerBroadcast = true) {
+        async function savePersistentStorage(triggerBroadcast = true) {
             try {
                 localStorage.setItem('ecb_protocols_v108', JSON.stringify(protocols));
                 localStorage.setItem('ecb_dguv_v108', JSON.stringify(dguvDevices));
                 localStorage.setItem('ecb_users_v108', JSON.stringify(cloudUsers));
                 if (triggerBroadcast) {
                     broadcastState();
+                }
+                if (db) {
+                    const appId = 'ecb-maintenance-live';
+                    for (let usr of cloudUsers) {
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cloud_users', usr.user), usr).catch(()=>{});
+                    }
                 }
             } catch(e) {}
         }
@@ -572,6 +597,9 @@
                     }
                     for (let d of dguvDevices) {
                         await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', d.id), d);
+                    }
+                    for (let usr of cloudUsers) {
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cloud_users', usr.user), usr);
                     }
                 } catch(e) {}
             }
@@ -608,6 +636,9 @@
                         }
                         for (let d of dguvDevices) {
                             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', d.id), d);
+                        }
+                        for (let usr of cloudUsers) {
+                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cloud_users', usr.user), usr);
                         }
                     }
                     savePersistentStorage();
@@ -856,7 +887,7 @@
             const pass = document.getElementById('login-pass').value.trim();
             const found = cloudUsers.find(u => u.user === user && u.pass === pass);
             if (found) {
-                if (found.active === false) { showModal('Fehler', 'Konto deaktiviert.', false); return; }
+                if (found.active === false) { showModal('Fehler', 'Konto ist deaktiviert.', false); return; }
                 localStorage.setItem('ecb_logged_in', 'true');
                 localStorage.setItem('ecb_current_user', user);
                 localStorage.setItem('ecb_current_fullname', found.fullname || user);
@@ -922,7 +953,10 @@
         window.closeModal = function() { document.getElementById('modal-message').classList.add('hidden'); };
         window.openDguvModal = function() { document.getElementById('modal-dguv').classList.remove('hidden'); };
         window.closeDguvModal = function() { document.getElementById('modal-dguv').classList.add('hidden'); };
-        window.openRegisterModal = function() { document.getElementById('modal-register').classList.remove('hidden'); };
+        window.openRegisterModal = function() { 
+            renderAdminUsersList();
+            document.getElementById('modal-register').classList.remove('hidden'); 
+        };
         window.closeRegisterModal = function() { document.getElementById('modal-register').classList.add('hidden'); };
         window.openPasswordModal = function() { document.getElementById('new-pass').value = ''; document.getElementById('modal-password').classList.remove('hidden'); };
         window.closePasswordModal = function() { document.getElementById('modal-password').classList.add('hidden'); };
@@ -946,9 +980,66 @@
             cloudUsers.push({ fullname, user: newUser, pass: newPass, active: true });
             savePersistentStorage();
             document.getElementById('reg-fullname').value = ''; document.getElementById('reg-user').value = ''; document.getElementById('reg-pass').value = '';
-            closeRegisterModal();
-            showModal('Erfolg', 'Mitarbeiter angelegt!', true);
+            document.getElementById('reg-error').classList.add('hidden');
+            renderAdminUsersList();
+            showModal('Erfolg', 'Mitarbeiter angelegt & synchronisiert!', true);
         };
+
+        window.toggleUserActive = async function(username) {
+            const usr = cloudUsers.find(u => u.user === username);
+            if (usr) {
+                usr.active = usr.active === false ? true : false;
+                savePersistentStorage();
+                renderAdminUsersList();
+            }
+        };
+
+        window.deleteUserAccount = async function(username) {
+            if (username === 'ECB_Wartung') {
+                showModal('Hinweis', 'Das Haupt-Admin-Konto kann nicht gelöscht werden.', false);
+                return;
+            }
+            if (confirm(`Möchten Sie das Konto "${username}" wirklich löschen?`)) {
+                const idx = cloudUsers.findIndex(u => u.user === username);
+                if (idx > -1) {
+                    cloudUsers.splice(idx, 1);
+                    savePersistentStorage();
+                    if (db) {
+                        try {
+                            const appId = 'ecb-maintenance-live';
+                            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cloud_users', username));
+                        } catch(e) {}
+                    }
+                    renderAdminUsersList();
+                    showModal('Erfolg', 'Mitarbeiter-Konto gelöscht.', true);
+                }
+            }
+        };
+
+        function renderAdminUsersList() {
+            const listEl = document.getElementById('admin-users-list');
+            if (!listEl) return;
+            if (cloudUsers.length === 0) {
+                listEl.innerHTML = '<div class="text-xs text-slate-400">Keine Mitarbeiter vorhanden.</div>';
+                return;
+            }
+            listEl.innerHTML = cloudUsers.map(u => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border text-xs">
+                    <div>
+                        <strong>${u.fullname}</strong> (${u.user})
+                        <div class="text-[10px] ${u.active !== false ? 'text-emerald-600 font-bold' : 'text-red-500 font-bold'}">
+                            ${u.active !== false ? 'Aktiv' : 'Deaktiviert'}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="toggleUserActive('${u.user}')" class="px-2.5 py-1 rounded-lg font-bold text-[10px] ${u.active !== false ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'} cursor-pointer">
+                            ${u.active !== false ? 'Deaktivieren' : 'Aktivieren'}
+                        </button>
+                        ${u.user !== 'ECB_Wartung' ? `<button type="button" onclick="deleteUserAccount('${u.user}')" class="p-1 text-red-600 hover:text-red-800 cursor-pointer"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
 
         function checkAdminNav() {
             if (localStorage.getItem('ecb_current_user') === 'ECB_Wartung') {
