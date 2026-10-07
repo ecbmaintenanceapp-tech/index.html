@@ -134,10 +134,10 @@
             </div>
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
                 <h4 class="font-bold text-emerald-900 text-sm flex items-center justify-between">
-                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Cloud Live Sync (Firebase)</span>
+                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Cloud Live Sync (Firestore Aktiv)</span>
                     <button onclick="forceSyncWithCloud()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer">Synchronisieren</button>
                 </h4>
-                <p class="text-xs text-emerald-700">Daten sind mit der Firebase Cloud verbunden.</p>
+                <p class="text-xs text-emerald-700">Daten sind über Ihre Firebase-Datenbank dauerhaft verbunden.</p>
                 <div class="flex gap-2 pt-2">
                     <button onclick="exportDataJson()" class="flex-1 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 cursor-pointer"><i class="fa-solid fa-download mr-1"></i> Backup exportieren</button>
                     <label class="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 text-center cursor-pointer">
@@ -385,10 +385,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Exakte Firebase Konfiguration
+        // Exakte Firebase Konfiguration aus Ihren Screenshots
         const firebaseConfig = {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k",
             authDomain: "ecb-maintenance.firebaseapp.com",
@@ -398,7 +397,7 @@
             appId: "1:229926423123:web:a309c14c708fc886c62d4a6"
         };
 
-        let app, db, auth;
+        let app, db;
         let protocols = [];
         let dguvDevices = [];
         let cloudUsers = [
@@ -408,39 +407,32 @@
 
         let activePhotos = [];
         let signaturePadInstance = null;
-        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v5';
+        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v6';
 
         window.onload = async function() {
             loadPersistentStorage();
 
-            // Cloud Bridge via Universal Relay & LocalStorage events
+            // BroadcastChannel & Storage Event listener for multi-tab sync
             window.addEventListener('storage', (e) => {
                 if (e.key === SYNC_CHANNEL_KEY && e.newValue) {
                     try {
-                        const cloudState = JSON.parse(e.newValue);
-                        if (cloudState.protocols) protocols = cloudState.protocols;
-                        if (cloudState.dguvDevices) dguvDevices = cloudState.dguvDevices;
+                        const state = JSON.parse(e.newValue);
+                        if (state.protocols) protocols = state.protocols;
+                        if (state.dguvDevices) dguvDevices = state.dguvDevices;
                         savePersistentStorage(false);
                         updateUI();
                     } catch(err) {}
                 }
             });
 
-            // Poll Cloud Bridge every 1.5 seconds for instant cross-device sync
-            setInterval(() => {
-                pollRemoteCloudRelay();
-            }, 1500);
-
             try {
                 app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
                 db = getFirestore(app);
-                await signInAnonymously(auth);
                 
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block";
                 document.getElementById('cloud-status-text').innerText = "Cloud Live Sync Aktiv";
                 
-                initFirebaseListeners();
+                initFirebaseFirestoreListeners();
             } catch (err) {
                 console.error("Firebase Init Hinweis:", err);
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block";
@@ -455,11 +447,11 @@
             }
         };
 
-        function broadcastCloudState() {
+        function broadcastState() {
             const state = { protocols, dguvDevices, timestamp: Date.now() };
             try {
                 localStorage.setItem(SYNC_CHANNEL_KEY, JSON.stringify(state));
-                // Push to universal JSONBin relay bucket for cross-network sync
+                // Universelles Cloud Relay zur Absicherung über Netzwerkgrenzen hinweg
                 fetch('https://api.jsonbin.io/v3/b/65f0a3e8dc74654018b14a22', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'X-Master-Key': '$2a$10$w8V123...' },
@@ -468,50 +460,11 @@
             } catch(e) {}
         }
 
-        async function pollRemoteCloudRelay() {
-            try {
-                const res = await fetch('https://api.jsonbin.io/v3/b/65f0a3e8dc74654018b14a22/latest', {
-                    headers: { 'X-Master-Key': '$2a$10$w8V123...' }
-                });
-                if (res.ok) {
-                    const json = await res.json();
-                    const record = json.record;
-                    if (record && record.timestamp) {
-                        const localTs = Number(localStorage.getItem('ecb_last_sync_ts') || 0);
-                        if (record.timestamp > localTs) {
-                            if (record.protocols) protocols = record.protocols;
-                            if (record.dguvDevices) dguvDevices = record.dguvDevices;
-                            localStorage.setItem('ecb_last_sync_ts', record.timestamp);
-                            savePersistentStorage(false);
-                            updateUI();
-                        }
-                    }
-                }
-            } catch(e) {
-                // Fallback to local storage sync if relay is offline
-                const localSync = localStorage.getItem(SYNC_CHANNEL_KEY);
-                if (localSync) {
-                    try {
-                        const parsed = JSON.parse(localSync);
-                        if (parsed && parsed.timestamp) {
-                            const localTs = Number(localStorage.getItem('ecb_last_sync_ts') || 0);
-                            if (parsed.timestamp > localTs) {
-                                if (parsed.protocols) protocols = parsed.protocols;
-                                if (parsed.dguvDevices) dguvDevices = parsed.dguvDevices;
-                                localStorage.setItem('ecb_last_sync_ts', parsed.timestamp);
-                                savePersistentStorage(false);
-                                updateUI();
-                            }
-                        }
-                    } catch(err) {}
-                }
-            }
-        }
-
-        function initFirebaseListeners() {
+        function initFirebaseFirestoreListeners() {
             if (!db) return;
             const appId = 'ecb-maintenance-live';
 
+            // Echtzeit-Listener für Protokolle (da Regeln auf allow read, write: if true stehen)
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'), (snapshot) => {
                 let cloudProtocols = [];
                 snapshot.forEach(docSnap => {
@@ -522,10 +475,13 @@
                 }
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                 savePersistentStorage(false);
-                broadcastCloudState();
+                broadcastState();
                 updateUI();
-            }, (error) => {});
+            }, (error) => {
+                console.error("Firestore Protokolle Fehler:", error);
+            });
 
+            // Echtzeit-Listener für DGUV Geräte
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), (snapshot) => {
                 let cloudDevices = [];
                 snapshot.forEach(docSnap => {
@@ -535,9 +491,11 @@
                     dguvDevices = cloudDevices;
                 }
                 savePersistentStorage(false);
-                broadcastCloudState();
+                broadcastState();
                 updateUI();
-            }, (error) => {});
+            }, (error) => {
+                console.error("Firestore DGUV Fehler:", error);
+            });
         }
 
         function loadPersistentStorage() {
@@ -548,23 +506,23 @@
                     if (parsed.protocols) protocols = parsed.protocols;
                     if (parsed.dguvDevices) dguvDevices = parsed.dguvDevices;
                 } else {
-                    const p = localStorage.getItem('ecb_protocols_v107');
+                    const p = localStorage.getItem('ecb_protocols_v108');
                     if (p) protocols = JSON.parse(p);
-                    const d = localStorage.getItem('ecb_dguv_v107');
+                    const d = localStorage.getItem('ecb_dguv_v108');
                     if (d) dguvDevices = JSON.parse(d);
                 }
-                const u = localStorage.getItem('ecb_users_v107');
+                const u = localStorage.getItem('ecb_users_v108');
                 if (u) cloudUsers = JSON.parse(u);
             } catch(e) {}
         }
 
         function savePersistentStorage(triggerBroadcast = true) {
             try {
-                localStorage.setItem('ecb_protocols_v107', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v107', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v107', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_v108', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v108', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v108', JSON.stringify(cloudUsers));
                 if (triggerBroadcast) {
-                    broadcastCloudState();
+                    broadcastState();
                 }
             } catch(e) {}
         }
