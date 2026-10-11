@@ -99,10 +99,10 @@
             
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
                 <h4 class="font-bold text-emerald-900 text-sm flex items-center justify-between">
-                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Firebase Cloud Recovery</span>
+                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Firebase Cloud Wiederherstellung</span>
                     <button type="button" onclick="forceCloudRecovery()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer"><i class="fa-solid fa-rotate mr-1"></i> Aus Cloud laden</button>
                 </h4>
-                <p class="text-xs text-emerald-700">Laden Sie alle Protokolle und DGUV-Geräte aus Ihrer Firebase-Datenbank (`ecb-maintenance`).</p>
+                <p class="text-xs text-emerald-700">Laden Sie alle gespeicherten Protokolle und DGUV-Geräte direkt aus Ihrer Firebase-Datenbank.</p>
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="exportDataJson()" class="flex-1 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 cursor-pointer"><i class="fa-solid fa-download mr-1"></i> Backup exportieren</button>
                     <label class="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 text-center cursor-pointer">
@@ -122,7 +122,7 @@
             </form>
 
             <div class="space-y-3">
-                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-users-gear mr-1 text-ecbGreen"></i> Mitarbeiter-Konten verwalten</h4>
+                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-users-gear mr-1 text-ecbGreen"></i> Mitarbeiter-Konten verwalten (Aktivieren / Deaktivieren / Löschen)</h4>
                 <div id="admin-users-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
             </div>
         </div>
@@ -145,7 +145,7 @@
                     <div class="w-10 h-10 rounded-xl bg-ecbGreen text-white flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-file-pdf"></i></div>
                     <div>
                         <h3 class="text-lg font-extrabold text-slate-900" id="pdf-modal-heading">Wartungsprotokoll erstellt</h3>
-                        <p class="text-xs text-slate-500">Das Protokoll wurde in der Cloud gespeichert und synchronisiert.</p>
+                        <p class="text-xs text-slate-500">Das Protokoll wurde in der Cloud gespeichert.</p>
                     </div>
                 </div>
                 <button onclick="closePdfPreviewModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
@@ -405,7 +405,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k",
@@ -429,7 +429,6 @@
         let retroCustomDate = null;
         let retroCustomTime = null;
         let retroCustomTechnician = null;
-        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v44';
 
         window.onload = async function() {
             loadPersistentStorage();
@@ -440,19 +439,6 @@
             if (timeInp) timeInp.value = new Date().toTimeString().slice(0,5);
             if (techInp) techInp.value = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
 
-            window.addEventListener('storage', (e) => {
-                if (e.key === SYNC_CHANNEL_KEY && e.newValue) {
-                    try {
-                        const state = JSON.parse(e.newValue);
-                        if (state.protocols) protocols = state.protocols;
-                        if (state.dguvDevices) dguvDevices = state.dguvDevices;
-                        if (state.cloudUsers) cloudUsers = state.cloudUsers;
-                        savePersistentStorage(false);
-                        updateUI();
-                    } catch(err) {}
-                }
-            });
-
             try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
@@ -461,7 +447,6 @@
                 document.getElementById('cloud-status-text').innerText = "Firebase Cloud Live Sync Aktiv";
                 
                 await forceCloudRecovery();
-                initFirebaseFirestoreListeners();
             } catch (err) {
                 console.error("Firebase Init Hinweis:", err);
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-400 inline-block";
@@ -476,13 +461,6 @@
             }
         };
 
-        function broadcastState() {
-            const state = { protocols, dguvDevices, cloudUsers, timestamp: Date.now() };
-            try {
-                localStorage.setItem(SYNC_CHANNEL_KEY, JSON.stringify(state));
-            } catch(e) {}
-        }
-
         window.forceCloudRecovery = async function() {
             if (!db) {
                 showModal('Hinweis', 'Keine aktive Firebase-Verbindung.', false);
@@ -495,7 +473,7 @@
                 protoSnap.forEach(docSnap => {
                     cloudProtocols.push({ id: docSnap.id, ...docSnap.data() });
                 });
-                if (cloudProtocols.length >= 0) {
+                if (cloudProtocols.length > 0) {
                     protocols = cloudProtocols;
                 }
 
@@ -504,7 +482,7 @@
                 dguvSnap.forEach(docSnap => {
                     cloudDevices.push({ id: docSnap.id, ...docSnap.data() });
                 });
-                if (cloudDevices.length >= 0) {
+                if (cloudDevices.length > 0) {
                     dguvDevices = cloudDevices;
                 }
 
@@ -518,69 +496,20 @@
                 }
 
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                savePersistentStorage(false);
+                savePersistentStorage();
                 updateUI();
-                showModal('Erfolg', `Daten aus Cloud geladen! ${protocols.length} Protokolle & ${dguvDevices.length} DGUV-Geräte gefunden.`, true);
             } catch(e) {
-                showModal('Fehler', 'Fehler beim Abrufen der Cloud-Daten: ' + e.message, false);
+                console.error("Cloud recovery error:", e);
             }
         };
 
-        function initFirebaseFirestoreListeners() {
-            if (!db) return;
-            const appId = 'ecb-maintenance-live';
-
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'), (snapshot) => {
-                let cloudProtocols = [];
-                snapshot.forEach(docSnap => {
-                    cloudProtocols.push({ id: docSnap.id, ...docSnap.data() });
-                });
-                protocols = cloudProtocols;
-                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                savePersistentStorage(false);
-                broadcastState();
-                updateUI();
-            }, (error) => {});
-
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), (snapshot) => {
-                let cloudDevices = [];
-                snapshot.forEach(docSnap => {
-                    cloudDevices.push({ id: docSnap.id, ...docSnap.data() });
-                });
-                dguvDevices = cloudDevices;
-                savePersistentStorage(false);
-                broadcastState();
-                updateUI();
-            }, (error) => {});
-
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'cloud_users'), (snapshot) => {
-                let cloudUsrs = [];
-                snapshot.forEach(docSnap => {
-                    cloudUsrs.push(docSnap.data());
-                });
-                if (cloudUsrs.length > 0) {
-                    cloudUsers = cloudUsrs;
-                    savePersistentStorage(false);
-                    updateUI();
-                }
-            }, (error) => {});
-        }
-
         function loadPersistentStorage() {
             try {
-                const cloudSync = localStorage.getItem(SYNC_CHANNEL_KEY);
-                if (cloudSync) {
-                    const parsed = JSON.parse(cloudSync);
-                    if (parsed.protocols) protocols = parsed.protocols;
-                    if (parsed.dguvDevices) dguvDevices = parsed.dguvDevices;
-                    if (parsed.cloudUsers) cloudUsers = parsed.cloudUsers;
-                } else {
-                    const p = localStorage.getItem('ecb_protocols_v108');
-                    if (p) protocols = JSON.parse(p);
-                    const d = localStorage.getItem('ecb_dguv_v108');
-                    if (d) dguvDevices = JSON.parse(d);
-                }
-                const u = localStorage.getItem('ecb_users_v108');
+                const p = localStorage.getItem('ecb_protocols_v109');
+                if (p) protocols = JSON.parse(p);
+                const d = localStorage.getItem('ecb_dguv_v109');
+                if (d) dguvDevices = JSON.parse(d);
+                const u = localStorage.getItem('ecb_users_v109');
                 if (u) {
                     const parsedU = JSON.parse(u);
                     if (parsedU.length > 0) cloudUsers = parsedU;
@@ -588,20 +517,11 @@
             } catch(e) {}
         }
 
-        async function savePersistentStorage(triggerBroadcast = true) {
+        async function savePersistentStorage() {
             try {
-                localStorage.setItem('ecb_protocols_v108', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v108', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v108', JSON.stringify(cloudUsers));
-                if (triggerBroadcast) {
-                    broadcastState();
-                }
-                if (db) {
-                    const appId = 'ecb-maintenance-live';
-                    for (let usr of cloudUsers) {
-                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cloud_users', usr.user), usr).catch(()=>{});
-                    }
-                }
+                localStorage.setItem('ecb_protocols_v109', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v109', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v109', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
@@ -634,9 +554,6 @@
                         for (let d of dguvDevices) {
                             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', d.id), d);
                         }
-                        for (let usr of cloudUsers) {
-                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'cloud_users', usr.user), usr);
-                        }
                     }
                     savePersistentStorage();
                     updateUI();
@@ -648,7 +565,7 @@
             reader.readAsText(file);
         };
 
-        window.submitProtocol = async function(event, categoryKey) {
+        window.submitProtocol = async function(event, rawCategoryKey) {
             if (event) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -659,7 +576,14 @@
             if (!signaturePadInstance || !signaturePadInstance.hasSigned) { showModal('Fehler', 'Bitte unterschreiben.', false); return; }
 
             const machineSelect = document.getElementById('machine-select');
-            const machineName = machineSelect ? machineSelect.value : categoryKey;
+            const machineName = machineSelect ? machineSelect.value : rawCategoryKey;
+
+            let categoryKey = rawCategoryKey;
+            if (machineName.includes('Waschmaschine') || rawCategoryKey.includes('Waschmaschine')) categoryKey = 'Waschmaschine';
+            else if (machineName.includes('Trockner') || rawCategoryKey.includes('Trockner')) categoryKey = 'Trockner';
+            else if (rawCategoryKey.includes('2-Wochen') || machineName.includes('2-Wochen')) categoryKey = 'Kompressor 2-Wochen';
+            else if (rawCategoryKey.includes('Jahreswartung') || machineName.includes('Jahreswartung')) categoryKey = 'Kompressor Jahreswartung';
+
             const remarks = document.getElementById('remarks-input') ? document.getElementById('remarks-input').value : '';
             const runtimeHours = document.getElementById('runtime-hours') ? document.getElementById('runtime-hours').value : null;
 
@@ -687,10 +611,10 @@
             }
 
             let prefixId = 'ECB-GEN-';
-            if (categoryKey.includes('Waschmaschine')) prefixId = 'ECB-WASH-';
-            else if (categoryKey.includes('Trockner')) prefixId = 'ECB-DRY-';
-            else if (categoryKey.includes('2-Wochen')) prefixId = 'ECB-COMP2W-';
-            else if (categoryKey.includes('Jahreswartung')) prefixId = 'ECB-COMPYR-';
+            if (categoryKey === 'Waschmaschine') prefixId = 'ECB-WASH-';
+            else if (categoryKey === 'Trockner') prefixId = 'ECB-DRY-';
+            else if (categoryKey === 'Kompressor 2-Wochen') prefixId = 'ECB-COMP2W-';
+            else if (categoryKey === 'Kompressor Jahreswartung') prefixId = 'ECB-COMPYR-';
 
             const protocolIdGen = prefixId + Math.floor(100000 + Math.random() * 900000);
 
@@ -715,7 +639,7 @@
                 protocols.unshift(protocol);
             }
             
-            await savePersistentStorage(true);
+            await savePersistentStorage();
 
             if (db) {
                 try {
@@ -785,7 +709,7 @@
             if (!dguvDevices.some(d => d.id === newDev.id)) {
                 dguvDevices.unshift(newDev);
             }
-            await savePersistentStorage(true);
+            await savePersistentStorage();
 
             if (db) {
                 try {
@@ -826,7 +750,7 @@
                     dev.protocolName = file.name;
                     dev.status = 'Erledigt';
 
-                    await savePersistentStorage(true);
+                    await savePersistentStorage();
                     if (db) {
                         try {
                             const appId = 'ecb-maintenance-live';
@@ -871,7 +795,7 @@
             const idx = protocols.findIndex(p => p.id === protocolId);
             if (idx > -1) {
                 protocols.splice(idx, 1);
-                await savePersistentStorage(true);
+                await savePersistentStorage();
                 if (db) {
                     try {
                         const appId = 'ecb-maintenance-live';
@@ -886,7 +810,7 @@
             const idx = dguvDevices.findIndex(d => d.id === deviceId);
             if (idx > -1) {
                 dguvDevices.splice(idx, 1);
-                await savePersistentStorage(true);
+                await savePersistentStorage();
                 if (db) {
                     try {
                         const appId = 'ecb-maintenance-live';
@@ -982,7 +906,7 @@
             const newPass = document.getElementById('new-pass').value.trim();
             const currentUser = localStorage.getItem('ecb_current_user');
             const found = cloudUsers.find(u => u.user === currentUser);
-            if (found) { found.pass = newPass; savePersistentStorage(true); }
+            if (found) { found.pass = newPass; savePersistentStorage(); }
             closePasswordModal();
             showModal('Erfolg', 'Passwort aktualisiert!', true);
         };
@@ -994,7 +918,7 @@
             const newPass = document.getElementById('reg-pass').value.trim();
             if (cloudUsers.some(u => u.user === newUser)) { document.getElementById('reg-error').classList.remove('hidden'); return; }
             cloudUsers.push({ fullname, user: newUser, pass: newPass, active: true });
-            savePersistentStorage(true);
+            savePersistentStorage();
             document.getElementById('reg-fullname').value = ''; document.getElementById('reg-user').value = ''; document.getElementById('reg-pass').value = '';
             document.getElementById('reg-error').classList.add('hidden');
             renderAdminUsersList();
@@ -1005,7 +929,7 @@
             const usr = cloudUsers.find(u => u.user === username);
             if (usr) {
                 usr.active = usr.active === false ? true : false;
-                savePersistentStorage(true);
+                savePersistentStorage();
                 renderAdminUsersList();
             }
         };
@@ -1019,7 +943,7 @@
                 const idx = cloudUsers.findIndex(u => u.user === username);
                 if (idx > -1) {
                     cloudUsers.splice(idx, 1);
-                    savePersistentStorage(true);
+                    savePersistentStorage();
                     if (db) {
                         try {
                             const appId = 'ecb-maintenance-live';
