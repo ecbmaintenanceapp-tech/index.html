@@ -429,7 +429,7 @@
         let retroCustomDate = null;
         let retroCustomTime = null;
         let retroCustomTechnician = null;
-        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v42';
+        const SYNC_CHANNEL_KEY = 'ecb_maintenance_sync_v44';
 
         window.onload = async function() {
             loadPersistentStorage();
@@ -495,7 +495,7 @@
                 protoSnap.forEach(docSnap => {
                     cloudProtocols.push({ id: docSnap.id, ...docSnap.data() });
                 });
-                if (cloudProtocols.length > 0) {
+                if (cloudProtocols.length >= 0) {
                     protocols = cloudProtocols;
                 }
 
@@ -504,7 +504,7 @@
                 dguvSnap.forEach(docSnap => {
                     cloudDevices.push({ id: docSnap.id, ...docSnap.data() });
                 });
-                if (cloudDevices.length > 0) {
+                if (cloudDevices.length >= 0) {
                     dguvDevices = cloudDevices;
                 }
 
@@ -535,13 +535,11 @@
                 snapshot.forEach(docSnap => {
                     cloudProtocols.push({ id: docSnap.id, ...docSnap.data() });
                 });
-                if (cloudProtocols.length > 0) {
-                    protocols = cloudProtocols;
-                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                    savePersistentStorage(false);
-                    broadcastState();
-                    updateUI();
-                }
+                protocols = cloudProtocols;
+                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                savePersistentStorage(false);
+                broadcastState();
+                updateUI();
             }, (error) => {});
 
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'), (snapshot) => {
@@ -549,12 +547,10 @@
                 snapshot.forEach(docSnap => {
                     cloudDevices.push({ id: docSnap.id, ...docSnap.data() });
                 });
-                if (cloudDevices.length > 0) {
-                    dguvDevices = cloudDevices;
-                    savePersistentStorage(false);
-                    broadcastState();
-                    updateUI();
-                }
+                dguvDevices = cloudDevices;
+                savePersistentStorage(false);
+                broadcastState();
+                updateUI();
             }, (error) => {});
 
             onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'cloud_users'), (snapshot) => {
@@ -712,7 +708,6 @@
                 signature: signaturePadInstance.canvas.toDataURL()
             };
 
-            // Ensure unique protocol id
             const existingIdx = protocols.findIndex(p => p.id === protocol.id);
             if (existingIdx > -1) {
                 protocols[existingIdx] = protocol;
@@ -720,10 +715,8 @@
                 protocols.unshift(protocol);
             }
             
-            // Persist locally first
             await savePersistentStorage(true);
 
-            // Persist to Cloud immediately
             if (db) {
                 try {
                     const appId = 'ecb-maintenance-live';
