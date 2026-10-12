@@ -102,7 +102,7 @@
                     <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Firebase Cloud Wiederherstellung</span>
                     <button type="button" onclick="forceCloudRecovery()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer"><i class="fa-solid fa-rotate mr-1"></i> Aus Cloud laden</button>
                 </h4>
-                <p class="text-xs text-emerald-700">Laden Sie alle gespeicherten Protokolle und DGUV-Geräte direkt aus Ihrer Firebase-Datenbank.</p>
+                <p class="text-xs text-emerald-700">Laden Sie alle Protokolle und DGUV-Geräte aus Ihrer Firebase-Datenbank.</p>
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="exportDataJson()" class="flex-1 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 cursor-pointer"><i class="fa-solid fa-download mr-1"></i> Backup exportieren</button>
                     <label class="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 text-center cursor-pointer">
@@ -122,7 +122,7 @@
             </form>
 
             <div class="space-y-3">
-                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-users-gear mr-1 text-ecbGreen"></i> Mitarbeiter-Konten verwalten (Aktivieren / Deaktivieren / Löschen)</h4>
+                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-users-gear mr-1 text-ecbGreen"></i> Mitarbeiter-Konten verwalten</h4>
                 <div id="admin-users-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
             </div>
         </div>
@@ -145,7 +145,7 @@
                     <div class="w-10 h-10 rounded-xl bg-ecbGreen text-white flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-file-pdf"></i></div>
                     <div>
                         <h3 class="text-lg font-extrabold text-slate-900" id="pdf-modal-heading">Wartungsprotokoll erstellt</h3>
-                        <p class="text-xs text-slate-500">Das Protokoll wurde in der Cloud gespeichert.</p>
+                        <p class="text-xs text-slate-500">Das Protokoll wurde permanent in der Cloud gespeichert.</p>
                     </div>
                 </div>
                 <button onclick="closePdfPreviewModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
@@ -463,7 +463,7 @@
 
         window.forceCloudRecovery = async function() {
             if (!db) {
-                showModal('Hinweis', 'Keine aktive Firebase-Verbindung.', false);
+                showModal('Hinweis', 'Cloud-Verbindung ist im Offline-Modus.', false);
                 return;
             }
             const appId = 'ecb-maintenance-live';
@@ -498,18 +498,20 @@
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                 savePersistentStorage();
                 updateUI();
+                showModal('Erfolg', 'Daten erfolgreich aus der Firebase Cloud geladen!', true);
             } catch(e) {
                 console.error("Cloud recovery error:", e);
+                showModal('Fehler', 'Fehler beim Laden aus der Cloud.', false);
             }
         };
 
         function loadPersistentStorage() {
             try {
-                const p = localStorage.getItem('ecb_protocols_v109');
+                const p = localStorage.getItem('ecb_protocols_v116');
                 if (p) protocols = JSON.parse(p);
-                const d = localStorage.getItem('ecb_dguv_v109');
+                const d = localStorage.getItem('ecb_dguv_v116');
                 if (d) dguvDevices = JSON.parse(d);
-                const u = localStorage.getItem('ecb_users_v109');
+                const u = localStorage.getItem('ecb_users_v116');
                 if (u) {
                     const parsedU = JSON.parse(u);
                     if (parsedU.length > 0) cloudUsers = parsedU;
@@ -519,9 +521,9 @@
 
         async function savePersistentStorage() {
             try {
-                localStorage.setItem('ecb_protocols_v109', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v109', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v109', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_v116', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v116', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v116', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
