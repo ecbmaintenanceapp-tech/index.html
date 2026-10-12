@@ -507,11 +507,11 @@
 
         function loadPersistentStorage() {
             try {
-                const p = localStorage.getItem('ecb_protocols_v116');
+                const p = localStorage.getItem('ecb_protocols_v117');
                 if (p) protocols = JSON.parse(p);
-                const d = localStorage.getItem('ecb_dguv_v116');
+                const d = localStorage.getItem('ecb_dguv_v117');
                 if (d) dguvDevices = JSON.parse(d);
-                const u = localStorage.getItem('ecb_users_v116');
+                const u = localStorage.getItem('ecb_users_v117');
                 if (u) {
                     const parsedU = JSON.parse(u);
                     if (parsedU.length > 0) cloudUsers = parsedU;
@@ -521,9 +521,9 @@
 
         async function savePersistentStorage() {
             try {
-                localStorage.setItem('ecb_protocols_v116', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v116', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v116', JSON.stringify(cloudUsers));
+                localStorage.setItem('ecb_protocols_v117', JSON.stringify(protocols));
+                localStorage.setItem('ecb_dguv_v117', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v117', JSON.stringify(cloudUsers));
             } catch(e) {}
         }
 
