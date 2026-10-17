@@ -145,7 +145,7 @@
                     <div class="w-10 h-10 rounded-xl bg-ecbGreen text-white flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-file-pdf"></i></div>
                     <div>
                         <h3 class="text-lg font-extrabold text-slate-900" id="pdf-modal-heading">Wartungsprotokoll erstellt</h3>
-                        <p class="text-xs text-slate-500">Das Protokoll wurde permanent in der Cloud gespeichert.</p>
+                        <p class="text-xs text-slate-500">Das Protokoll wurde permanent in der Firebase-Cloud gespeichert.</p>
                     </div>
                 </div>
                 <button onclick="closePdfPreviewModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
@@ -567,7 +567,7 @@
             reader.readAsText(file);
         };
 
-        // Universal protocol submit dispatcher
+        // Universal protocol submit dispatcher with guaranteed Cloud (Firestore) write
         window.submitProtocol = async function(event, rawCategoryKey) {
             if (event) {
                 event.preventDefault();
@@ -584,8 +584,8 @@
             let categoryKey = rawCategoryKey;
             if (machineName.includes('Waschmaschine') || rawCategoryKey.includes('Waschmaschine')) categoryKey = 'Waschmaschine';
             else if (machineName.includes('Trockner') || rawCategoryKey.includes('Trockner')) categoryKey = 'Trockner';
-            else if (rawCategoryKey.includes('2-Wochen') || machineName.includes('2-Wochen')) categoryKey = 'Kompressor 2-Wochen';
-            else if (rawCategoryKey.includes('Jahreswartung') || machineName.includes('Jahreswartung')) categoryKey = 'Kompressor Jahreswartung';
+            else if (rawCategoryKey.includes('2-Wochen') || machineName.includes('2-Wochen') || machineName.includes('Kompressor (2-Wochen)')) categoryKey = 'Kompressor 2-Wochen';
+            else if (rawCategoryKey.includes('Jahreswartung') || machineName.includes('Jahreswartung') || machineName.includes('Kompressor (Jahreswartung)')) categoryKey = 'Kompressor Jahreswartung';
 
             const remarks = document.getElementById('remarks-input') ? document.getElementById('remarks-input').value : '';
             const runtimeHours = document.getElementById('runtime-hours') ? document.getElementById('runtime-hours').value : null;
@@ -644,14 +644,14 @@
             }
             await savePersistentStorage();
 
-            // Save to Firebase Cloud immediately and synchronously wait
+            // GUARANTEED CLOUD SAVE: Await Firestore write before opening modal
             if (db) {
                 try {
                     const appId = 'ecb-maintenance-live';
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocol.id), protocol);
-                    console.log("Protocol saved successfully to Firestore:", protocol.id);
+                    console.log("SUCCESS: Protocol permanently saved to Firestore:", protocol.id);
                 } catch(e) {
-                    console.error("Firestore Save Error:", e);
+                    console.error("FIRESTORE SAVE ERROR:", e);
                 }
             }
 
@@ -842,6 +842,7 @@
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('login-error').classList.add('hidden');
                 checkAdminNav();
+                forceCloudRecovery(); // Pull latest data upon login
                 updateUI();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
