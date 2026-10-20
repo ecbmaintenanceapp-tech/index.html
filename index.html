@@ -468,27 +468,33 @@
             }
             const appId = 'ecb-maintenance-live';
             try {
-                let cloudProtocols = [];
-                try {
-                    const snapArt = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'));
-                    snapArt.forEach(docSnap => {
-                        cloudProtocols.push({ id: docSnap.id, ...docSnap.data() });
-                    });
-                } catch(e) {}
+                let mergedMap = new Map();
 
+                // 1. Root Collection 'protocols'
                 try {
                     const snapRoot = await getDocs(collection(db, 'protocols'));
                     snapRoot.forEach(docSnap => {
-                        if (!cloudProtocols.some(p => p.id === docSnap.id)) {
-                            cloudProtocols.push({ id: docSnap.id, ...docSnap.data() });
-                        }
+                        const data = docSnap.data();
+                        const pId = data.id || docSnap.id;
+                        mergedMap.set(pId, { id: pId, ...data });
                     });
                 } catch(e) {}
 
-                if (cloudProtocols.length > 0) {
-                    protocols = cloudProtocols;
+                // 2. Artifact Collection 'protocols'
+                try {
+                    const snapArt = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'));
+                    snapArt.forEach(docSnap => {
+                        const data = docSnap.data();
+                        const pId = data.id || docSnap.id;
+                        mergedMap.set(pId, { id: pId, ...data });
+                    });
+                } catch(e) {}
+
+                if (mergedMap.size > 0) {
+                    protocols = Array.from(mergedMap.values());
                 }
 
+                // DGUV devices
                 try {
                     const dguvSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'));
                     let cloudDevices = [];
@@ -498,6 +504,7 @@
                     if (cloudDevices.length > 0) dguvDevices = cloudDevices;
                 } catch(e) {}
 
+                // Users
                 try {
                     const userSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'cloud_users'));
                     let cloudUsrs = [];
@@ -563,6 +570,7 @@
                     if (db) {
                         const appId = 'ecb-maintenance-live';
                         for (let p of protocols) {
+                            await setDoc(doc(db, 'protocols', p.id), p);
                             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.id), p);
                         }
                     }
@@ -646,13 +654,15 @@
             protocols.unshift(protocol);
             await savePersistentStorage();
 
+            // PARALLEL CLOUD SAVE: Root collection AND artifact collection
             if (db) {
                 try {
                     const appId = 'ecb-maintenance-live';
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocol.id), protocol);
                     await setDoc(doc(db, 'protocols', protocol.id), protocol);
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocol.id), protocol);
+                    console.log("Protocol successfully saved to both Cloud locations:", protocol.id);
                 } catch(e) {
-                    console.error("Firestore save error:", e);
+                    console.error("Cloud save error:", e);
                 }
             }
 
@@ -805,8 +815,8 @@
                 if (db) {
                     try {
                         const appId = 'ecb-maintenance-live';
-                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocolId));
                         await deleteDoc(doc(db, 'protocols', protocolId));
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocolId));
                     } catch(e) {}
                 }
                 updateUI();
@@ -1507,29 +1517,29 @@
                 y += 6;
                 let xPos = 15;
                 p.photos.forEach((pho) => {
-                    if (xPos + 40 > pageWidth - 15) { xPos = 15; y += 45; }
-                    if (y > pageHeight - 50) { doc.addPage(); y = 20; xPos = 15; }
+                    if (y > pageHeight - 55) { doc.addPage(); y = 20; xPos = 15; }
                     try {
                         const tempImg = new Image();
                         tempImg.src = pho;
-                        let pW = 36;
-                        let pH = 36;
+                        let imgW = 40;
+                        let imgH = 40;
                         if (tempImg.naturalWidth && tempImg.naturalHeight) {
                             if (tempImg.naturalHeight > tempImg.naturalWidth) {
-                                // Hochformat Bild korrekt skalieren (schmälerer Kasten, gleiche Höhe)
-                                pW = 27;
-                                pH = 36;
+                                // Hochformat
+                                imgW = 30;
+                                imgH = 40;
                             } else {
-                                // Querformat Bild
-                                pW = 36;
-                                pH = 27;
+                                // Querformat
+                                imgW = 40;
+                                imgH = 30;
                             }
                         }
-                        doc.addImage(pho, 'JPEG', xPos, y, pW, pH);
-                        xPos += 40;
+                        if (xPos + imgW > pageWidth - 15) { xPos = 15; y += imgH + 6; }
+                        doc.addImage(pho, 'JPEG', xPos, y, imgW, imgH);
+                        xPos += imgW + 6;
                     } catch(e) {}
                 });
-                y += 45;
+                y += 48;
             }
 
             y += 10;
