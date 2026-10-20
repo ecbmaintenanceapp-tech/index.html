@@ -466,23 +466,21 @@
                 showModal('Hinweis', 'Cloud-Verbindung ist im Offline-Modus.', false);
                 return;
             }
-            const appId = 'ecb-maintenance-live';
             try {
                 let mergedMap = new Map();
-                // 1. Load existing local protocols first so they are never lost
+                // 1. Load local persistent items first so they are never lost
                 protocols.forEach(p => { if(p.id) mergedMap.set(p.id, p); });
 
                 // 2. Fetch from Root Collection 'protocols'
-                try {
-                    const snapRoot = await getDocs(collection(db, 'protocols'));
-                    snapRoot.forEach(docSnap => {
-                        const data = docSnap.data();
-                        const pId = data.id || docSnap.id;
-                        mergedMap.set(pId, { id: pId, ...data });
-                    });
-                } catch(e) {}
+                const snapRoot = await getDocs(collection(db, 'protocols'));
+                snapRoot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const pId = data.id || docSnap.id;
+                    mergedMap.set(pId, { id: pId, ...data });
+                });
 
                 // 3. Fetch from Artifact Collection 'protocols'
+                const appId = 'ecb-maintenance-live';
                 try {
                     const snapArt = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'));
                     snapArt.forEach(docSnap => {
@@ -492,19 +490,20 @@
                     });
                 } catch(e) {}
 
-                if (mergedMap.size > 0) {
-                    protocols = Array.from(mergedMap.values());
-                }
-
                 // DGUV devices
                 try {
                     const dguvSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'));
-                    let cloudDevices = [];
                     dguvSnap.forEach(docSnap => {
-                        cloudDevices.push({ id: docSnap.id, ...docSnap.data() });
+                        const dData = docSnap.data();
+                        if (dData.id && !dguvDevices.some(d => d.id === dData.id)) {
+                            dguvDevices.push({ id: docSnap.id, ...dData });
+                        }
                     });
-                    if (cloudDevices.length > 0) dguvDevices = cloudDevices;
                 } catch(e) {}
+
+                if (mergedMap.size > 0) {
+                    protocols = Array.from(mergedMap.values());
+                }
 
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                 savePersistentStorage();
@@ -518,8 +517,20 @@
 
         function loadPersistentStorage() {
             try {
-                const p = localStorage.getItem('ecb_protocols_v135') || localStorage.getItem('ecb_protocols_v118');
-                if (p) protocols = JSON.parse(p);
+                let merged = [];
+                const p1 = localStorage.getItem('ecb_permanent_local_protocols_v2');
+                if (p1) merged = merged.concat(JSON.parse(p1));
+                const p2 = localStorage.getItem('ecb_protocols_v135');
+                if (p2) merged = merged.concat(JSON.parse(p2));
+                const p3 = localStorage.getItem('ecb_protocols_v118');
+                if (p3) merged = merged.concat(JSON.parse(p3));
+
+                // Deduplicate by ID
+                let map = new Map();
+                merged.forEach(item => { if(item && item.id) map.set(item.id, item); });
+                protocols = Array.from(map.values());
+                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+
                 const d = localStorage.getItem('ecb_dguv_v118');
                 if (d) dguvDevices = JSON.parse(d);
                 const u = localStorage.getItem('ecb_users_v118');
@@ -532,6 +543,7 @@
 
         async function savePersistentStorage() {
             try {
+                localStorage.setItem('ecb_permanent_local_protocols_v2', JSON.stringify(protocols));
                 localStorage.setItem('ecb_protocols_v135', JSON.stringify(protocols));
                 localStorage.setItem('ecb_dguv_v118', JSON.stringify(dguvDevices));
                 localStorage.setItem('ecb_users_v118', JSON.stringify(cloudUsers));
@@ -643,19 +655,19 @@
                 signature: signaturePadInstance.canvas.toDataURL()
             };
 
-            // 1. Immediately insert into local array and save to localStorage
+            // 1. Insert locally and save persistent storage immediately
             protocols.unshift(protocol);
             await savePersistentStorage();
 
-            // 2. Parallel Cloud Save (Root + Artifacts)
+            // 2. GUARANTEED CLOUD WRITE: Write simultaneously to Root and Artifacts
             if (db) {
                 try {
                     const appId = 'ecb-maintenance-live';
                     await setDoc(doc(db, 'protocols', protocol.id), protocol);
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocol.id), protocol);
-                    console.log("Protocol permanently saved to Cloud:", protocol.id);
+                    console.log("CRITICAL: Protocol successfully saved to Firestore Cloud:", protocol.id);
                 } catch(e) {
-                    console.error("Cloud save error:", e);
+                    console.error("FIRESTORE CLOUD SAVE ERROR:", e);
                 }
             }
 
@@ -1518,11 +1530,9 @@
                         let imgH = 40;
                         if (tempImg.naturalWidth && tempImg.naturalHeight) {
                             if (tempImg.naturalHeight > tempImg.naturalWidth) {
-                                // Hochformat
                                 imgW = 30;
                                 imgH = 40;
                             } else {
-                                // Querformat
                                 imgW = 40;
                                 imgH = 30;
                             }
