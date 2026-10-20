@@ -102,7 +102,7 @@
                     <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Firebase Cloud Wiederherstellung</span>
                     <button type="button" onclick="forceCloudRecovery()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer"><i class="fa-solid fa-rotate mr-1"></i> Aus Cloud laden</button>
                 </h4>
-                <p class="text-xs text-emerald-700">Laden Sie alle Protokolle und DGUV-Geräte direkt aus Ihrer Firebase-Datenbank.</p>
+                <p class="text-xs text-emerald-700">Laden Sie alle Protokolle und DGUV-Geräte aus Ihrer Firebase-Datenbank.</p>
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="exportDataJson()" class="flex-1 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 cursor-pointer"><i class="fa-solid fa-download mr-1"></i> Backup exportieren</button>
                     <label class="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 text-center cursor-pointer">
@@ -466,54 +466,51 @@
                 showModal('Hinweis', 'Cloud-Verbindung ist im Offline-Modus.', false);
                 return;
             }
+            const appId = 'ecb-maintenance-live';
             try {
                 let cloudProtocols = [];
-                // 1. Try root collection 'protocols' (where your existing data sits)
                 try {
-                    const snap = await getDocs(collection(db, 'protocols'));
-                    snap.forEach(docSnap => {
-                        const data = docSnap.data();
-                        cloudProtocols.push({ id: docSnap.id, ...data });
+                    const snapArt = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'));
+                    snapArt.forEach(docSnap => {
+                        cloudProtocols.push({ id: docSnap.id, ...docSnap.data() });
                     });
-                } catch(e1) { console.log("Root protocols fetch fallback:", e1); }
+                } catch(e) {}
 
-                // 2. Try artifact specific path just in case
-                const appId = 'ecb-maintenance-live';
                 try {
-                    const snap2 = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'));
-                    snap2.forEach(docSnap => {
-                        const data = docSnap.data();
+                    const snapRoot = await getDocs(collection(db, 'protocols'));
+                    snapRoot.forEach(docSnap => {
                         if (!cloudProtocols.some(p => p.id === docSnap.id)) {
-                            cloudProtocols.push({ id: docSnap.id, ...data });
+                            cloudProtocols.push({ id: docSnap.id, ...docSnap.data() });
                         }
                     });
-                } catch(e2) { console.log("Artifact protocols fetch fallback:", e2); }
+                } catch(e) {}
 
                 if (cloudProtocols.length > 0) {
                     protocols = cloudProtocols;
                 }
 
-                // Fetch DGUV devices
                 try {
-                    const dguvSnap = await getDocs(collection(db, 'dguv_devices'));
+                    const dguvSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'));
                     let cloudDevices = [];
                     dguvSnap.forEach(docSnap => {
                         cloudDevices.push({ id: docSnap.id, ...docSnap.data() });
                     });
                     if (cloudDevices.length > 0) dguvDevices = cloudDevices;
-                } catch(e3) {
-                    const dguvSnap2 = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'));
-                    let cloudDevices2 = [];
-                    dguvSnap2.forEach(docSnap => {
-                        cloudDevices2.push({ id: docSnap.id, ...docSnap.data() });
+                } catch(e) {}
+
+                try {
+                    const userSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'cloud_users'));
+                    let cloudUsrs = [];
+                    userSnap.forEach(docSnap => {
+                        cloudUsrs.push(docSnap.data());
                     });
-                    if (cloudDevices2.length > 0) dguvDevices = cloudDevices2;
-                }
+                    if (cloudUsrs.length > 0) cloudUsers = cloudUsrs;
+                } catch(e) {}
 
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                 savePersistentStorage();
                 updateUI();
-                showModal('Erfolg', `Daten aus Cloud geladen (${protocols.length} Protokolle gefunden)!`, true);
+                showModal('Erfolg', `${protocols.length} Protokolle erfolgreich aus der Firebase Cloud geladen!`, true);
             } catch(e) {
                 console.error("Cloud recovery error:", e);
                 showModal('Fehler', 'Fehler beim Laden aus der Cloud.', false);
@@ -522,7 +519,7 @@
 
         function loadPersistentStorage() {
             try {
-                const p = localStorage.getItem('ecb_protocols_v118');
+                const p = localStorage.getItem('ecb_protocols_v135') || localStorage.getItem('ecb_protocols_v118');
                 if (p) protocols = JSON.parse(p);
                 const d = localStorage.getItem('ecb_dguv_v118');
                 if (d) dguvDevices = JSON.parse(d);
@@ -536,7 +533,7 @@
 
         async function savePersistentStorage() {
             try {
-                localStorage.setItem('ecb_protocols_v118', JSON.stringify(protocols));
+                localStorage.setItem('ecb_protocols_v135', JSON.stringify(protocols));
                 localStorage.setItem('ecb_dguv_v118', JSON.stringify(dguvDevices));
                 localStorage.setItem('ecb_users_v118', JSON.stringify(cloudUsers));
             } catch(e) {}
@@ -564,11 +561,9 @@
                     if (parsed.cloudUsers) cloudUsers = parsed.cloudUsers;
                     
                     if (db) {
+                        const appId = 'ecb-maintenance-live';
                         for (let p of protocols) {
-                            await setDoc(doc(db, 'protocols', p.id), p);
-                        }
-                        for (let d of dguvDevices) {
-                            await setDoc(doc(db, 'dguv_devices', d.id), d);
+                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.id), p);
                         }
                     }
                     savePersistentStorage();
@@ -648,22 +643,16 @@
                 signature: signaturePadInstance.canvas.toDataURL()
             };
 
-            const existingIdx = protocols.findIndex(p => p.id === protocol.id);
-            if (existingIdx > -1) {
-                protocols[existingIdx] = protocol;
-            } else {
-                protocols.unshift(protocol);
-            }
+            protocols.unshift(protocol);
             await savePersistentStorage();
 
             if (db) {
                 try {
-                    await setDoc(doc(db, 'protocols', protocol.id), protocol);
                     const appId = 'ecb-maintenance-live';
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocol.id), protocol);
-                    console.log("SUCCESS: Protocol permanently saved to Firestore:", protocol.id);
+                    await setDoc(doc(db, 'protocols', protocol.id), protocol);
                 } catch(e) {
-                    console.error("FIRESTORE SAVE ERROR:", e);
+                    console.error("Firestore save error:", e);
                 }
             }
 
@@ -730,7 +719,8 @@
 
             if (db) {
                 try {
-                    await setDoc(doc(db, 'dguv_devices', newDev.id), newDev);
+                    const appId = 'ecb-maintenance-live';
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', newDev.id), newDev);
                 } catch(e) {}
             }
 
@@ -769,7 +759,8 @@
                     await savePersistentStorage();
                     if (db) {
                         try {
-                            await setDoc(doc(db, 'dguv_devices', dev.id), dev);
+                            const appId = 'ecb-maintenance-live';
+                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', dev.id), dev);
                         } catch(e) {}
                     }
 
@@ -813,9 +804,9 @@
                 await savePersistentStorage();
                 if (db) {
                     try {
-                        await deleteDoc(doc(db, 'protocols', protocolId));
                         const appId = 'ecb-maintenance-live';
                         await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocolId));
+                        await deleteDoc(doc(db, 'protocols', protocolId));
                     } catch(e) {}
                 }
                 updateUI();
@@ -829,7 +820,8 @@
                 await savePersistentStorage();
                 if (db) {
                     try {
-                        await deleteDoc(doc(db, 'dguv_devices', deviceId));
+                        const appId = 'ecb-maintenance-live';
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', deviceId));
                     } catch(e) {}
                 }
                 updateUI();
@@ -960,11 +952,6 @@
                 if (idx > -1) {
                     cloudUsers.splice(idx, 1);
                     savePersistentStorage();
-                    if (db) {
-                        try {
-                            await deleteDoc(doc(db, 'cloud_users', username));
-                        } catch(e) {}
-                    }
                     renderAdminUsersList();
                     showModal('Erfolg', 'Mitarbeiter-Konto gelöscht.', true);
                 }
@@ -1247,7 +1234,26 @@
         window.handlePhotoCapture = function(e) {
             Array.from(e.target.files).forEach(f => {
                 const r = new FileReader();
-                r.onload = (evt) => { activePhotos.push(evt.target.result); updatePhotoPreview(); };
+                r.onload = (evt) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width;
+                        let h = img.height;
+                        const MAX = 1200;
+                        if (w > MAX || h > MAX) {
+                            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+                            else { w = Math.round(w * MAX / h); h = MAX; }
+                        }
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        activePhotos.push(canvas.toDataURL('image/jpeg', 0.85));
+                        updatePhotoPreview();
+                    };
+                    img.src = evt.target.result;
+                };
                 r.readAsDataURL(f);
             });
             e.target.value = '';
@@ -1494,18 +1500,36 @@
 
             if (p.photos && p.photos.length > 0) {
                 y += 6;
-                if (y > pageHeight - 60) { doc.addPage(); y = 20; }
+                if (y > pageHeight - 65) { doc.addPage(); y = 20; }
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(15, 23, 42);
                 doc.text('Dokumentationsfotos:', 15, y);
                 y += 6;
                 let xPos = 15;
                 p.photos.forEach((pho) => {
-                    if (xPos + 35 > pageWidth - 15) { xPos = 15; y += 38; }
-                    if (y > pageHeight - 45) { doc.addPage(); y = 20; xPos = 15; }
-                    try { doc.addImage(pho, 'JPEG', xPos, y, 32, 32); xPos += 38; } catch(e) {}
+                    if (xPos + 40 > pageWidth - 15) { xPos = 15; y += 45; }
+                    if (y > pageHeight - 50) { doc.addPage(); y = 20; xPos = 15; }
+                    try {
+                        const tempImg = new Image();
+                        tempImg.src = pho;
+                        let pW = 36;
+                        let pH = 36;
+                        if (tempImg.naturalWidth && tempImg.naturalHeight) {
+                            if (tempImg.naturalHeight > tempImg.naturalWidth) {
+                                // Hochformat Bild korrekt skalieren (schmälerer Kasten, gleiche Höhe)
+                                pW = 27;
+                                pH = 36;
+                            } else {
+                                // Querformat Bild
+                                pW = 36;
+                                pH = 27;
+                            }
+                        }
+                        doc.addImage(pho, 'JPEG', xPos, y, pW, pH);
+                        xPos += 40;
+                    } catch(e) {}
                 });
-                y += 38;
+                y += 45;
             }
 
             y += 10;
