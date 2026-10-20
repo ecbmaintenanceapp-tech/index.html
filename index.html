@@ -469,8 +469,10 @@
             const appId = 'ecb-maintenance-live';
             try {
                 let mergedMap = new Map();
+                // 1. Load existing local protocols first so they are never lost
+                protocols.forEach(p => { if(p.id) mergedMap.set(p.id, p); });
 
-                // 1. Root Collection 'protocols'
+                // 2. Fetch from Root Collection 'protocols'
                 try {
                     const snapRoot = await getDocs(collection(db, 'protocols'));
                     snapRoot.forEach(docSnap => {
@@ -480,7 +482,7 @@
                     });
                 } catch(e) {}
 
-                // 2. Artifact Collection 'protocols'
+                // 3. Fetch from Artifact Collection 'protocols'
                 try {
                     const snapArt = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'));
                     snapArt.forEach(docSnap => {
@@ -504,20 +506,10 @@
                     if (cloudDevices.length > 0) dguvDevices = cloudDevices;
                 } catch(e) {}
 
-                // Users
-                try {
-                    const userSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'cloud_users'));
-                    let cloudUsrs = [];
-                    userSnap.forEach(docSnap => {
-                        cloudUsrs.push(docSnap.data());
-                    });
-                    if (cloudUsrs.length > 0) cloudUsers = cloudUsrs;
-                } catch(e) {}
-
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                 savePersistentStorage();
                 updateUI();
-                showModal('Erfolg', `${protocols.length} Protokolle erfolgreich aus der Firebase Cloud geladen!`, true);
+                showModal('Erfolg', `${protocols.length} Protokolle erfolgreich synchronisiert!`, true);
             } catch(e) {
                 console.error("Cloud recovery error:", e);
                 showModal('Fehler', 'Fehler beim Laden aus der Cloud.', false);
@@ -651,16 +643,17 @@
                 signature: signaturePadInstance.canvas.toDataURL()
             };
 
+            // 1. Immediately insert into local array and save to localStorage
             protocols.unshift(protocol);
             await savePersistentStorage();
 
-            // PARALLEL CLOUD SAVE: Root collection AND artifact collection
+            // 2. Parallel Cloud Save (Root + Artifacts)
             if (db) {
                 try {
                     const appId = 'ecb-maintenance-live';
                     await setDoc(doc(db, 'protocols', protocol.id), protocol);
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocol.id), protocol);
-                    console.log("Protocol successfully saved to both Cloud locations:", protocol.id);
+                    console.log("Protocol permanently saved to Cloud:", protocol.id);
                 } catch(e) {
                     console.error("Cloud save error:", e);
                 }
@@ -1510,14 +1503,14 @@
 
             if (p.photos && p.photos.length > 0) {
                 y += 6;
-                if (y > pageHeight - 65) { doc.addPage(); y = 20; }
+                if (y > pageHeight - 75) { doc.addPage(); y = 20; }
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(15, 23, 42);
                 doc.text('Dokumentationsfotos:', 15, y);
                 y += 6;
                 let xPos = 15;
                 p.photos.forEach((pho) => {
-                    if (y > pageHeight - 55) { doc.addPage(); y = 20; xPos = 15; }
+                    if (y > pageHeight - 70) { doc.addPage(); y = 20; xPos = 15; }
                     try {
                         const tempImg = new Image();
                         tempImg.src = pho;
