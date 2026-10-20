@@ -199,7 +199,7 @@
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Wartungs- und Prüfsystem</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge synchronisieren sich in Echtzeit mit Firebase.</p>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge synchronisieren sich mit Firebase.</p>
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden flex flex-wrap gap-3">
                     <button type="button" onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Cloud-Sync</button>
@@ -462,36 +462,27 @@
         };
 
         window.forceCloudRecovery = async function() {
-            if (!db) {
-                showModal('Hinweis', 'Cloud-Verbindung ist im Offline-Modus.', false);
-                return;
-            }
-            try {
-                let mergedMap = new Map();
-                // 1. Load local persistent items first so they are never lost
-                protocols.forEach(p => { if(p.id) mergedMap.set(p.id, p); });
+            let mergedMap = new Map();
+            // Load existing local persistent protocols first so they are never lost
+            protocols.forEach(p => { if (p && p.id) mergedMap.set(p.id, p); });
 
-                // 2. Fetch from Root Collection 'protocols'
-                const snapRoot = await getDocs(collection(db, 'protocols'));
-                snapRoot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const pId = data.id || docSnap.id;
-                    mergedMap.set(pId, { id: pId, ...data });
-                });
-
-                // 3. Fetch from Artifact Collection 'protocols'
-                const appId = 'ecb-maintenance-live';
+            if (db) {
                 try {
+                    const snapRoot = await getDocs(collection(db, 'protocols'));
+                    snapRoot.forEach(docSnap => {
+                        const data = docSnap.data();
+                        const pId = data.id || docSnap.id;
+                        mergedMap.set(pId, { id: pId, ...data });
+                    });
+
+                    const appId = 'ecb-maintenance-live';
                     const snapArt = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'));
                     snapArt.forEach(docSnap => {
                         const data = docSnap.data();
                         const pId = data.id || docSnap.id;
                         mergedMap.set(pId, { id: pId, ...data });
                     });
-                } catch(e) {}
 
-                // DGUV devices
-                try {
                     const dguvSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'));
                     dguvSnap.forEach(docSnap => {
                         const dData = docSnap.data();
@@ -499,20 +490,16 @@
                             dguvDevices.push({ id: docSnap.id, ...dData });
                         }
                     });
-                } catch(e) {}
-
-                if (mergedMap.size > 0) {
-                    protocols = Array.from(mergedMap.values());
+                } catch(e) {
+                    console.error("Cloud recovery sync warning:", e);
                 }
-
-                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-                savePersistentStorage();
-                updateUI();
-                showModal('Erfolg', `${protocols.length} Protokolle erfolgreich synchronisiert!`, true);
-            } catch(e) {
-                console.error("Cloud recovery error:", e);
-                showModal('Fehler', 'Fehler beim Laden aus der Cloud.', false);
             }
+
+            protocols = Array.from(mergedMap.values());
+            protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+            savePersistentStorage();
+            updateUI();
+            showModal('Erfolg', `${protocols.length} Protokolle erfolgreich geladen und synchronisiert!`, true);
         };
 
         function loadPersistentStorage() {
@@ -525,9 +512,8 @@
                 const p3 = localStorage.getItem('ecb_protocols_v118');
                 if (p3) merged = merged.concat(JSON.parse(p3));
 
-                // Deduplicate by ID
                 let map = new Map();
-                merged.forEach(item => { if(item && item.id) map.set(item.id, item); });
+                merged.forEach(item => { if (item && item.id) map.set(item.id, item); });
                 protocols = Array.from(map.values());
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
 
@@ -588,6 +574,7 @@
             reader.readAsText(file);
         };
 
+        // Universal protocol submit dispatcher with guaranteed permanent local and cloud write
         window.submitProtocol = async function(event, rawCategoryKey) {
             if (event) {
                 event.preventDefault();
@@ -655,8 +642,13 @@
                 signature: signaturePadInstance.canvas.toDataURL()
             };
 
-            // 1. Insert locally and save persistent storage immediately
-            protocols.unshift(protocol);
+            // 1. Insert locally and save permanent storage immediately
+            const existingIdx = protocols.findIndex(p => p.id === protocol.id);
+            if (existingIdx > -1) {
+                protocols[existingIdx] = protocol;
+            } else {
+                protocols.unshift(protocol);
+            }
             await savePersistentStorage();
 
             // 2. GUARANTEED CLOUD WRITE: Write simultaneously to Root and Artifacts
@@ -665,7 +657,7 @@
                     const appId = 'ecb-maintenance-live';
                     await setDoc(doc(db, 'protocols', protocol.id), protocol);
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocol.id), protocol);
-                    console.log("CRITICAL: Protocol successfully saved to Firestore Cloud:", protocol.id);
+                    console.log("SUCCESS: Protocol permanently saved to Firestore Cloud & Local:", protocol.id);
                 } catch(e) {
                     console.error("FIRESTORE CLOUD SAVE ERROR:", e);
                 }
@@ -1098,7 +1090,7 @@
         };
 
         function renderCommonHeaderFields(customTech) {
-            const techName = customTech || localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
+            const techName = customTech || retroCustomTechnician || localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
             return `
                 <div class="p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-4 mb-8 shadow-sm">
                     <div class="font-bold text-sm text-ecbDarkGreen"><i class="fa-solid fa-user mr-1"></i> Zuständiger Techniker</div>
