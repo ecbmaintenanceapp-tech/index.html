@@ -145,7 +145,7 @@
                     <div class="w-10 h-10 rounded-xl bg-ecbGreen text-white flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-file-pdf"></i></div>
                     <div>
                         <h3 class="text-lg font-extrabold text-slate-900" id="pdf-modal-heading">Wartungsprotokoll erstellt</h3>
-                        <p class="text-xs text-slate-500">Das Protokoll wurde permanent gespeichert und in die Cloud übertragen.</p>
+                        <p class="text-xs text-slate-500">Das Protokoll wurde permanent in der Firebase-Cloud gespeichert.</p>
                     </div>
                 </div>
                 <button onclick="closePdfPreviewModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
@@ -199,7 +199,7 @@
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Wartungs- und Prüfsystem</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge werden permanent in der Cloud und lokal gespeichert.</p>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge synchronisieren sich dauerhaft mit Firebase.</p>
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden flex flex-wrap gap-3">
                     <button type="button" onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Cloud-Sync</button>
@@ -267,7 +267,7 @@
                 <h2 class="text-2xl font-extrabold text-slate-900">Wartungskalender &amp; Fälligkeiten</h2>
                 <p class="text-sm text-slate-500 mt-1">Aktualisiert sich automatisch nach jeder durchgeführten Wartung.</p>
             </div>
-            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border overflow-x-auto">
+            <div class="bg-white rounded-3xl p-6 shadow-sm border overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead><tr class="border-b text-xs font-extrabold text-slate-500 uppercase"><th class="py-3 px-4">Kategorie</th><th class="py-3 px-4">Letzte Wartung</th><th class="py-3 px-4">Nächster Termin</th><th class="py-3 px-4">Status</th></tr></thead>
                     <tbody id="calendar-table-body" class="divide-y text-sm"></tbody>
@@ -431,7 +431,7 @@
         let retroCustomTechnician = null;
 
         window.onload = async function() {
-            loadPermanentStorageVault();
+            loadPersistentStorage();
             const dateInp = document.getElementById('retro-date-input');
             const timeInp = document.getElementById('retro-time-input');
             const techInp = document.getElementById('retro-technician-input');
@@ -450,7 +450,7 @@
             } catch (err) {
                 console.error("Firebase Init Hinweis:", err);
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-400 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Lokaler Modus (Offline gespeichert)";
+                document.getElementById('cloud-status-text').innerText = "Lokaler Modus (Cloud Offline)";
             }
 
             updateUI();
@@ -461,106 +461,103 @@
             }
         };
 
-        // Bulletproof Permanent Storage Vault (Never wiped on logout)
-        function loadPermanentStorageVault() {
+        // Smart Cloud Merge Strategy: Local/Retroactive records take precedence and are never overwritten by older cloud syncs
+        window.forceCloudRecovery = async function() {
+            if (!db) {
+                showModal('Hinweis', 'Cloud-Verbindung ist im Offline-Modus.', false);
+                return;
+            }
+            const appId = 'ecb-maintenance-live';
+            try {
+                // Collect existing local protocols in a map to preserve them
+                let mergedMap = new Map();
+                protocols.forEach(p => { if (p && p.id) mergedMap.set(p.id, p); });
+
+                const protoSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'));
+                protoSnap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const pId = data.id || docSnap.id;
+                    if (pId) {
+                        // If local doesn't have it, add it from cloud
+                        if (!mergedMap.has(pId)) {
+                            mergedMap.set(pId, { id: pId, ...data });
+                        }
+                    }
+                });
+
+                protocols = Array.from(mergedMap.values());
+                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+
+                const dguvSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'));
+                let cloudDevices = [];
+                dguvSnap.forEach(docSnap => {
+                    cloudDevices.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                if (cloudDevices.length > 0) {
+                    dguvDevices = cloudDevices;
+                }
+
+                savePersistentStorage();
+                updateUI();
+                showModal('Erfolg', 'Daten erfolgreich synchronisiert!', true);
+            } catch(e) {
+                console.error("Cloud recovery error:", e);
+                showModal('Fehler', 'Fehler beim Laden aus der Cloud.', false);
+            }
+        };
+
+        function loadPersistentStorage() {
             try {
                 let mergedMap = new Map();
-                
                 const loadKey = (key) => {
                     const raw = localStorage.getItem(key);
                     if (raw) {
-                        try {
-                            const parsed = JSON.parse(raw);
-                            if (Array.isArray(parsed)) {
-                                parsed.forEach(item => {
-                                    if (item && (item.id || item.protocolId)) {
-                                        const pId = item.id || item.protocolId;
-                                        mergedMap.set(pId, { ...item, id: pId });
-                                    }
-                                });
-                            }
-                        } catch(err) {}
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed)) {
+                            parsed.forEach(item => {
+                                if (item && (item.id || item.protocolId)) {
+                                    const pId = item.id || item.protocolId;
+                                    mergedMap.set(pId, { ...item, id: pId });
+                                }
+                            });
+                        }
                     }
                 };
 
                 loadKey('ecb_permanent_local_protocols_v2');
-                loadKey('ecb_protocols_v135');
                 loadKey('ecb_protocols_v118');
 
                 protocols = Array.from(mergedMap.values());
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
 
                 const d = localStorage.getItem('ecb_dguv_v118');
-                if (d) { try { dguvDevices = JSON.parse(d); } catch(e) {} }
-
+                if (d) dguvDevices = JSON.parse(d);
                 const u = localStorage.getItem('ecb_users_v118');
                 if (u) {
-                    try {
-                        const parsedU = JSON.parse(u);
-                        if (Array.isArray(parsedU) && parsedU.length > 0) cloudUsers = parsedU;
-                    } catch(e) {}
+                    const parsedU = JSON.parse(u);
+                    if (parsedU.length > 0) cloudUsers = parsedU;
                 }
-            } catch(e) {
-                console.error("Vault load error:", e);
-            }
+            } catch(e) {}
         }
 
-        async function savePermanentStorageVault() {
+        async function savePersistentStorage() {
             try {
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                 const jsonStr = JSON.stringify(protocols);
                 localStorage.setItem('ecb_permanent_local_protocols_v2', jsonStr);
-                localStorage.setItem('ecb_protocols_v135', jsonStr);
+                localStorage.setItem('ecb_protocols_v118', jsonStr);
                 localStorage.setItem('ecb_dguv_v118', JSON.stringify(dguvDevices));
                 localStorage.setItem('ecb_users_v118', JSON.stringify(cloudUsers));
-            } catch(e) {
-                console.error("Vault save error:", e);
-            }
-        }
 
-        window.forceCloudRecovery = async function() {
-            let cloudMergedMap = new Map();
-            protocols.forEach(p => { if (p && p.id) cloudMergedMap.set(p.id, p); });
-
-            if (db) {
-                try {
-                    const snap = await getDocs(collection(db, 'protocols'));
-                    snap.forEach(docSnap => {
-                        const data = docSnap.data();
-                        const pId = data.id || docSnap.id;
-                        if (pId) {
-                            cloudMergedMap.set(pId, { id: pId, ...data });
-                        }
-                    });
-
+                // Also push all local protocols immediately to cloud to guarantee persistence
+                if (db) {
                     const appId = 'ecb-maintenance-live';
-                    const snapArt = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'));
-                    snapArt.forEach(docSnap => {
-                        const data = docSnap.data();
-                        const pId = data.id || docSnap.id;
-                        if (pId) {
-                            cloudMergedMap.set(pId, { id: pId, ...data });
-                        }
-                    });
-
-                    const dguvSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'));
-                    dguvSnap.forEach(docSnap => {
-                        const dData = docSnap.data();
-                        if (dData.id && !dguvDevices.some(d => d.id === dData.id)) {
-                            dguvDevices.push({ id: docSnap.id, ...dData });
-                        }
-                    });
-                } catch(e) {
-                    console.error("Cloud recovery sync notice:", e);
+                    for (let p of protocols) {
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.id), p);
+                    }
                 }
-            }
-
-            protocols = Array.from(cloudMergedMap.values());
-            protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-            await savePermanentStorageVault();
-            updateUI();
-            showModal('Erfolg', `${protocols.length} Protokolle erfolgreich geladen und synchronisiert!`, true);
-        };
+            } catch(e) {}
+        }
 
         window.exportDataJson = function() {
             const data = { protocols, dguvDevices, cloudUsers };
@@ -586,11 +583,10 @@
                     if (db) {
                         const appId = 'ecb-maintenance-live';
                         for (let p of protocols) {
-                            await setDoc(doc(db, 'protocols', p.id), p);
                             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.id), p);
                         }
                     }
-                    await savePermanentStorageVault();
+                    savePersistentStorage();
                     updateUI();
                     showModal('Erfolg', 'Backup importiert & synchronisiert!', true);
                 } catch(err) {
@@ -600,7 +596,7 @@
             reader.readAsText(file);
         };
 
-        // Guaranteed Persistent Protocol Submission & Sync
+        // Universal protocol submit dispatcher with guaranteed local & cloud persistence
         window.submitProtocol = async function(event, rawCategoryKey) {
             if (event) {
                 event.preventDefault();
@@ -668,22 +664,16 @@
                 signature: signaturePadInstance.canvas.toDataURL()
             };
 
-            // 1. Save immediately to permanent local vault
-            const existingIdx = protocols.findIndex(p => p.id === protocol.id);
-            if (existingIdx > -1) {
-                protocols[existingIdx] = protocol;
-            } else {
-                protocols.unshift(protocol);
-            }
-            await savePermanentStorageVault();
+            // Prepend and save permanently
+            protocols.unshift(protocol);
+            await savePersistentStorage();
 
-            // 2. Guaranteed Cloud Save (Firestore root + artifact path)
+            // Push to Firestore immediately
             if (db) {
                 try {
                     const appId = 'ecb-maintenance-live';
-                    await setDoc(doc(db, 'protocols', protocol.id), protocol);
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocol.id), protocol);
-                    console.log("SUCCESS: Protocol permanently saved to Cloud & Local Vault:", protocol.id);
+                    console.log("SUCCESS: Protocol permanently saved to Firestore:", protocol.id);
                 } catch(e) {
                     console.error("FIRESTORE SAVE ERROR:", e);
                 }
@@ -748,7 +738,7 @@
             if (!dguvDevices.some(d => d.id === newDev.id)) {
                 dguvDevices.unshift(newDev);
             }
-            await savePermanentStorageVault();
+            await savePersistentStorage();
 
             if (db) {
                 try {
@@ -789,7 +779,7 @@
                     dev.protocolName = file.name;
                     dev.status = 'Erledigt';
 
-                    await savePermanentStorageVault();
+                    await savePersistentStorage();
                     if (db) {
                         try {
                             const appId = 'ecb-maintenance-live';
@@ -834,11 +824,10 @@
             const idx = protocols.findIndex(p => p.id === protocolId);
             if (idx > -1) {
                 protocols.splice(idx, 1);
-                await savePermanentStorageVault();
+                await savePersistentStorage();
                 if (db) {
                     try {
                         const appId = 'ecb-maintenance-live';
-                        await deleteDoc(doc(db, 'protocols', protocolId));
                         await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocolId));
                     } catch(e) {}
                 }
@@ -850,7 +839,7 @@
             const idx = dguvDevices.findIndex(d => d.id === deviceId);
             if (idx > -1) {
                 dguvDevices.splice(idx, 1);
-                await savePermanentStorageVault();
+                await savePersistentStorage();
                 if (db) {
                     try {
                         const appId = 'ecb-maintenance-live';
@@ -874,14 +863,13 @@
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('login-error').classList.add('hidden');
                 checkAdminNav();
-                loadPermanentStorageVault(); // Ensure vault is fully loaded on login
+                forceCloudRecovery();
                 updateUI();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
             }
         };
 
-        // Logout preserves protocols in permanent storage vault (only clears auth state)
         window.handleLogout = function() {
             localStorage.removeItem('ecb_logged_in');
             localStorage.removeItem('ecb_current_user');
@@ -948,7 +936,7 @@
             const newPass = document.getElementById('new-pass').value.trim();
             const currentUser = localStorage.getItem('ecb_current_user');
             const found = cloudUsers.find(u => u.user === currentUser);
-            if (found) { found.pass = newPass; savePermanentStorageVault(); }
+            if (found) { found.pass = newPass; savePersistentStorage(); }
             closePasswordModal();
             showModal('Erfolg', 'Passwort aktualisiert!', true);
         };
@@ -960,7 +948,7 @@
             const newPass = document.getElementById('reg-pass').value.trim();
             if (cloudUsers.some(u => u.user === newUser)) { document.getElementById('reg-error').classList.remove('hidden'); return; }
             cloudUsers.push({ fullname, user: newUser, pass: newPass, active: true });
-            savePermanentStorageVault();
+            savePersistentStorage();
             document.getElementById('reg-fullname').value = ''; document.getElementById('reg-user').value = ''; document.getElementById('reg-pass').value = '';
             document.getElementById('reg-error').classList.add('hidden');
             renderAdminUsersList();
@@ -971,7 +959,7 @@
             const usr = cloudUsers.find(u => u.user === username);
             if (usr) {
                 usr.active = usr.active === false ? true : false;
-                savePermanentStorageVault();
+                savePersistentStorage();
                 renderAdminUsersList();
             }
         };
@@ -985,7 +973,7 @@
                 const idx = cloudUsers.findIndex(u => u.user === username);
                 if (idx > -1) {
                     cloudUsers.splice(idx, 1);
-                    savePermanentStorageVault();
+                    savePersistentStorage();
                     renderAdminUsersList();
                     showModal('Erfolg', 'Mitarbeiter-Konto gelöscht.', true);
                 }
@@ -1268,26 +1256,7 @@
         window.handlePhotoCapture = function(e) {
             Array.from(e.target.files).forEach(f => {
                 const r = new FileReader();
-                r.onload = (evt) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let w = img.width;
-                        let h = img.height;
-                        const MAX = 1200;
-                        if (w > MAX || h > MAX) {
-                            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-                            else { w = Math.round(w * MAX / h); h = MAX; }
-                        }
-                        canvas.width = w;
-                        canvas.height = h;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, w, h);
-                        activePhotos.push(canvas.toDataURL('image/jpeg', 0.85));
-                        updatePhotoPreview();
-                    };
-                    img.src = evt.target.result;
-                };
+                r.onload = (evt) => { activePhotos.push(evt.target.result); updatePhotoPreview(); };
                 r.readAsDataURL(f);
             });
             e.target.value = '';
@@ -1534,34 +1503,18 @@
 
             if (p.photos && p.photos.length > 0) {
                 y += 6;
-                if (y > pageHeight - 75) { doc.addPage(); y = 20; }
+                if (y > pageHeight - 60) { doc.addPage(); y = 20; }
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(15, 23, 42);
                 doc.text('Dokumentationsfotos:', 15, y);
                 y += 6;
                 let xPos = 15;
                 p.photos.forEach((pho) => {
-                    if (y > pageHeight - 70) { doc.addPage(); y = 20; xPos = 15; }
-                    try {
-                        const tempImg = new Image();
-                        tempImg.src = pho;
-                        let imgW = 40;
-                        let imgH = 40;
-                        if (tempImg.naturalWidth && tempImg.naturalHeight) {
-                            if (tempImg.naturalHeight > tempImg.naturalWidth) {
-                                imgW = 30;
-                                imgH = 40;
-                            } else {
-                                imgW = 40;
-                                imgH = 30;
-                            }
-                        }
-                        if (xPos + imgW > pageWidth - 15) { xPos = 15; y += imgH + 6; }
-                        doc.addImage(pho, 'JPEG', xPos, y, imgW, imgH);
-                        xPos += imgW + 6;
-                    } catch(e) {}
+                    if (xPos + 35 > pageWidth - 15) { xPos = 15; y += 38; }
+                    if (y > pageHeight - 45) { doc.addPage(); y = 20; xPos = 15; }
+                    try { doc.addImage(pho, 'JPEG', xPos, y, 32, 32); xPos += 38; } catch(e) {}
                 });
-                y += 48;
+                y += 38;
             }
 
             y += 10;
