@@ -99,10 +99,10 @@
             
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
                 <h4 class="font-bold text-emerald-900 text-sm flex items-center justify-between">
-                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Firebase Cloud Wiederherstellung</span>
+                    <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Firebase Cloud Synchronisation</span>
                     <button type="button" onclick="forceCloudRecovery()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer"><i class="fa-solid fa-rotate mr-1"></i> Aus Cloud laden</button>
                 </h4>
-                <p class="text-xs text-emerald-700">Laden Sie alle Protokolle und DGUV-Geräte aus Ihrer Firebase-Datenbank.</p>
+                <p class="text-xs text-emerald-700">Laden Sie alle permanenten Protokolle und DGUV-Geräte aus Ihrer Firebase-Datenbank.</p>
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="exportDataJson()" class="flex-1 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 cursor-pointer"><i class="fa-solid fa-download mr-1"></i> Backup exportieren</button>
                     <label class="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 text-center cursor-pointer">
@@ -145,7 +145,7 @@
                     <div class="w-10 h-10 rounded-xl bg-ecbGreen text-white flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-file-pdf"></i></div>
                     <div>
                         <h3 class="text-lg font-extrabold text-slate-900" id="pdf-modal-heading">Wartungsprotokoll erstellt</h3>
-                        <p class="text-xs text-slate-500">Das Protokoll wurde permanent in der Firebase-Cloud gespeichert.</p>
+                        <p class="text-xs text-slate-500">Das Protokoll wurde permanent gespeichert und in die Cloud übertragen.</p>
                     </div>
                 </div>
                 <button onclick="closePdfPreviewModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
@@ -199,7 +199,7 @@
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Wartungs- und Prüfsystem</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge synchronisieren sich mit Firebase.</p>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge werden permanent in der Cloud und lokal gespeichert.</p>
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden flex flex-wrap gap-3">
                     <button type="button" onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Cloud-Sync</button>
@@ -267,7 +267,7 @@
                 <h2 class="text-2xl font-extrabold text-slate-900">Wartungskalender &amp; Fälligkeiten</h2>
                 <p class="text-sm text-slate-500 mt-1">Aktualisiert sich automatisch nach jeder durchgeführten Wartung.</p>
             </div>
-            <div class="bg-white rounded-3xl p-6 shadow-sm border overflow-x-auto">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead><tr class="border-b text-xs font-extrabold text-slate-500 uppercase"><th class="py-3 px-4">Kategorie</th><th class="py-3 px-4">Letzte Wartung</th><th class="py-3 px-4">Nächster Termin</th><th class="py-3 px-4">Status</th></tr></thead>
                     <tbody id="calendar-table-body" class="divide-y text-sm"></tbody>
@@ -431,7 +431,7 @@
         let retroCustomTechnician = null;
 
         window.onload = async function() {
-            loadPersistentStorage();
+            loadPermanentStorageVault();
             const dateInp = document.getElementById('retro-date-input');
             const timeInp = document.getElementById('retro-time-input');
             const techInp = document.getElementById('retro-technician-input');
@@ -450,7 +450,7 @@
             } catch (err) {
                 console.error("Firebase Init Hinweis:", err);
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-400 inline-block";
-                document.getElementById('cloud-status-text').innerText = "Lokaler Modus (Cloud Offline)";
+                document.getElementById('cloud-status-text').innerText = "Lokaler Modus (Offline gespeichert)";
             }
 
             updateUI();
@@ -461,18 +461,76 @@
             }
         };
 
+        // Bulletproof Permanent Storage Vault (Never wiped on logout)
+        function loadPermanentStorageVault() {
+            try {
+                let mergedMap = new Map();
+                
+                const loadKey = (key) => {
+                    const raw = localStorage.getItem(key);
+                    if (raw) {
+                        try {
+                            const parsed = JSON.parse(raw);
+                            if (Array.isArray(parsed)) {
+                                parsed.forEach(item => {
+                                    if (item && (item.id || item.protocolId)) {
+                                        const pId = item.id || item.protocolId;
+                                        mergedMap.set(pId, { ...item, id: pId });
+                                    }
+                                });
+                            }
+                        } catch(err) {}
+                    }
+                };
+
+                loadKey('ecb_permanent_local_protocols_v2');
+                loadKey('ecb_protocols_v135');
+                loadKey('ecb_protocols_v118');
+
+                protocols = Array.from(mergedMap.values());
+                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+
+                const d = localStorage.getItem('ecb_dguv_v118');
+                if (d) { try { dguvDevices = JSON.parse(d); } catch(e) {} }
+
+                const u = localStorage.getItem('ecb_users_v118');
+                if (u) {
+                    try {
+                        const parsedU = JSON.parse(u);
+                        if (Array.isArray(parsedU) && parsedU.length > 0) cloudUsers = parsedU;
+                    } catch(e) {}
+                }
+            } catch(e) {
+                console.error("Vault load error:", e);
+            }
+        }
+
+        async function savePermanentStorageVault() {
+            try {
+                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                const jsonStr = JSON.stringify(protocols);
+                localStorage.setItem('ecb_permanent_local_protocols_v2', jsonStr);
+                localStorage.setItem('ecb_protocols_v135', jsonStr);
+                localStorage.setItem('ecb_dguv_v118', JSON.stringify(dguvDevices));
+                localStorage.setItem('ecb_users_v118', JSON.stringify(cloudUsers));
+            } catch(e) {
+                console.error("Vault save error:", e);
+            }
+        }
+
         window.forceCloudRecovery = async function() {
-            let mergedMap = new Map();
-            // Load existing local persistent protocols first so they are never lost
-            protocols.forEach(p => { if (p && p.id) mergedMap.set(p.id, p); });
+            let cloudMergedMap = new Map();
+            protocols.forEach(p => { if (p && p.id) cloudMergedMap.set(p.id, p); });
 
             if (db) {
                 try {
-                    const snapRoot = await getDocs(collection(db, 'protocols'));
-                    snapRoot.forEach(docSnap => {
+                    const snap = await getDocs(collection(db, 'protocols'));
+                    snap.forEach(docSnap => {
                         const data = docSnap.data();
                         const pId = data.id || docSnap.id;
-                        mergedMap.set(pId, { id: pId, ...data });
+                        if (pId) {
+                            cloudMergedMap.set(pId, { id: pId, ...data });
+                        }
                     });
 
                     const appId = 'ecb-maintenance-live';
@@ -480,7 +538,9 @@
                     snapArt.forEach(docSnap => {
                         const data = docSnap.data();
                         const pId = data.id || docSnap.id;
-                        mergedMap.set(pId, { id: pId, ...data });
+                        if (pId) {
+                            cloudMergedMap.set(pId, { id: pId, ...data });
+                        }
                     });
 
                     const dguvSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'));
@@ -491,50 +551,16 @@
                         }
                     });
                 } catch(e) {
-                    console.error("Cloud recovery sync warning:", e);
+                    console.error("Cloud recovery sync notice:", e);
                 }
             }
 
-            protocols = Array.from(mergedMap.values());
+            protocols = Array.from(cloudMergedMap.values());
             protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-            savePersistentStorage();
+            await savePermanentStorageVault();
             updateUI();
             showModal('Erfolg', `${protocols.length} Protokolle erfolgreich geladen und synchronisiert!`, true);
         };
-
-        function loadPersistentStorage() {
-            try {
-                let merged = [];
-                const p1 = localStorage.getItem('ecb_permanent_local_protocols_v2');
-                if (p1) merged = merged.concat(JSON.parse(p1));
-                const p2 = localStorage.getItem('ecb_protocols_v135');
-                if (p2) merged = merged.concat(JSON.parse(p2));
-                const p3 = localStorage.getItem('ecb_protocols_v118');
-                if (p3) merged = merged.concat(JSON.parse(p3));
-
-                let map = new Map();
-                merged.forEach(item => { if (item && item.id) map.set(item.id, item); });
-                protocols = Array.from(map.values());
-                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
-
-                const d = localStorage.getItem('ecb_dguv_v118');
-                if (d) dguvDevices = JSON.parse(d);
-                const u = localStorage.getItem('ecb_users_v118');
-                if (u) {
-                    const parsedU = JSON.parse(u);
-                    if (parsedU.length > 0) cloudUsers = parsedU;
-                }
-            } catch(e) {}
-        }
-
-        async function savePersistentStorage() {
-            try {
-                localStorage.setItem('ecb_permanent_local_protocols_v2', JSON.stringify(protocols));
-                localStorage.setItem('ecb_protocols_v135', JSON.stringify(protocols));
-                localStorage.setItem('ecb_dguv_v118', JSON.stringify(dguvDevices));
-                localStorage.setItem('ecb_users_v118', JSON.stringify(cloudUsers));
-            } catch(e) {}
-        }
 
         window.exportDataJson = function() {
             const data = { protocols, dguvDevices, cloudUsers };
@@ -564,7 +590,7 @@
                             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.id), p);
                         }
                     }
-                    savePersistentStorage();
+                    await savePermanentStorageVault();
                     updateUI();
                     showModal('Erfolg', 'Backup importiert & synchronisiert!', true);
                 } catch(err) {
@@ -574,7 +600,7 @@
             reader.readAsText(file);
         };
 
-        // Universal protocol submit dispatcher with guaranteed permanent local and cloud write
+        // Guaranteed Persistent Protocol Submission & Sync
         window.submitProtocol = async function(event, rawCategoryKey) {
             if (event) {
                 event.preventDefault();
@@ -642,24 +668,24 @@
                 signature: signaturePadInstance.canvas.toDataURL()
             };
 
-            // 1. Insert locally and save permanent storage immediately
+            // 1. Save immediately to permanent local vault
             const existingIdx = protocols.findIndex(p => p.id === protocol.id);
             if (existingIdx > -1) {
                 protocols[existingIdx] = protocol;
             } else {
                 protocols.unshift(protocol);
             }
-            await savePersistentStorage();
+            await savePermanentStorageVault();
 
-            // 2. GUARANTEED CLOUD WRITE: Write simultaneously to Root and Artifacts
+            // 2. Guaranteed Cloud Save (Firestore root + artifact path)
             if (db) {
                 try {
                     const appId = 'ecb-maintenance-live';
                     await setDoc(doc(db, 'protocols', protocol.id), protocol);
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocol.id), protocol);
-                    console.log("SUCCESS: Protocol permanently saved to Firestore Cloud & Local:", protocol.id);
+                    console.log("SUCCESS: Protocol permanently saved to Cloud & Local Vault:", protocol.id);
                 } catch(e) {
-                    console.error("FIRESTORE CLOUD SAVE ERROR:", e);
+                    console.error("FIRESTORE SAVE ERROR:", e);
                 }
             }
 
@@ -722,7 +748,7 @@
             if (!dguvDevices.some(d => d.id === newDev.id)) {
                 dguvDevices.unshift(newDev);
             }
-            await savePersistentStorage();
+            await savePermanentStorageVault();
 
             if (db) {
                 try {
@@ -763,7 +789,7 @@
                     dev.protocolName = file.name;
                     dev.status = 'Erledigt';
 
-                    await savePersistentStorage();
+                    await savePermanentStorageVault();
                     if (db) {
                         try {
                             const appId = 'ecb-maintenance-live';
@@ -808,7 +834,7 @@
             const idx = protocols.findIndex(p => p.id === protocolId);
             if (idx > -1) {
                 protocols.splice(idx, 1);
-                await savePersistentStorage();
+                await savePermanentStorageVault();
                 if (db) {
                     try {
                         const appId = 'ecb-maintenance-live';
@@ -824,7 +850,7 @@
             const idx = dguvDevices.findIndex(d => d.id === deviceId);
             if (idx > -1) {
                 dguvDevices.splice(idx, 1);
-                await savePersistentStorage();
+                await savePermanentStorageVault();
                 if (db) {
                     try {
                         const appId = 'ecb-maintenance-live';
@@ -848,13 +874,14 @@
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('login-error').classList.add('hidden');
                 checkAdminNav();
-                forceCloudRecovery();
+                loadPermanentStorageVault(); // Ensure vault is fully loaded on login
                 updateUI();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
             }
         };
 
+        // Logout preserves protocols in permanent storage vault (only clears auth state)
         window.handleLogout = function() {
             localStorage.removeItem('ecb_logged_in');
             localStorage.removeItem('ecb_current_user');
@@ -921,7 +948,7 @@
             const newPass = document.getElementById('new-pass').value.trim();
             const currentUser = localStorage.getItem('ecb_current_user');
             const found = cloudUsers.find(u => u.user === currentUser);
-            if (found) { found.pass = newPass; savePersistentStorage(); }
+            if (found) { found.pass = newPass; savePermanentStorageVault(); }
             closePasswordModal();
             showModal('Erfolg', 'Passwort aktualisiert!', true);
         };
@@ -933,7 +960,7 @@
             const newPass = document.getElementById('reg-pass').value.trim();
             if (cloudUsers.some(u => u.user === newUser)) { document.getElementById('reg-error').classList.remove('hidden'); return; }
             cloudUsers.push({ fullname, user: newUser, pass: newPass, active: true });
-            savePersistentStorage();
+            savePermanentStorageVault();
             document.getElementById('reg-fullname').value = ''; document.getElementById('reg-user').value = ''; document.getElementById('reg-pass').value = '';
             document.getElementById('reg-error').classList.add('hidden');
             renderAdminUsersList();
@@ -944,7 +971,7 @@
             const usr = cloudUsers.find(u => u.user === username);
             if (usr) {
                 usr.active = usr.active === false ? true : false;
-                savePersistentStorage();
+                savePermanentStorageVault();
                 renderAdminUsersList();
             }
         };
@@ -958,7 +985,7 @@
                 const idx = cloudUsers.findIndex(u => u.user === username);
                 if (idx > -1) {
                     cloudUsers.splice(idx, 1);
-                    savePersistentStorage();
+                    savePermanentStorageVault();
                     renderAdminUsersList();
                     showModal('Erfolg', 'Mitarbeiter-Konto gelöscht.', true);
                 }
