@@ -141,7 +141,7 @@
         </div>
     </div>
 
-    <!-- PDF Preview Modal (Öffnet sich direkt nach dem Speichern & aus der Historie) -->
+    <!-- PDF Preview Modal -->
     <div id="modal-pdf-preview" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-4xl w-full p-6 space-y-4 shadow-2xl border max-h-[94vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3">
@@ -158,7 +158,6 @@
             </div>
             <input type="hidden" id="current-preview-pdf-id">
             
-            <!-- Dual Preview Container (Funktioniert auf Desktop & Mobilgeräten zuverlässig) -->
             <div id="pdf-preview-container" class="flex-grow overflow-y-auto bg-slate-100 rounded-2xl p-4 min-h-[380px] max-h-[65vh] space-y-4"></div>
             
             <div class="flex flex-wrap justify-between items-center gap-3 pt-2 border-t">
@@ -226,7 +225,7 @@
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Wartungs- und Prüfsystem</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Nach dem Speichern öffnet sich direkt die PDF-Ansicht und das Protokoll wird synchron in der History abgelegt.</p>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Nach dem Speichern öffnet sich direkt die PDF-Ansicht mit allen Fotos und Prüfpunkten.</p>
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden flex flex-wrap gap-3">
                     <button type="button" onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Cloud-Sync</button>
@@ -309,7 +308,7 @@
                 <div>
                     <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-bold uppercase">Rückwirkend Erfassen</span>
                     <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartung nachtragen</h2>
-                    <p class="text-sm text-slate-500 mt-1">Wählen Sie die Maschine, das Datum, die Uhrzeit sowie den Techniker aus. Nach dem Ausfüllen und Unterschreiben öffnet sich direkt die PDF-Vorschau und das Protokoll wird synchron in die History übertragen.</p>
+                    <p class="text-sm text-slate-500 mt-1">Wählen Sie die Maschine, das Datum, die Uhrzeit sowie den Techniker aus.</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                     <div>
@@ -472,8 +471,8 @@
         let currentPdfBlobUrl = null;
         let confirmActionCallback = null;
 
-        // Hilfsfunktion: Bilder vor dem Speichern komprimieren (verhindert LocalStorage- & Firestore-Abstürze bei Smartphone-Kameras)
-        function compressImageDataUrl(dataUrl, maxWidth = 900, quality = 0.7) {
+        // Funktion zur Bildkomprimierung und Ausrichtungskorrektur (Landscape / Portrait)
+        function compressAndOrientImage(dataUrl, maxWidth = 1000, quality = 0.75) {
             return new Promise((resolve) => {
                 if (!dataUrl || !dataUrl.startsWith('data:image')) {
                     resolve(dataUrl);
@@ -483,10 +482,13 @@
                 img.onload = () => {
                     let width = img.width;
                     let height = img.height;
+
+                    // Wenn Bild im Hochformat (Portrait) aufgenommen wurde, behalten wir die Proportionen bei
                     if (width > maxWidth) {
                         height = Math.round((height * maxWidth) / width);
                         width = maxWidth;
                     }
+
                     const canvas = document.createElement('canvas');
                     canvas.width = width;
                     canvas.height = height;
@@ -547,17 +549,13 @@
             }
         }
 
-        // Echtzeit-Listener für automatische Synchronisation zwischen allen Geräten
         function setupRealtimeListeners() {
             if (!db) return;
 
             try {
-                // Protokolle in Echtzeit überwachen
                 onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'protocols'), (snap) => {
                     let mergedMap = new Map();
-                    // Behalte lokal bereits angelegte Protokolle
                     protocols.forEach(p => { if (p && p.id) mergedMap.set(p.id, p); });
-                    // Füge alle Cloud-Protokolle hinzu / aktualisiere sie
                     snap.forEach(docSnap => {
                         const data = docSnap.data();
                         const pId = data.id || docSnap.id;
@@ -567,11 +565,8 @@
                     protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                     saveLocalCacheOnly();
                     updateUI();
-                }, (err) => {
-                    console.warn("Realtime Protocol Sync Hinweis:", err);
-                });
+                }, (err) => {});
 
-                // DGUV-Geräte in Echtzeit überwachen
                 onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'dguv_devices'), (snap) => {
                     let mergedDguv = new Map();
                     dguvDevices.forEach(d => { if (d && d.id) mergedDguv.set(d.id, d); });
@@ -583,15 +578,10 @@
                     dguvDevices = Array.from(mergedDguv.values());
                     saveLocalCacheOnly();
                     updateUI();
-                }, (err) => {
-                    console.warn("Realtime DGUV Sync Hinweis:", err);
-                });
-            } catch (e) {
-                console.warn("Konnte Echtzeit-Listener nicht starten:", e);
-            }
+                }, (err) => {});
+            } catch (e) {}
         }
 
-        // Manuelles Abrufen & Pushen aller Daten mit der Cloud
         window.forceCloudRecovery = async function(showToast = false) {
             if (!db) {
                 if (showToast) showModal('Hinweis', 'Cloud-Verbindung ist im Offline-Modus. Daten sind lokal gesichert.', false);
@@ -615,14 +605,11 @@
                 protocols = Array.from(mergedMap.values());
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
 
-                // Lokale Protokolle, die noch nicht in der Cloud waren, sofort hochladen
                 for (let p of protocols) {
                     if (p && p.id && !cloudIds.has(p.id)) {
                         try {
                             await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'protocols', p.id), p);
-                        } catch (pushErr) {
-                            console.warn("Sync Push Warnung für Protokoll:", p.id, pushErr);
-                        }
+                        } catch (pushErr) {}
                     }
                 }
 
@@ -642,8 +629,7 @@
                     showModal('Synchronisiert', `Alle ${protocols.length} Protokolle und ${dguvDevices.length} DGUV-Geräte sind auf dem neuesten Stand!`, true);
                 }
             } catch(e) {
-                console.error("Cloud recovery error:", e);
-                if (showToast) showModal('Hinweis', 'Lokale Daten sind aktiv. Cloud-Abruf war eingeschränkt.', false);
+                if (showToast) showModal('Hinweis', 'Lokale Daten sind aktiv.', false);
             }
         };
 
@@ -678,9 +664,7 @@
                     const parsedU = JSON.parse(u);
                     if (parsedU.length > 0) cloudUsers = parsedU;
                 }
-            } catch(e) {
-                console.warn("Fehler beim Laden des lokalen Speichers:", e);
-            }
+            } catch(e) {}
         }
 
         function saveLocalCacheOnly() {
@@ -690,7 +674,6 @@
                 localStorage.setItem('ecb_permanent_local_protocols_v2', jsonStr);
                 localStorage.setItem('ecb_protocols_v118', jsonStr);
             } catch (quotaErr) {
-                console.warn("LocalStorage Speicherplatz knapp – optimiere ältere Foto-Anhänge im lokalen Cache:", quotaErr);
                 try {
                     const slimProtocols = protocols.map((p, idx) => idx > 15 ? { ...p, photos: [] } : p);
                     localStorage.setItem('ecb_permanent_local_protocols_v2', JSON.stringify(slimProtocols));
@@ -700,20 +683,6 @@
                 localStorage.setItem('ecb_dguv_v118', JSON.stringify(dguvDevices));
                 localStorage.setItem('ecb_users_v118', JSON.stringify(cloudUsers));
             } catch (e) {}
-        }
-
-        async function savePersistentStorage() {
-            saveLocalCacheOnly();
-            if (db && protocols.length > 0) {
-                const newest = protocols[0];
-                if (newest && newest.id) {
-                    try {
-                        await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'protocols', newest.id), newest);
-                    } catch (e) {
-                        console.warn("Hintergrund-Sync Hinweis:", e);
-                    }
-                }
-            }
         }
 
         window.exportDataJson = function() {
@@ -747,7 +716,7 @@
                             } catch (err) {}
                         }
                     }
-                    showModal('Erfolg', 'Backup erfolgreich importiert & mit der Cloud synchronisiert!', true);
+                    showModal('Erfolg', 'Backup erfolgreich importiert & synchronisiert!', true);
                 } catch(err) {
                     showModal('Fehler', 'Ungültige Backup-Datei.', false);
                 }
@@ -755,7 +724,6 @@
             reader.readAsText(file);
         };
 
-        // Zentrale Funktion zum Speichern eines Protokolls (Normal & Nachtragen)
         window.submitProtocol = async function(event, rawCategoryKey) {
             if (event) {
                 event.preventDefault();
@@ -793,7 +761,6 @@
                 const remarks = document.getElementById('remarks-input') ? document.getElementById('remarks-input').value.trim() : '';
                 const runtimeHours = document.getElementById('runtime-hours') ? document.getElementById('runtime-hours').value : null;
 
-                // Prüfe ob es sich um ein nachgetragenes Protokoll handelt (aus Formularfeldern oder globalem Status)
                 const formRetroDateEl = document.getElementById('form-retro-date');
                 const formRetroTimeEl = document.getElementById('form-retro-time');
                 const effectiveRetroDate = (formRetroDateEl && formRetroDateEl.value) ? formRetroDateEl.value : retroCustomDate;
@@ -842,7 +809,6 @@
                     protocolTimestamp = now.getTime();
                 }
 
-                // Zurücksetzen des globalen Nachtrage-Status nach dem Auslesen
                 retroCustomDate = null;
                 retroCustomTime = null;
                 retroCustomTechnician = null;
@@ -870,35 +836,26 @@
                     signature: sigDataUrl
                 };
 
-                // 1. Sofort in das lokale Array & LocalStorage übernehmen
                 protocols = protocols.filter(p => p.id !== protocol.id);
                 protocols.unshift(protocol);
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                 saveLocalCacheOnly();
 
-                // 2. UI (History, Zähler, Kalender, Dashboard) sofort aktualisieren
                 updateUI();
-
-                // 3. Sofort die PDF-Ansicht vor dem Wechsel öffnen, damit der Nutzer das PDF sieht & herunterladen kann
                 openPdfPreviewModal(protocol);
 
-                // 4. Synchronisation mit Firebase Firestore für alle anderen Geräte
                 if (db) {
                     try {
                         await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'protocols', protocol.id), protocol);
                     } catch (cloudErr) {
-                        console.warn("Firestore Upload mit Fotos zu groß – speichere kompakte Cloud-Version:", cloudErr);
                         try {
                             const compactProtocol = { ...protocol, photos: [] };
                             await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'protocols', protocol.id), compactProtocol);
-                        } catch (err2) {
-                            console.error("Firestore Speicherung fehlgeschlagen:", err2);
-                        }
+                        } catch (err2) {}
                     }
                 }
             } catch (err) {
-                console.error("Kritischer Fehler beim Speichern des Protokolls:", err);
-                showModal('Fehler', 'Beim Erstellen des Protokolls ist ein Fehler aufgetreten: ' + (err.message || ''), false);
+                showModal('Fehler', 'Beim Erstellen des Protokolls ist ein Fehler aufgetreten.', false);
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
@@ -907,7 +864,6 @@
             }
         };
 
-        // Öffnet das PDF-Vorschau-Modal (mit PDF-Iframe + garantiert sichtbarer Dokumenten-Ansicht für Mobilgeräte)
         window.openPdfPreviewModal = function(p) {
             if (!p) return;
             document.getElementById('pdf-modal-heading').innerText = `Protokoll ${p.id} – ${p.machine}`;
@@ -927,9 +883,7 @@
                             <iframe src="${currentPdfBlobUrl}" class="w-full h-full border-0" title="PDF Vorschau"></iframe>
                         </div>
                     `;
-                } catch (e) {
-                    console.warn("PDF Blob Vorschau Hinweis:", e);
-                }
+                } catch (e) {}
             }
 
             const pointsRows = (p.points || []).map((pt, i) => `
@@ -943,14 +897,13 @@
 
             const photosPreview = (p.photos && p.photos.length > 0) ? `
                 <div class="pt-3">
-                    <div class="text-xs font-bold text-slate-600 mb-2">Dokumentationsfotos (${p.photos.length}):</div>
-                    <div class="flex gap-2 overflow-x-auto pb-2">
-                        ${p.photos.map(pho => `<img src="${pho}" class="h-20 w-20 object-cover rounded-xl border shadow-sm">`).join('')}
+                    <div class="text-xs font-bold text-slate-600 mb-2">Dokumentationsfotos (${p.photos.length}) – Automatisch integriert:</div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        ${p.photos.map(pho => `<img src="${pho}" class="h-32 w-full object-cover rounded-xl border shadow-sm">`).join('')}
                     </div>
                 </div>
             ` : '';
 
-            // Visuelles Protokoll-Blatt (immer sichtbar auf Smartphones/Tablets und als Ergänzung auf Desktop)
             const visualSheetHtml = `
                 <div class="bg-white rounded-2xl p-6 shadow-md border border-slate-200 space-y-4">
                     <div class="bg-[#65a30d] text-white p-4 rounded-xl flex flex-wrap justify-between items-center gap-2">
@@ -975,14 +928,14 @@
                         <div class="divide-y divide-slate-100">${pointsRows}</div>
                     </div>
 
+                    ${photosPreview}
+
                     ${p.remarks ? `
                         <div class="bg-amber-50 p-3.5 rounded-xl border border-amber-200 text-xs sm:text-sm">
                             <strong class="text-amber-900 block mb-1">Bemerkungen / Feststellungen:</strong>
                             <span class="text-amber-800">${p.remarks}</span>
                         </div>
                     ` : ''}
-
-                    ${photosPreview}
 
                     ${p.signature ? `
                         <div class="pt-3 border-t flex items-center justify-between flex-wrap gap-4">
@@ -1002,10 +955,8 @@
             document.getElementById('modal-pdf-preview').classList.remove('hidden');
         };
 
-        // Schließt die PDF-Vorschau und springt direkt in die History (Protokolle), wo der Eintrag hinterlegt ist
         window.closePdfPreviewModal = function() {
             document.getElementById('modal-pdf-preview').classList.add('hidden');
-            // Filter zurücksetzen, damit auch nachgetragene Protokolle aus anderen Monaten/Jahren sofort sichtbar sind
             const fY = document.getElementById('filter-year');
             const fM = document.getElementById('filter-month');
             const fC = document.getElementById('filter-category');
@@ -1084,7 +1035,7 @@
             reader.onload = async function(e) {
                 let base64Data = e.target.result;
                 if (base64Data.startsWith('data:image')) {
-                    base64Data = await compressImageDataUrl(base64Data, 1000, 0.75);
+                    base64Data = await compressAndOrientImage(base64Data, 1000, 0.75);
                 }
                 const dev = dguvDevices.find(d => d.id === devId);
                 if (dev) {
@@ -1096,9 +1047,7 @@
                     if (db) {
                         try {
                             await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'dguv_devices', dev.id), dev);
-                        } catch(err) {
-                            console.warn("DGUV Cloud Upload Hinweis:", err);
-                        }
+                        } catch(err) {}
                     }
 
                     updateUI();
@@ -1134,7 +1083,6 @@
             document.getElementById('modal-dguv-view').classList.add('hidden');
         };
 
-        // Custom Confirm Dialog Workflow (ohne window.confirm)
         function askConfirmation(title, text, onConfirm) {
             document.getElementById('confirm-title').innerText = title;
             document.getElementById('confirm-text').innerText = text;
@@ -1430,7 +1378,6 @@
             tableBody.innerHTML = html;
         }
 
-        // Startet das Formular aus dem "Nachtragen"-Tab
         window.startRetroactiveForm = function() {
             const selectVal = document.getElementById('retro-category-select').value;
             const dateVal = document.getElementById('retro-date-input').value;
@@ -1560,7 +1507,7 @@
                 <form onsubmit="submitProtocol(event, 'Kompressor 2-Wochen')" class="space-y-6">
                     ${renderCommonHeaderFields(customTech)}
                     <input type="hidden" id="machine-select" value="Kompressor (2-Wochen)">
-                    <div class="space-y-1"><label class="block font-bold text-sm text-slate-700">Betriebsstunden (optional falls nicht zur Hand):</label><input type="number" id="runtime-hours" class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="z.B. 1450"></div>
+                    <div class="space-y-1"><label class="block font-bold text-sm text-slate-700">Betriebsstunden (optional):</label><input type="number" id="runtime-hours" class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="z.B. 1450"></div>
                     ${renderCheckPoint(1, 'Ölstand am Schauglas prüfen und bei Bedarf Öl auffüllen')}
                     ${renderCheckPoint(2, 'Ansaugfilter reinigen ggf. erneuern')}
                     ${renderCheckPoint(3, 'Kältetrockner reinigen')}
@@ -1585,7 +1532,7 @@
                 <form onsubmit="submitProtocol(event, 'Kompressor Jahreswartung')" class="space-y-6">
                     ${renderCommonHeaderFields(customTech)}
                     <input type="hidden" id="machine-select" value="Kompressor (Jahreswartung)">
-                    <div class="space-y-1"><label class="block font-bold text-sm text-slate-700">Betriebsstunden (optional falls nicht zur Hand):</label><input type="number" id="runtime-hours" class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="z.B. 4200"></div>
+                    <div class="space-y-1"><label class="block font-bold text-sm text-slate-700">Betriebsstunden (optional):</label><input type="number" id="runtime-hours" class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="z.B. 4200"></div>
                     ${renderCheckPoint(1, 'Kompletten Ölwechsel durchführen (Altöl ablassen, spülen, neues Kompressoröl einfüllen)')}
                     ${renderCheckPoint(2, 'Ölfilter erneuern und auf Dichtigkeit achten')}
                     ${renderCheckPoint(3, 'Luftfilter / Ansaugfilter komplett erneuern & reinigen')}
@@ -1629,7 +1576,7 @@
         function renderPhotoSection() {
             return `
                 <div class="p-5 bg-slate-50 rounded-2xl border space-y-3">
-                    <label class="block font-bold text-sm text-slate-800"><i class="fa-solid fa-camera mr-1.5 text-ecbDarkGreen"></i> Fotos hinzufügen (optional):</label>
+                    <label class="block font-bold text-sm text-slate-800"><i class="fa-solid fa-camera mr-1.5 text-ecbDarkGreen"></i> Fotos hinzufügen (automatische Ausrichtung):</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <label class="flex items-center justify-center gap-2 p-3.5 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-xs cursor-pointer shadow transition">
                             <i class="fa-solid fa-camera text-base"></i> Foto mit Kamera machen
@@ -1653,8 +1600,8 @@
             files.forEach(f => {
                 const r = new FileReader();
                 r.onload = async (evt) => {
-                    const compressed = await compressImageDataUrl(evt.target.result, 850, 0.7);
-                    activePhotos.push(compressed);
+                    const oriented = await compressAndOrientImage(evt.target.result, 1000, 0.75);
+                    activePhotos.push(oriented);
                     updatePhotoPreview();
                 };
                 r.readAsDataURL(f);
@@ -1752,7 +1699,7 @@
 
             container.innerHTML = filtered.map((p) => {
                 const pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b border-slate-200/60"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status === 'erledigt' ? 'OK' : 'MANGEL'}</strong></div>`).join('');
-                const photosHtml = (p.photos && p.photos.length > 0) ? `<div class="flex gap-2 overflow-x-auto py-2">${p.photos.map(pho => `<img src="${pho}" class="w-16 h-16 object-cover rounded-lg border">`).join('')}</div>` : '';
+                const photosHtml = (p.photos && p.photos.length > 0) ? `<div class="flex gap-2 overflow-x-auto py-2">${p.photos.map(pho => `<img src="${pho}" class="w-20 h-20 object-cover rounded-lg border shadow-sm">`).join('')}</div>` : '';
                 const isRetro = (p.date || '').includes('Nachgetragen') || (p.date || '').includes('Nachträglich');
 
                 return `
@@ -1830,12 +1777,9 @@
             if (dash) dash.innerHTML = html;
         };
 
-        // Erzeugt das jsPDF-Dokument-Objekt (fehlertolerant)
+        // Erzeugt das jsPDF-Dokument mit professioneller Foto-Integration & korrekter Ausrichtung
         function createJsPdfInstance(p) {
-            if (!window.jspdf || !window.jspdf.jsPDF) {
-                console.error("jsPDF Bibliothek nicht geladen.");
-                return null;
-            }
+            if (!window.jspdf || !window.jspdf.jsPDF) return null;
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -1910,7 +1854,7 @@
             doc.setFontSize(9.5);
 
             (p.points || []).forEach((pt, idx) => {
-                if (y > pageHeight - 60) { doc.addPage(); y = 20; }
+                if (y > pageHeight - 50) { doc.addPage(); y = 20; }
                 doc.setTextColor(15, 23, 42);
                 const splitTitle = doc.splitTextToSize(`${idx + 1}. ${pt.title}`, pageWidth - 60);
                 doc.text(splitTitle, 18, y);
@@ -1927,9 +1871,44 @@
                 y += (splitTitle.length * 5.5) + 3;
             });
 
+            // Fotos in PDF integrieren
+            if (p.photos && p.photos.length > 0) {
+                y += 6;
+                if (y > pageHeight - 65) { doc.addPage(); y = 20; }
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(11);
+                doc.setTextColor(15, 23, 42);
+                doc.text('Dokumentationsfotos:', 15, y);
+                y += 6;
+
+                let xPos = 15;
+                let imgWidth = 45;
+                let imgHeight = 45;
+
+                p.photos.forEach((pho) => {
+                    if (xPos + imgWidth > pageWidth - 15) {
+                        xPos = 15;
+                        y += imgHeight + 6;
+                    }
+                    if (y + imgHeight > pageHeight - 35) {
+                        doc.addPage();
+                        y = 20;
+                        xPos = 15;
+                    }
+                    try {
+                        const fmt = pho.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+                        doc.addImage(pho, fmt, xPos, y, imgWidth, imgHeight);
+                        doc.setDrawColor(203, 213, 225);
+                        doc.rect(xPos, y, imgWidth, imgHeight);
+                        xPos += imgWidth + 6;
+                    } catch(e) {}
+                });
+                y += imgHeight + 10;
+            }
+
             if (p.remarks) {
                 y += 4;
-                if (y > pageHeight - 55) { doc.addPage(); y = 20; }
+                if (y > pageHeight - 45) { doc.addPage(); y = 20; }
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(15, 23, 42);
                 doc.text('Bemerkungen:', 15, y);
@@ -1941,28 +1920,8 @@
                 y += (splitRemarks.length * 5.5) + 4;
             }
 
-            if (p.photos && p.photos.length > 0) {
-                y += 6;
-                if (y > pageHeight - 60) { doc.addPage(); y = 20; }
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(15, 23, 42);
-                doc.text('Dokumentationsfotos:', 15, y);
-                y += 6;
-                let xPos = 15;
-                p.photos.forEach((pho) => {
-                    if (xPos + 35 > pageWidth - 15) { xPos = 15; y += 38; }
-                    if (y > pageHeight - 45) { doc.addPage(); y = 20; xPos = 15; }
-                    try {
-                        const fmt = pho.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-                        doc.addImage(pho, fmt, xPos, y, 32, 32);
-                        xPos += 38;
-                    } catch(e) {}
-                });
-                y += 38;
-            }
-
             y += 10;
-            if (y > pageHeight - 40) { doc.addPage(); y = 20; }
+            if (y > pageHeight - 35) { doc.addPage(); y = 20; }
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(10);
             doc.setTextColor(15, 23, 42);
@@ -1985,3 +1944,4 @@
     </script>
 </body>
 </html>
+```option:ECB Wartungssystem:index.html
