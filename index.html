@@ -91,7 +91,7 @@
         </div>
     </div>
 
-    <!-- Admin Modal -->
+    <!-- Admin / Cloud Modal -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -104,7 +104,7 @@
                     <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Firebase Cloud Synchronisation</span>
                     <button type="button" onclick="forceCloudRecovery(true)" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer"><i class="fa-solid fa-rotate mr-1"></i> Aus Cloud laden</button>
                 </h4>
-                <p class="text-xs text-emerald-700">Alle Protokolle, DGUV-Geräte und Mitarbeiter werden in Echtzeit über Firebase synchronisiert.</p>
+                <p class="text-xs text-emerald-700">Alle Protokolle mit Fotos, DGUV-Geräte und Mitarbeiter werden in Echtzeit synchronisiert.</p>
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="exportDataJson()" class="flex-1 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 cursor-pointer"><i class="fa-solid fa-download mr-1"></i> Backup exportieren</button>
                     <label class="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 text-center cursor-pointer">
@@ -150,7 +150,7 @@
                     <div>
                         <h3 class="text-lg font-extrabold text-slate-900" id="pdf-modal-heading">Wartungsprotokoll erstellt</h3>
                         <p class="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                            <i class="fa-solid fa-circle-check"></i> In der History hinterlegt &amp; auf allen Geräten synchronisiert
+                            <i class="fa-solid fa-circle-check"></i> Permanent gespeichert &amp; mit Fotos synchronisiert
                         </p>
                     </div>
                 </div>
@@ -170,7 +170,7 @@
         </div>
     </div>
 
-    <!-- Custom Confirm Modal -->
+    <!-- Confirm Modal -->
     <div id="modal-confirm" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl text-center">
             <div class="w-16 h-16 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl mx-auto shadow-inner">
@@ -185,7 +185,7 @@
         </div>
     </div>
 
-    <!-- Header Navigation -->
+    <!-- Header -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
@@ -225,7 +225,7 @@
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Wartungs- und Prüfsystem</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Nach dem Speichern öffnet sich direkt die PDF-Ansicht mit allen Fotos und Prüfpunkten.</p>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle hochgeladenen Fotos werden automatisch ausgerichtet, permanent gespeichert und direkt in die PDF-Protokolle integriert.</p>
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden flex flex-wrap gap-3">
                     <button type="button" onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Cloud-Sync</button>
@@ -302,7 +302,7 @@
             </div>
         </div>
 
-        <!-- Retroactive (Nachtragen) Tab -->
+        <!-- Retroactive Tab -->
         <div id="tab-retro" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border space-y-6">
                 <div>
@@ -361,7 +361,7 @@
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border flex flex-wrap justify-between items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-extrabold text-slate-900">Gespeicherte Protokolle (History)</h2>
-                    <p class="text-xs text-slate-500 mt-1">Synchronisiert auf allen verbundenen Geräten.</p>
+                    <p class="text-xs text-slate-500 mt-1">Inklusive aller hochgeladenen Dokumentationsfotos.</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <button type="button" onclick="forceCloudRecovery(true)" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow transition cursor-pointer"><i class="fa-solid fa-cloud-arrow-down mr-1"></i> Cloud-Sync prüfen</button>
@@ -383,7 +383,7 @@
         </div>
     </main>
 
-    <!-- DGUV Create Modal -->
+    <!-- DGUV Modals -->
     <div id="modal-dguv" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border">
             <div class="flex justify-between items-center border-b pb-4"><h3 class="text-xl font-extrabold">DGUV V3 Gerät erfassen</h3><button type="button" onclick="closeDguvModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
@@ -396,7 +396,6 @@
         </div>
     </div>
 
-    <!-- DGUV Upload Modal -->
     <div id="modal-dguv-upload" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border">
             <div class="flex justify-between items-center border-b pb-4">
@@ -406,7 +405,7 @@
             <input type="hidden" id="dguv-upload-device-id">
             <div class="space-y-4">
                 <div class="p-4 bg-sky-50 rounded-2xl border border-sky-100 text-xs text-sky-800">
-                    Laden Sie hier das DGUV V3 Messprotokoll (Bild oder PDF) hoch. Bilder werden automatisch für die Cloud-Synchronisation optimiert.
+                    Laden Sie hier das DGUV V3 Messprotokoll (Bild oder PDF) hoch.
                 </div>
                 <div>
                     <label class="block text-sm font-bold mb-2">Messprotokoll auswählen:</label>
@@ -417,7 +416,6 @@
         </div>
     </div>
 
-    <!-- DGUV View Modal -->
     <div id="modal-dguv-view" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl border max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3">
@@ -471,8 +469,8 @@
         let currentPdfBlobUrl = null;
         let confirmActionCallback = null;
 
-        // Funktion zur Bildkomprimierung und Ausrichtungskorrektur (Landscape / Portrait)
-        function compressAndOrientImage(dataUrl, maxWidth = 1000, quality = 0.75) {
+        // Automatische Korrektur der Bildausrichtung & Komprimierung (Landscape/Portrait)
+        function compressAndOrientImage(dataUrl, maxWidth = 800, quality = 0.70) {
             return new Promise((resolve) => {
                 if (!dataUrl || !dataUrl.startsWith('data:image')) {
                     resolve(dataUrl);
@@ -483,7 +481,6 @@
                     let width = img.width;
                     let height = img.height;
 
-                    // Wenn Bild im Hochformat (Portrait) aufgenommen wurde, behalten wir die Proportionen bei
                     if (width > maxWidth) {
                         height = Math.round((height * maxWidth) / width);
                         width = maxWidth;
@@ -551,7 +548,6 @@
 
         function setupRealtimeListeners() {
             if (!db) return;
-
             try {
                 onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'protocols'), (snap) => {
                     let mergedMap = new Map();
@@ -626,7 +622,7 @@
                 saveLocalCacheOnly();
                 updateUI();
                 if (showToast) {
-                    showModal('Synchronisiert', `Alle ${protocols.length} Protokolle und ${dguvDevices.length} DGUV-Geräte sind auf dem neuesten Stand!`, true);
+                    showModal('Synchronisiert', `Alle ${protocols.length} Protokolle mit Fotos und ${dguvDevices.length} DGUV-Geräte sind aktuell!`, true);
                 }
             } catch(e) {
                 if (showToast) showModal('Hinweis', 'Lokale Daten sind aktiv.', false);
@@ -651,6 +647,7 @@
                     }
                 };
 
+                loadKey('ecb_permanent_local_protocols_v3');
                 loadKey('ecb_permanent_local_protocols_v2');
                 loadKey('ecb_protocols_v118');
 
@@ -671,12 +668,11 @@
             try {
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                 const jsonStr = JSON.stringify(protocols);
-                localStorage.setItem('ecb_permanent_local_protocols_v2', jsonStr);
-                localStorage.setItem('ecb_protocols_v118', jsonStr);
+                localStorage.setItem('ecb_permanent_local_protocols_v3', jsonStr);
             } catch (quotaErr) {
                 try {
                     const slimProtocols = protocols.map((p, idx) => idx > 15 ? { ...p, photos: [] } : p);
-                    localStorage.setItem('ecb_permanent_local_protocols_v2', JSON.stringify(slimProtocols));
+                    localStorage.setItem('ecb_permanent_local_protocols_v3', JSON.stringify(slimProtocols));
                 } catch (e2) {}
             }
             try {
@@ -739,7 +735,7 @@
                 return;
             }
             if (!signaturePadInstance || !signaturePadInstance.hasSigned) {
-                showModal('Unterschrift fehlt', 'Bitte unterschreiben Sie das Protokoll im Unterschriftenfeld, bevor Sie speichern.', false);
+                showModal('Unterschrift fehlt', 'Bitte unterschreiben Sie das Protokoll im Unterschriftenfeld.', false);
                 return;
             }
 
@@ -897,7 +893,7 @@
 
             const photosPreview = (p.photos && p.photos.length > 0) ? `
                 <div class="pt-3">
-                    <div class="text-xs font-bold text-slate-600 mb-2">Dokumentationsfotos (${p.photos.length}) – Automatisch integriert:</div>
+                    <div class="text-xs font-bold text-slate-600 mb-2"><i class="fa-solid fa-camera mr-1 text-ecbGreen"></i> Dokumentationsfotos (${p.photos.length}) – In PDF &amp; History integriert:</div>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         ${p.photos.map(pho => `<img src="${pho}" class="h-32 w-full object-cover rounded-xl border shadow-sm">`).join('')}
                     </div>
@@ -1035,7 +1031,7 @@
             reader.onload = async function(e) {
                 let base64Data = e.target.result;
                 if (base64Data.startsWith('data:image')) {
-                    base64Data = await compressAndOrientImage(base64Data, 1000, 0.75);
+                    base64Data = await compressAndOrientImage(base64Data, 800, 0.70);
                 }
                 const dev = dguvDevices.find(d => d.id === devId);
                 if (dev) {
@@ -1429,11 +1425,7 @@
         }
 
         window.openWashingMachineMenu = function(preselectedNum, customTech, isRetroMode = false) {
-            if (!isRetroMode) {
-                retroCustomDate = null;
-                retroCustomTime = null;
-                retroCustomTechnician = null;
-            }
+            if (!isRetroMode) { retroCustomDate = null; retroCustomTime = null; retroCustomTechnician = null; }
             const defaultNum = preselectedNum || '1';
             document.getElementById('dynamic-form-content').innerHTML = `
                 <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Milnor Waschmaschinen Wartung</h2>
@@ -1463,11 +1455,7 @@
         };
 
         window.openDryerMenu = function(preselectedNum, customTech, isRetroMode = false) {
-            if (!isRetroMode) {
-                retroCustomDate = null;
-                retroCustomTime = null;
-                retroCustomTechnician = null;
-            }
+            if (!isRetroMode) { retroCustomDate = null; retroCustomTime = null; retroCustomTechnician = null; }
             const defaultNum = preselectedNum || '1';
             document.getElementById('dynamic-form-content').innerHTML = `
                 <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Trockner Wartung</h2>
@@ -1497,11 +1485,7 @@
         };
 
         window.openCompressorRoutine = function(customTech, isRetroMode = false) {
-            if (!isRetroMode) {
-                retroCustomDate = null;
-                retroCustomTime = null;
-                retroCustomTechnician = null;
-            }
+            if (!isRetroMode) { retroCustomDate = null; retroCustomTime = null; retroCustomTechnician = null; }
             document.getElementById('dynamic-form-content').innerHTML = `
                 <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Wartung (2-Wochen)</h2>
                 <form onsubmit="submitProtocol(event, 'Kompressor 2-Wochen')" class="space-y-6">
@@ -1522,11 +1506,7 @@
         };
 
         window.openCompressorAnnual = function(customTech, isRetroMode = false) {
-            if (!isRetroMode) {
-                retroCustomDate = null;
-                retroCustomTime = null;
-                retroCustomTechnician = null;
-            }
+            if (!isRetroMode) { retroCustomDate = null; retroCustomTime = null; retroCustomTechnician = null; }
             document.getElementById('dynamic-form-content').innerHTML = `
                 <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Jahreswartung</h2>
                 <form onsubmit="submitProtocol(event, 'Kompressor Jahreswartung')" class="space-y-6">
@@ -1576,7 +1556,7 @@
         function renderPhotoSection() {
             return `
                 <div class="p-5 bg-slate-50 rounded-2xl border space-y-3">
-                    <label class="block font-bold text-sm text-slate-800"><i class="fa-solid fa-camera mr-1.5 text-ecbDarkGreen"></i> Fotos hinzufügen (automatische Ausrichtung):</label>
+                    <label class="block font-bold text-sm text-slate-800"><i class="fa-solid fa-camera mr-1.5 text-ecbDarkGreen"></i> Fotos hinzufügen (mit automatischer Ausrichtung):</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <label class="flex items-center justify-center gap-2 p-3.5 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-xs cursor-pointer shadow transition">
                             <i class="fa-solid fa-camera text-base"></i> Foto mit Kamera machen
@@ -1600,7 +1580,7 @@
             files.forEach(f => {
                 const r = new FileReader();
                 r.onload = async (evt) => {
-                    const oriented = await compressAndOrientImage(evt.target.result, 1000, 0.75);
+                    const oriented = await compressAndOrientImage(evt.target.result, 800, 0.70);
                     activePhotos.push(oriented);
                     updatePhotoPreview();
                 };
@@ -1699,7 +1679,12 @@
 
             container.innerHTML = filtered.map((p) => {
                 const pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b border-slate-200/60"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status === 'erledigt' ? 'OK' : 'MANGEL'}</strong></div>`).join('');
-                const photosHtml = (p.photos && p.photos.length > 0) ? `<div class="flex gap-2 overflow-x-auto py-2">${p.photos.map(pho => `<img src="${pho}" class="w-20 h-20 object-cover rounded-lg border shadow-sm">`).join('')}</div>` : '';
+                const photosHtml = (p.photos && p.photos.length > 0) ? `
+                    <div class="pt-2">
+                        <div class="text-[11px] font-bold text-slate-500 mb-1.5"><i class="fa-solid fa-camera mr-1 text-ecbGreen"></i> Dokumentationsfotos (${p.photos.length}):</div>
+                        <div class="flex gap-2 overflow-x-auto py-1">${p.photos.map(pho => `<img src="${pho}" class="w-20 h-20 object-cover rounded-xl border shadow-sm">`).join('')}</div>
+                    </div>
+                ` : '';
                 const isRetro = (p.date || '').includes('Nachgetragen') || (p.date || '').includes('Nachträglich');
 
                 return `
@@ -1777,7 +1762,7 @@
             if (dash) dash.innerHTML = html;
         };
 
-        // Erzeugt das jsPDF-Dokument mit professioneller Foto-Integration & korrekter Ausrichtung
+        // Erzeugt das jsPDF-Dokument mit korrekter Ausrichtung und eingebetteten Fotos
         function createJsPdfInstance(p) {
             if (!window.jspdf || !window.jspdf.jsPDF) return null;
             const { jsPDF } = window.jspdf;
@@ -1854,7 +1839,7 @@
             doc.setFontSize(9.5);
 
             (p.points || []).forEach((pt, idx) => {
-                if (y > pageHeight - 50) { doc.addPage(); y = 20; }
+                if (y > pageHeight - 55) { doc.addPage(); y = 20; }
                 doc.setTextColor(15, 23, 42);
                 const splitTitle = doc.splitTextToSize(`${idx + 1}. ${pt.title}`, pageWidth - 60);
                 doc.text(splitTitle, 18, y);
@@ -1944,4 +1929,3 @@
     </script>
 </body>
 </html>
-```option:ECB Wartungssystem:index.html
