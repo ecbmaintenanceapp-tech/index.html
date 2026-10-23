@@ -61,6 +61,7 @@
 </head>
 <body class="text-slate-900 min-h-screen flex flex-col antialiased selection:bg-ecbGreen selection:text-white">
 
+    <!-- Login Screen -->
     <div id="login-screen" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 space-y-6 animate-fade-in">
             <div class="text-center space-y-2">
@@ -90,6 +91,7 @@
         </div>
     </div>
 
+    <!-- Admin Modal -->
     <div id="modal-register" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4">
@@ -100,9 +102,9 @@
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
                 <h4 class="font-bold text-emerald-900 text-sm flex items-center justify-between">
                     <span><i class="fa-solid fa-cloud mr-1 text-emerald-600"></i> Firebase Cloud Synchronisation</span>
-                    <button type="button" onclick="forceCloudRecovery()" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer"><i class="fa-solid fa-rotate mr-1"></i> Aus Cloud laden</button>
+                    <button type="button" onclick="forceCloudRecovery(true)" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer"><i class="fa-solid fa-rotate mr-1"></i> Aus Cloud laden</button>
                 </h4>
-                <p class="text-xs text-emerald-700">Laden Sie alle permanenten Protokolle und DGUV-Geräte aus Ihrer Firebase-Datenbank.</p>
+                <p class="text-xs text-emerald-700">Alle Protokolle, DGUV-Geräte und Mitarbeiter werden in Echtzeit über Firebase synchronisiert.</p>
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="exportDataJson()" class="flex-1 py-2 bg-white border border-emerald-300 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 cursor-pointer"><i class="fa-solid fa-download mr-1"></i> Backup exportieren</button>
                     <label class="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 text-center cursor-pointer">
@@ -128,6 +130,7 @@
         </div>
     </div>
 
+    <!-- Password Modal -->
     <div id="modal-password" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-4"><h3 class="text-xl font-extrabold text-slate-900">Passwort ändern</h3><button onclick="closePasswordModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
@@ -138,30 +141,52 @@
         </div>
     </div>
 
+    <!-- PDF Preview Modal (Öffnet sich direkt nach dem Speichern & aus der Historie) -->
     <div id="modal-pdf-preview" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
-        <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl border max-h-[92vh] flex flex-col">
+        <div class="bg-white rounded-3xl max-w-4xl w-full p-6 space-y-4 shadow-2xl border max-h-[94vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3">
-                <div class="flex items-center gap-2">
-                    <div class="w-10 h-10 rounded-xl bg-ecbGreen text-white flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-file-pdf"></i></div>
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-2xl bg-ecbGreen text-white flex items-center justify-center font-bold text-xl shadow-sm"><i class="fa-solid fa-file-pdf"></i></div>
                     <div>
                         <h3 class="text-lg font-extrabold text-slate-900" id="pdf-modal-heading">Wartungsprotokoll erstellt</h3>
-                        <p class="text-xs text-slate-500">Das Protokoll wurde permanent in der Firebase-Cloud gespeichert.</p>
+                        <p class="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-circle-check"></i> In der History hinterlegt &amp; auf allen Geräten synchronisiert
+                        </p>
                     </div>
                 </div>
-                <button onclick="closePdfPreviewModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closePdfPreviewModal()" class="w-9 h-9 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <input type="hidden" id="current-preview-pdf-id">
-            <div id="pdf-preview-container" class="flex-grow overflow-auto flex items-center justify-center bg-slate-100 rounded-2xl p-4 min-h-[400px]"></div>
-            <div class="flex flex-wrap justify-between items-center gap-3 pt-2">
-                <button type="button" onclick="shareProtocolEmail()" class="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-sm shadow transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-envelope"></i> Per E-Mail versenden</button>
-                <div class="flex gap-2">
-                    <button type="button" onclick="downloadCurrentProtocolPDF()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-sm shadow transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-download"></i> Herunterladen</button>
-                    <button type="button" onclick="closePdfPreviewModal()" class="px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold text-sm transition cursor-pointer">Zu den Protokollen</button>
+            
+            <!-- Dual Preview Container (Funktioniert auf Desktop & Mobilgeräten zuverlässig) -->
+            <div id="pdf-preview-container" class="flex-grow overflow-y-auto bg-slate-100 rounded-2xl p-4 min-h-[380px] max-h-[65vh] space-y-4"></div>
+            
+            <div class="flex flex-wrap justify-between items-center gap-3 pt-2 border-t">
+                <button type="button" onclick="shareProtocolEmail()" class="px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-xs sm:text-sm shadow transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-envelope"></i> Per E-Mail teilen</button>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="downloadCurrentProtocolPDF()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-xs sm:text-sm shadow transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-download"></i> PDF Herunterladen</button>
+                    <button type="button" onclick="closePdfPreviewModal()" class="px-5 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-xs sm:text-sm shadow transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-folder-open"></i> Weiter zur History</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Custom Confirm Modal -->
+    <div id="modal-confirm" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl text-center">
+            <div class="w-16 h-16 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl mx-auto shadow-inner">
+                <i class="fa-solid fa-trash-can"></i>
+            </div>
+            <h3 id="confirm-title" class="text-xl font-extrabold text-slate-900">Bestätigung</h3>
+            <p id="confirm-text" class="text-sm text-slate-600">Möchten Sie diesen Eintrag wirklich löschen?</p>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeConfirmModal()" class="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold cursor-pointer transition">Abbrechen</button>
+                <button type="button" id="confirm-yes-btn" class="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-bold shadow-lg cursor-pointer transition">Ja, löschen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Navigation -->
     <header class="bg-gradient-to-r from-slate-900 via-ecbDarkGreen to-ecbGreen text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center">
             <div class="flex items-center space-x-3.5">
@@ -177,7 +202,7 @@
                     <h1 class="text-xl font-extrabold tracking-tight">ECB Reinigungssysteme</h1>
                     <p class="text-xs text-ecbLightGreen font-medium flex items-center gap-1.5">
                         <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-                        <span id="cloud-status-text">Firebase Cloud Live Sync Aktiv</span>
+                        <span id="cloud-status-text">Verbinde mit Cloud...</span>
                     </p>
                 </div>
             </div>
@@ -193,22 +218,24 @@
         </div>
     </header>
 
+    <!-- Main Content -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
+        <!-- Dashboard Tab -->
         <div id="tab-dashboard" class="space-y-8 animate-fade-in">
             <div class="bg-gradient-to-br from-white via-emerald-50/40 to-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">
                     <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold uppercase tracking-wider">Instandhaltung &amp; Qualitätskontrolle</span>
                     <h2 class="text-3xl font-extrabold text-slate-900 mt-3 tracking-tight">Wartungs- und Prüfsystem</h2>
-                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Alle Einträge synchronisieren sich dauerhaft mit Firebase.</p>
+                    <p class="text-slate-600 mt-2 text-base">Wählen Sie eine Kategorie, um ein Protokoll zu starten. Nach dem Speichern öffnet sich direkt die PDF-Ansicht und das Protokoll wird synchron in der History abgelegt.</p>
                 </div>
                 <div id="dashboard-admin-btn-container" class="mt-6 hidden flex flex-wrap gap-3">
                     <button type="button" onclick="openRegisterModal()" class="px-5 py-3 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-users-gear"></i> Admin-Verwaltung &amp; Cloud-Sync</button>
-                    <button type="button" onclick="forceCloudRecovery()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-cloud-arrow-down"></i> Daten aus Cloud laden</button>
+                    <button type="button" onclick="forceCloudRecovery(true)" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-sm shadow-md transition flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-cloud-arrow-down"></i> Daten aus Cloud laden</button>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div onclick="openWashingMachineMenu()" class="card-washer rounded-3xl p-6 shadow-sm cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openWashingMachineMenu(null, null, false)" class="card-washer rounded-3xl p-6 shadow-sm cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Waschmaschine" class="absolute top-4 right-4"></div>
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-lime-100 text-[#3f6212] flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-shirt"></i></div>
@@ -219,7 +246,7 @@
                     <div class="mt-6 flex items-center justify-between text-sm font-bold text-ecbDarkGreen"><span>Starten</span><div class="w-8 h-8 rounded-full bg-lime-200 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <div onclick="openDryerMenu()" class="card-dryer rounded-3xl p-6 shadow-sm cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openDryerMenu(null, null, false)" class="card-dryer rounded-3xl p-6 shadow-sm cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Trockner" class="absolute top-4 right-4"></div>
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-wind"></i></div>
@@ -230,7 +257,7 @@
                     <div class="mt-6 flex items-center justify-between text-sm font-bold text-amber-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <div onclick="openCompressorRoutine()" class="card-comp2w rounded-3xl p-6 shadow-sm cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openCompressorRoutine(null, false)" class="card-comp2w rounded-3xl p-6 shadow-sm cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor 2-Wochen" class="absolute top-4 right-4"></div>
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-gauge-high"></i></div>
@@ -241,7 +268,7 @@
                     <div class="mt-6 flex items-center justify-between text-sm font-bold text-emerald-800"><span>Starten</span><div class="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></div></div>
                 </div>
 
-                <div onclick="openCompressorAnnual()" class="card-compyear rounded-3xl p-6 shadow-sm cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+                <div onclick="openCompressorAnnual(null, false)" class="card-compyear rounded-3xl p-6 shadow-sm cursor-pointer flex flex-col justify-between group relative overflow-hidden">
                     <div id="badge-Kompressor Jahreswartung" class="absolute top-4 right-4"></div>
                     <div>
                         <div class="w-14 h-14 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition shadow-sm"><i class="fa-solid fa-calendar-days"></i></div>
@@ -262,10 +289,11 @@
             </div>
         </div>
 
+        <!-- Calendar Tab -->
         <div id="tab-calendar" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border">
                 <h2 class="text-2xl font-extrabold text-slate-900">Wartungskalender &amp; Fälligkeiten</h2>
-                <p class="text-sm text-slate-500 mt-1">Aktualisiert sich automatisch nach jeder durchgeführten Wartung.</p>
+                <p class="text-sm text-slate-500 mt-1">Aktualisiert sich automatisch in Echtzeit nach jeder durchgeführten Wartung.</p>
             </div>
             <div class="bg-white rounded-3xl p-6 shadow-sm border overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -275,12 +303,13 @@
             </div>
         </div>
 
+        <!-- Retroactive (Nachtragen) Tab -->
         <div id="tab-retro" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border space-y-6">
                 <div>
                     <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-bold uppercase">Rückwirkend Erfassen</span>
                     <h2 class="text-2xl font-extrabold text-slate-900 mt-2">Wartung nachtragen</h2>
-                    <p class="text-sm text-slate-500 mt-1">Wählen Sie unten die Maschine, das Datum, die Uhrzeit sowie den Techniker aus und springen Sie direkt in das vollständige Prüfprotokoll.</p>
+                    <p class="text-sm text-slate-500 mt-1">Wählen Sie die Maschine, das Datum, die Uhrzeit sowie den Techniker aus. Nach dem Ausfüllen und Unterschreiben öffnet sich direkt die PDF-Vorschau und das Protokoll wird synchron in die History übertragen.</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                     <div>
@@ -319,6 +348,7 @@
             </div>
         </div>
 
+        <!-- DGUV Tab -->
         <div id="tab-dguv" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border flex justify-between items-center">
                 <h2 class="text-2xl font-extrabold text-slate-900">DGUV V3 Prüfungen &amp; Messprotokolle</h2>
@@ -327,28 +357,34 @@
             <div id="dguv-devices-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
+        <!-- History Tab -->
         <div id="tab-history" class="hidden space-y-6 animate-fade-in">
             <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border flex flex-wrap justify-between items-center gap-4">
-                <h2 class="text-2xl font-extrabold text-slate-900">Gespeicherte Protokolle</h2>
+                <div>
+                    <h2 class="text-2xl font-extrabold text-slate-900">Gespeicherte Protokolle (History)</h2>
+                    <p class="text-xs text-slate-500 mt-1">Synchronisiert auf allen verbundenen Geräten.</p>
+                </div>
                 <div class="flex items-center gap-3">
-                    <button type="button" onclick="forceCloudRecovery()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow transition cursor-pointer"><i class="fa-solid fa-cloud-arrow-down mr-1"></i> Cloud aktualisieren</button>
-                    <div id="history-admin-clear-container" class="hidden"><button type="button" onclick="clearHistory()" class="px-4 py-2.5 bg-red-50 text-red-600 rounded-xl text-sm font-bold cursor-pointer">Verlauf löschen</button></div>
+                    <button type="button" onclick="forceCloudRecovery(true)" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow transition cursor-pointer"><i class="fa-solid fa-cloud-arrow-down mr-1"></i> Cloud-Sync prüfen</button>
+                    <div id="history-admin-clear-container" class="hidden"><button type="button" onclick="clearHistory()" class="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold cursor-pointer transition">Verlauf leeren</button></div>
                 </div>
             </div>
             <div class="bg-white p-5 rounded-3xl border shadow-sm flex flex-wrap items-center gap-4">
-                <div><label class="block text-xs font-bold text-slate-600 mb-1">Jahr:</label><select id="filter-year" onchange="renderHistory()" class="border rounded-xl px-4 py-2.5 text-sm bg-slate-50 cursor-pointer"><option value="all">Alle</option></select></div>
+                <div><label class="block text-xs font-bold text-slate-600 mb-1">Jahr:</label><select id="filter-year" onchange="renderHistory()" class="border rounded-xl px-4 py-2.5 text-sm bg-slate-50 cursor-pointer"><option value="all">Alle Jahre</option></select></div>
                 <div><label class="block text-xs font-bold text-slate-600 mb-1">Monat:</label><select id="filter-month" onchange="renderHistory()" class="border rounded-xl px-4 py-2.5 text-sm bg-slate-50 cursor-pointer"><option value="all">Alle</option><option value="01">Jan</option><option value="02">Feb</option><option value="03">März</option><option value="04">Apr</option><option value="05">Mai</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option><option value="10">Okt</option><option value="11">Nov</option><option value="12">Dez</option></select></div>
                 <div><label class="block text-xs font-bold text-slate-600 mb-1">Kategorie:</label><select id="filter-category" onchange="renderHistory()" class="border rounded-xl px-4 py-2.5 text-sm bg-slate-50 cursor-pointer"><option value="all">Alle</option><option value="Waschmaschine">Waschmaschine</option><option value="Trockner">Trockner</option><option value="Kompressor 2-Wochen">Kompressor 2-Wochen</option><option value="Kompressor Jahreswartung">Kompressor Jahreswartung</option></select></div>
             </div>
             <div id="protocols-container" class="space-y-4"></div>
         </div>
 
+        <!-- Dynamic Form View -->
         <div id="form-view" class="hidden space-y-6 animate-fade-in">
-            <button type="button" onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-white border rounded-xl text-sm font-bold text-slate-700 shadow-sm flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-arrow-left"></i> Zurück</button>
+            <button type="button" onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-white border rounded-xl text-sm font-bold text-slate-700 shadow-sm flex items-center gap-2 cursor-pointer hover:bg-slate-50 transition"><i class="fa-solid fa-arrow-left"></i> Zurück zur Übersicht</button>
             <div id="dynamic-form-content" class="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border"></div>
         </div>
     </main>
 
+    <!-- DGUV Create Modal -->
     <div id="modal-dguv" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border">
             <div class="flex justify-between items-center border-b pb-4"><h3 class="text-xl font-extrabold">DGUV V3 Gerät erfassen</h3><button type="button" onclick="closeDguvModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
@@ -361,6 +397,7 @@
         </div>
     </div>
 
+    <!-- DGUV Upload Modal -->
     <div id="modal-dguv-upload" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl border">
             <div class="flex justify-between items-center border-b pb-4">
@@ -370,7 +407,7 @@
             <input type="hidden" id="dguv-upload-device-id">
             <div class="space-y-4">
                 <div class="p-4 bg-sky-50 rounded-2xl border border-sky-100 text-xs text-sky-800">
-                    Laden Sie hier das DGUV V3 Messprotokoll (Bild oder PDF) hoch.
+                    Laden Sie hier das DGUV V3 Messprotokoll (Bild oder PDF) hoch. Bilder werden automatisch für die Cloud-Synchronisation optimiert.
                 </div>
                 <div>
                     <label class="block text-sm font-bold mb-2">Messprotokoll auswählen:</label>
@@ -381,6 +418,7 @@
         </div>
     </div>
 
+    <!-- DGUV View Modal -->
     <div id="modal-dguv-view" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-3xl w-full p-6 space-y-4 shadow-2xl border max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3">
@@ -394,6 +432,7 @@
         </div>
     </div>
 
+    <!-- General Message Modal -->
     <div id="modal-message" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 animate-fade-in">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-5 shadow-2xl text-center">
             <div id="modal-icon" class="w-16 h-16 rounded-2xl bg-ecbLightGreen text-ecbDarkGreen flex items-center justify-center text-2xl mx-auto shadow-inner"><i class="fa-solid fa-check"></i></div>
@@ -405,7 +444,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k",
@@ -416,6 +455,7 @@
             appId: "1:229926423123:web:a309c14c708fc886c62d4a6"
         };
 
+        const APP_ID = 'ecb-maintenance-live';
         let app, db;
         let protocols = [];
         let dguvDevices = [];
@@ -429,26 +469,53 @@
         let retroCustomDate = null;
         let retroCustomTime = null;
         let retroCustomTechnician = null;
+        let currentPdfBlobUrl = null;
+        let confirmActionCallback = null;
+
+        // Hilfsfunktion: Bilder vor dem Speichern komprimieren (verhindert LocalStorage- & Firestore-Abstürze bei Smartphone-Kameras)
+        function compressImageDataUrl(dataUrl, maxWidth = 900, quality = 0.7) {
+            return new Promise((resolve) => {
+                if (!dataUrl || !dataUrl.startsWith('data:image')) {
+                    resolve(dataUrl);
+                    return;
+                }
+                const img = new Image();
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, width, height);
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = () => resolve(dataUrl);
+                img.src = dataUrl;
+            });
+        }
 
         window.onload = async function() {
             loadPersistentStorage();
-            const dateInp = document.getElementById('retro-date-input');
-            const timeInp = document.getElementById('retro-time-input');
-            const techInp = document.getElementById('retro-technician-input');
-            if (dateInp) dateInp.valueAsDate = new Date();
-            if (timeInp) timeInp.value = new Date().toTimeString().slice(0,5);
-            if (techInp) techInp.value = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
+            initRetroDefaultInputs();
 
             try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 
-                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block";
+                document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse";
                 document.getElementById('cloud-status-text').innerText = "Firebase Cloud Live Sync Aktiv";
                 
-                await forceCloudRecovery();
+                setupRealtimeListeners();
+                await forceCloudRecovery(false);
             } catch (err) {
-                console.error("Firebase Init Hinweis:", err);
+                console.warn("Firebase Init Hinweis:", err);
                 document.getElementById('cloud-status-dot').className = "w-2 h-2 rounded-full bg-amber-400 inline-block";
                 document.getElementById('cloud-status-text').innerText = "Lokaler Modus (Cloud Offline)";
             }
@@ -461,48 +528,122 @@
             }
         };
 
-        // Smart Cloud Merge Strategy: Local/Retroactive records take precedence and are never overwritten by older cloud syncs
-        window.forceCloudRecovery = async function() {
+        function initRetroDefaultInputs() {
+            const dateInp = document.getElementById('retro-date-input');
+            const timeInp = document.getElementById('retro-time-input');
+            const techInp = document.getElementById('retro-technician-input');
+            if (dateInp && !dateInp.value) {
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                dateInp.value = `${yyyy}-${mm}-${dd}`;
+            }
+            if (timeInp && !timeInp.value) {
+                timeInp.value = new Date().toTimeString().slice(0,5);
+            }
+            if (techInp && !techInp.value) {
+                techInp.value = localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
+            }
+        }
+
+        // Echtzeit-Listener für automatische Synchronisation zwischen allen Geräten
+        function setupRealtimeListeners() {
+            if (!db) return;
+
+            try {
+                // Protokolle in Echtzeit überwachen
+                onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'protocols'), (snap) => {
+                    let mergedMap = new Map();
+                    // Behalte lokal bereits angelegte Protokolle
+                    protocols.forEach(p => { if (p && p.id) mergedMap.set(p.id, p); });
+                    // Füge alle Cloud-Protokolle hinzu / aktualisiere sie
+                    snap.forEach(docSnap => {
+                        const data = docSnap.data();
+                        const pId = data.id || docSnap.id;
+                        if (pId) mergedMap.set(pId, { ...data, id: pId });
+                    });
+                    protocols = Array.from(mergedMap.values());
+                    protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                    saveLocalCacheOnly();
+                    updateUI();
+                }, (err) => {
+                    console.warn("Realtime Protocol Sync Hinweis:", err);
+                });
+
+                // DGUV-Geräte in Echtzeit überwachen
+                onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'dguv_devices'), (snap) => {
+                    let mergedDguv = new Map();
+                    dguvDevices.forEach(d => { if (d && d.id) mergedDguv.set(d.id, d); });
+                    snap.forEach(docSnap => {
+                        const data = docSnap.data();
+                        const dId = data.id || docSnap.id;
+                        if (dId) mergedDguv.set(dId, { ...data, id: dId });
+                    });
+                    dguvDevices = Array.from(mergedDguv.values());
+                    saveLocalCacheOnly();
+                    updateUI();
+                }, (err) => {
+                    console.warn("Realtime DGUV Sync Hinweis:", err);
+                });
+            } catch (e) {
+                console.warn("Konnte Echtzeit-Listener nicht starten:", e);
+            }
+        }
+
+        // Manuelles Abrufen & Pushen aller Daten mit der Cloud
+        window.forceCloudRecovery = async function(showToast = false) {
             if (!db) {
-                showModal('Hinweis', 'Cloud-Verbindung ist im Offline-Modus.', false);
+                if (showToast) showModal('Hinweis', 'Cloud-Verbindung ist im Offline-Modus. Daten sind lokal gesichert.', false);
                 return;
             }
-            const appId = 'ecb-maintenance-live';
             try {
-                // Collect existing local protocols in a map to preserve them
                 let mergedMap = new Map();
                 protocols.forEach(p => { if (p && p.id) mergedMap.set(p.id, p); });
 
-                const protoSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'protocols'));
+                const protoSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'protocols'));
+                const cloudIds = new Set();
                 protoSnap.forEach(docSnap => {
                     const data = docSnap.data();
                     const pId = data.id || docSnap.id;
                     if (pId) {
-                        // If local doesn't have it, add it from cloud
-                        if (!mergedMap.has(pId)) {
-                            mergedMap.set(pId, { id: pId, ...data });
-                        }
+                        cloudIds.add(pId);
+                        mergedMap.set(pId, { ...data, id: pId });
                     }
                 });
 
                 protocols = Array.from(mergedMap.values());
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
 
-                const dguvSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'dguv_devices'));
-                let cloudDevices = [];
-                dguvSnap.forEach(docSnap => {
-                    cloudDevices.push({ id: docSnap.id, ...docSnap.data() });
-                });
-                if (cloudDevices.length > 0) {
-                    dguvDevices = cloudDevices;
+                // Lokale Protokolle, die noch nicht in der Cloud waren, sofort hochladen
+                for (let p of protocols) {
+                    if (p && p.id && !cloudIds.has(p.id)) {
+                        try {
+                            await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'protocols', p.id), p);
+                        } catch (pushErr) {
+                            console.warn("Sync Push Warnung für Protokoll:", p.id, pushErr);
+                        }
+                    }
                 }
 
-                savePersistentStorage();
+                const dguvSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'dguv_devices'));
+                let mergedDguv = new Map();
+                dguvDevices.forEach(d => { if (d && d.id) mergedDguv.set(d.id, d); });
+                dguvSnap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const dId = data.id || docSnap.id;
+                    if (dId) mergedDguv.set(dId, { ...data, id: dId });
+                });
+                dguvDevices = Array.from(mergedDguv.values());
+
+                saveLocalCacheOnly();
                 updateUI();
-                showModal('Erfolg', 'Daten erfolgreich synchronisiert!', true);
+                if (showToast) {
+                    showModal('Synchronisiert', `Alle ${protocols.length} Protokolle und ${dguvDevices.length} DGUV-Geräte sind auf dem neuesten Stand!`, true);
+                }
             } catch(e) {
                 console.error("Cloud recovery error:", e);
-                showModal('Fehler', 'Fehler beim Laden aus der Cloud.', false);
+                if (showToast) showModal('Hinweis', 'Lokale Daten sind aktiv. Cloud-Abruf war eingeschränkt.', false);
             }
         };
 
@@ -537,26 +678,42 @@
                     const parsedU = JSON.parse(u);
                     if (parsedU.length > 0) cloudUsers = parsedU;
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.warn("Fehler beim Laden des lokalen Speichers:", e);
+            }
         }
 
-        async function savePersistentStorage() {
+        function saveLocalCacheOnly() {
             try {
                 protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
                 const jsonStr = JSON.stringify(protocols);
                 localStorage.setItem('ecb_permanent_local_protocols_v2', jsonStr);
                 localStorage.setItem('ecb_protocols_v118', jsonStr);
+            } catch (quotaErr) {
+                console.warn("LocalStorage Speicherplatz knapp – optimiere ältere Foto-Anhänge im lokalen Cache:", quotaErr);
+                try {
+                    const slimProtocols = protocols.map((p, idx) => idx > 15 ? { ...p, photos: [] } : p);
+                    localStorage.setItem('ecb_permanent_local_protocols_v2', JSON.stringify(slimProtocols));
+                } catch (e2) {}
+            }
+            try {
                 localStorage.setItem('ecb_dguv_v118', JSON.stringify(dguvDevices));
                 localStorage.setItem('ecb_users_v118', JSON.stringify(cloudUsers));
+            } catch (e) {}
+        }
 
-                // Also push all local protocols immediately to cloud to guarantee persistence
-                if (db) {
-                    const appId = 'ecb-maintenance-live';
-                    for (let p of protocols) {
-                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.id), p);
+        async function savePersistentStorage() {
+            saveLocalCacheOnly();
+            if (db && protocols.length > 0) {
+                const newest = protocols[0];
+                if (newest && newest.id) {
+                    try {
+                        await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'protocols', newest.id), newest);
+                    } catch (e) {
+                        console.warn("Hintergrund-Sync Hinweis:", e);
                     }
                 }
-            } catch(e) {}
+            }
         }
 
         window.exportDataJson = function() {
@@ -580,15 +737,17 @@
                     if (parsed.dguvDevices) dguvDevices = parsed.dguvDevices;
                     if (parsed.cloudUsers) cloudUsers = parsed.cloudUsers;
                     
+                    saveLocalCacheOnly();
+                    updateUI();
+
                     if (db) {
-                        const appId = 'ecb-maintenance-live';
                         for (let p of protocols) {
-                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', p.id), p);
+                            try {
+                                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'protocols', p.id), p);
+                            } catch (err) {}
                         }
                     }
-                    savePersistentStorage();
-                    updateUI();
-                    showModal('Erfolg', 'Backup importiert & synchronisiert!', true);
+                    showModal('Erfolg', 'Backup erfolgreich importiert & mit der Cloud synchronisiert!', true);
                 } catch(err) {
                     showModal('Fehler', 'Ungültige Backup-Datei.', false);
                 }
@@ -596,109 +755,263 @@
             reader.readAsText(file);
         };
 
-        // Universal protocol submit dispatcher with guaranteed local & cloud persistence
+        // Zentrale Funktion zum Speichern eines Protokolls (Normal & Nachtragen)
         window.submitProtocol = async function(event, rawCategoryKey) {
             if (event) {
                 event.preventDefault();
                 event.stopPropagation();
             }
+
+            const submitBtn = document.getElementById('protocol-submit-btn');
             const employeeNameEl = document.getElementById('employee-name');
             const employeeName = employeeNameEl ? employeeNameEl.value.trim() : (localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter');
-            if (!employeeName) { showModal('Fehler', 'Bitte Namen angeben.', false); return; }
-            if (!signaturePadInstance || !signaturePadInstance.hasSigned) { showModal('Fehler', 'Bitte unterschreiben.', false); return; }
+            
+            if (!employeeName) {
+                showModal('Fehlende Angabe', 'Bitte geben Sie den Namen des Technikers an.', false);
+                return;
+            }
+            if (!signaturePadInstance || !signaturePadInstance.hasSigned) {
+                showModal('Unterschrift fehlt', 'Bitte unterschreiben Sie das Protokoll im Unterschriftenfeld, bevor Sie speichern.', false);
+                return;
+            }
 
-            const machineSelect = document.getElementById('machine-select');
-            const machineName = machineSelect ? machineSelect.value : rawCategoryKey;
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Protokoll wird gespeichert & PDF generiert...';
+            }
 
-            let categoryKey = rawCategoryKey;
-            if (machineName.includes('Waschmaschine') || rawCategoryKey.includes('Waschmaschine')) categoryKey = 'Waschmaschine';
-            else if (machineName.includes('Trockner') || rawCategoryKey.includes('Trockner')) categoryKey = 'Trockner';
-            else if (rawCategoryKey.includes('2-Wochen') || machineName.includes('2-Wochen') || machineName.includes('Kompressor (2-Wochen)')) categoryKey = 'Kompressor 2-Wochen';
-            else if (rawCategoryKey.includes('Jahreswartung') || machineName.includes('Jahreswartung') || machineName.includes('Kompressor (Jahreswartung)')) categoryKey = 'Kompressor Jahreswartung';
+            try {
+                const machineSelect = document.getElementById('machine-select');
+                const machineName = machineSelect ? machineSelect.value : rawCategoryKey;
 
-            const remarks = document.getElementById('remarks-input') ? document.getElementById('remarks-input').value : '';
-            const runtimeHours = document.getElementById('runtime-hours') ? document.getElementById('runtime-hours').value : null;
+                let categoryKey = rawCategoryKey;
+                if (machineName.includes('Waschmaschine') || rawCategoryKey.includes('Waschmaschine')) categoryKey = 'Waschmaschine';
+                else if (machineName.includes('Trockner') || rawCategoryKey.includes('Trockner')) categoryKey = 'Trockner';
+                else if (rawCategoryKey.includes('2-Wochen') || machineName.includes('2-Wochen')) categoryKey = 'Kompressor 2-Wochen';
+                else if (rawCategoryKey.includes('Jahreswartung') || machineName.includes('Jahreswartung')) categoryKey = 'Kompressor Jahreswartung';
 
-            const radios = document.querySelectorAll('input[type="radio"]:checked');
-            let pointsData = [];
-            radios.forEach((r, idx) => {
-                const parentDiv = r.closest('[data-title]');
-                const titleText = parentDiv ? parentDiv.getAttribute('data-title') : `Prüfpunkt ${idx + 1}`;
-                pointsData.push({ pointNumber: idx + 1, title: titleText, status: r.value });
-            });
+                const remarks = document.getElementById('remarks-input') ? document.getElementById('remarks-input').value.trim() : '';
+                const runtimeHours = document.getElementById('runtime-hours') ? document.getElementById('runtime-hours').value : null;
 
-            let protocolDate, protocolTimestamp;
-            if (retroCustomDate) {
-                const timeStr = retroCustomTime || '00:00';
-                const dObj = new Date(`${retroCustomDate}T${timeStr}:00`);
-                protocolDate = `${dObj.toLocaleDateString('de-DE')}, ${timeStr} Uhr (Nachträglich erfasst)`;
-                protocolTimestamp = dObj.getTime();
+                // Prüfe ob es sich um ein nachgetragenes Protokoll handelt (aus Formularfeldern oder globalem Status)
+                const formRetroDateEl = document.getElementById('form-retro-date');
+                const formRetroTimeEl = document.getElementById('form-retro-time');
+                const effectiveRetroDate = (formRetroDateEl && formRetroDateEl.value) ? formRetroDateEl.value : retroCustomDate;
+                const effectiveRetroTime = (formRetroTimeEl && formRetroTimeEl.value) ? formRetroTimeEl.value : retroCustomTime;
+
+                const checkpointCards = document.querySelectorAll('.checkpoint-card[data-title]');
+                let pointsData = [];
+                checkpointCards.forEach((card, idx) => {
+                    const titleText = card.getAttribute('data-title') || `Prüfpunkt ${idx + 1}`;
+                    const checkedRadio = card.querySelector('input[type="radio"]:checked');
+                    const statusVal = checkedRadio ? checkedRadio.value : 'erledigt';
+                    pointsData.push({ pointNumber: idx + 1, title: titleText, status: statusVal });
+                });
+
+                let protocolDate, protocolTimestamp;
+                if (effectiveRetroDate) {
+                    const timeStr = effectiveRetroTime || '08:00';
+                    const parts = effectiveRetroDate.split('-');
+                    let dObj;
+                    if (parts.length === 3) {
+                        const timeParts = timeStr.split(':');
+                        dObj = new Date(
+                            parseInt(parts[0], 10),
+                            parseInt(parts[1], 10) - 1,
+                            parseInt(parts[2], 10),
+                            parseInt(timeParts[0] || '8', 10),
+                            parseInt(timeParts[1] || '0', 10)
+                        );
+                    } else {
+                        dObj = new Date();
+                    }
+                    if (isNaN(dObj.getTime())) dObj = new Date();
+
+                    const dd = String(dObj.getDate()).padStart(2, '0');
+                    const mm = String(dObj.getMonth() + 1).padStart(2, '0');
+                    const yyyy = dObj.getFullYear();
+                    protocolDate = `${dd}.${mm}.${yyyy}, ${timeStr} Uhr (Nachgetragen)`;
+                    protocolTimestamp = dObj.getTime();
+                } else {
+                    const now = new Date();
+                    const dd = String(now.getDate()).padStart(2, '0');
+                    const mm = String(now.getMonth() + 1).padStart(2, '0');
+                    const yyyy = now.getFullYear();
+                    const timeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                    protocolDate = `${dd}.${mm}.${yyyy}, ${timeStr} Uhr`;
+                    protocolTimestamp = now.getTime();
+                }
+
+                // Zurücksetzen des globalen Nachtrage-Status nach dem Auslesen
                 retroCustomDate = null;
                 retroCustomTime = null;
                 retroCustomTechnician = null;
-            } else {
-                const now = new Date();
-                protocolDate = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
-                protocolTimestamp = now.getTime();
+
+                let prefixId = 'ECB-GEN-';
+                if (categoryKey === 'Waschmaschine') prefixId = 'ECB-WASH-';
+                else if (categoryKey === 'Trockner') prefixId = 'ECB-DRY-';
+                else if (categoryKey === 'Kompressor 2-Wochen') prefixId = 'ECB-COMP2W-';
+                else if (categoryKey === 'Kompressor Jahreswartung') prefixId = 'ECB-COMPYR-';
+
+                const protocolIdGen = prefixId + Math.floor(100000 + Math.random() * 900000);
+                const sigDataUrl = signaturePadInstance.canvas.toDataURL('image/png');
+
+                const protocol = {
+                    id: protocolIdGen,
+                    category: categoryKey,
+                    machine: machineName,
+                    employee: employeeName,
+                    runtime: runtimeHours || null,
+                    date: protocolDate,
+                    timestamp: protocolTimestamp,
+                    points: pointsData,
+                    remarks: remarks,
+                    photos: [...activePhotos],
+                    signature: sigDataUrl
+                };
+
+                // 1. Sofort in das lokale Array & LocalStorage übernehmen
+                protocols = protocols.filter(p => p.id !== protocol.id);
+                protocols.unshift(protocol);
+                protocols.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                saveLocalCacheOnly();
+
+                // 2. UI (History, Zähler, Kalender, Dashboard) sofort aktualisieren
+                updateUI();
+
+                // 3. Sofort die PDF-Ansicht vor dem Wechsel öffnen, damit der Nutzer das PDF sieht & herunterladen kann
+                openPdfPreviewModal(protocol);
+
+                // 4. Synchronisation mit Firebase Firestore für alle anderen Geräte
+                if (db) {
+                    try {
+                        await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'protocols', protocol.id), protocol);
+                    } catch (cloudErr) {
+                        console.warn("Firestore Upload mit Fotos zu groß – speichere kompakte Cloud-Version:", cloudErr);
+                        try {
+                            const compactProtocol = { ...protocol, photos: [] };
+                            await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'protocols', protocol.id), compactProtocol);
+                        } catch (err2) {
+                            console.error("Firestore Speicherung fehlgeschlagen:", err2);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Kritischer Fehler beim Speichern des Protokolls:", err);
+                showModal('Fehler', 'Beim Erstellen des Protokolls ist ein Fehler aufgetreten: ' + (err.message || ''), false);
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-file-pdf mr-2"></i> Protokoll speichern & PDF-Ansicht öffnen';
+                }
             }
+        };
 
-            let prefixId = 'ECB-GEN-';
-            if (categoryKey === 'Waschmaschine') prefixId = 'ECB-WASH-';
-            else if (categoryKey === 'Trockner') prefixId = 'ECB-DRY-';
-            else if (categoryKey === 'Kompressor 2-Wochen') prefixId = 'ECB-COMP2W-';
-            else if (categoryKey === 'Kompressor Jahreswartung') prefixId = 'ECB-COMPYR-';
+        // Öffnet das PDF-Vorschau-Modal (mit PDF-Iframe + garantiert sichtbarer Dokumenten-Ansicht für Mobilgeräte)
+        window.openPdfPreviewModal = function(p) {
+            if (!p) return;
+            document.getElementById('pdf-modal-heading').innerText = `Protokoll ${p.id} – ${p.machine}`;
+            document.getElementById('current-preview-pdf-id').value = p.id;
+            const container = document.getElementById('pdf-preview-container');
 
-            const protocolIdGen = prefixId + Math.floor(100000 + Math.random() * 900000);
+            const pdfDoc = createJsPdfInstance(p);
+            let iframeHtml = '';
 
-            const protocol = {
-                id: protocolIdGen,
-                category: categoryKey,
-                machine: machineName,
-                employee: employeeName,
-                runtime: runtimeHours,
-                date: protocolDate,
-                timestamp: protocolTimestamp,
-                points: pointsData,
-                remarks: remarks,
-                photos: [...activePhotos],
-                signature: signaturePadInstance.canvas.toDataURL()
-            };
-
-            // Prepend and save permanently
-            protocols.unshift(protocol);
-            await savePersistentStorage();
-
-            // Push to Firestore immediately
-            if (db) {
+            if (pdfDoc) {
                 try {
-                    const appId = 'ecb-maintenance-live';
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocol.id), protocol);
-                    console.log("SUCCESS: Protocol permanently saved to Firestore:", protocol.id);
-                } catch(e) {
-                    console.error("FIRESTORE SAVE ERROR:", e);
+                    if (currentPdfBlobUrl) URL.revokeObjectURL(currentPdfBlobUrl);
+                    const blob = pdfDoc.output('blob');
+                    currentPdfBlobUrl = URL.createObjectURL(blob);
+                    iframeHtml = `
+                        <div class="hidden md:block w-full h-[420px] rounded-xl overflow-hidden border border-slate-300 shadow-inner bg-white">
+                            <iframe src="${currentPdfBlobUrl}" class="w-full h-full border-0" title="PDF Vorschau"></iframe>
+                        </div>
+                    `;
+                } catch (e) {
+                    console.warn("PDF Blob Vorschau Hinweis:", e);
                 }
             }
 
-            updateUI();
-            openPdfPreviewModal(protocol);
-        };
+            const pointsRows = (p.points || []).map((pt, i) => `
+                <div class="flex justify-between items-center py-2 border-b border-slate-100 text-xs sm:text-sm">
+                    <span class="text-slate-800 font-medium">${i + 1}. ${pt.title}</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold ${pt.status === 'erledigt' ? 'bg-emerald-100 text-ecbDarkGreen' : 'bg-red-100 text-red-700'}">
+                        ${pt.status === 'erledigt' ? 'OK' : 'MANGEL'}
+                    </span>
+                </div>
+            `).join('');
 
-        window.openPdfPreviewModal = function(p) {
-            document.getElementById('pdf-modal-heading').innerText = `Protokoll ${p.id} (${p.machine})`;
-            document.getElementById('current-preview-pdf-id').value = p.id;
-            const container = document.getElementById('pdf-preview-container');
-            
-            const uri = generatePDFDataUri(p);
-            if (uri) {
-                container.innerHTML = `<iframe src="${uri}" class="w-full h-[450px] rounded-xl border"></iframe>`;
-            } else {
-                container.innerHTML = `<div class="text-slate-500 font-bold">PDF konnte nicht geladen werden.</div>`;
-            }
+            const photosPreview = (p.photos && p.photos.length > 0) ? `
+                <div class="pt-3">
+                    <div class="text-xs font-bold text-slate-600 mb-2">Dokumentationsfotos (${p.photos.length}):</div>
+                    <div class="flex gap-2 overflow-x-auto pb-2">
+                        ${p.photos.map(pho => `<img src="${pho}" class="h-20 w-20 object-cover rounded-xl border shadow-sm">`).join('')}
+                    </div>
+                </div>
+            ` : '';
+
+            // Visuelles Protokoll-Blatt (immer sichtbar auf Smartphones/Tablets und als Ergänzung auf Desktop)
+            const visualSheetHtml = `
+                <div class="bg-white rounded-2xl p-6 shadow-md border border-slate-200 space-y-4">
+                    <div class="bg-[#65a30d] text-white p-4 rounded-xl flex flex-wrap justify-between items-center gap-2">
+                        <div>
+                            <div class="text-base font-extrabold tracking-wide">E.C.B. REINIGUNGSSYSTEME</div>
+                            <div class="text-xs text-lime-100">Digitales Wartungsprotokoll &amp; Instandhaltung</div>
+                        </div>
+                        <div class="text-xs font-bold bg-black/20 px-3 py-1.5 rounded-lg">
+                            Protokoll-Nr: ${p.id}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border text-xs sm:text-sm">
+                        <div><span class="text-slate-500">Anlage / Maschine:</span> <strong class="text-slate-900 block">${p.machine}</strong></div>
+                        <div><span class="text-slate-500">Datum &amp; Uhrzeit:</span> <strong class="text-slate-900 block">${p.date}</strong></div>
+                        <div><span class="text-slate-500">Zuständiger Techniker:</span> <strong class="text-slate-900 block">${p.employee}</strong></div>
+                        <div><span class="text-slate-500">Kategorie:</span> <strong class="text-slate-900 block">${p.category} ${p.runtime ? `(${p.runtime} Betriebsstunden)` : ''}</strong></div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xs font-extrabold uppercase text-slate-500 tracking-wider mb-2">Geprüfte Wartungspunkte</h4>
+                        <div class="divide-y divide-slate-100">${pointsRows}</div>
+                    </div>
+
+                    ${p.remarks ? `
+                        <div class="bg-amber-50 p-3.5 rounded-xl border border-amber-200 text-xs sm:text-sm">
+                            <strong class="text-amber-900 block mb-1">Bemerkungen / Feststellungen:</strong>
+                            <span class="text-amber-800">${p.remarks}</span>
+                        </div>
+                    ` : ''}
+
+                    ${photosPreview}
+
+                    ${p.signature ? `
+                        <div class="pt-3 border-t flex items-center justify-between flex-wrap gap-4">
+                            <div>
+                                <div class="text-xs font-bold text-slate-500">Unterschrift Techniker (${p.employee}):</div>
+                                <img src="${p.signature}" class="h-14 object-contain mt-1 bg-slate-50 border rounded-lg p-1">
+                            </div>
+                            <span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl">
+                                <i class="fa-solid fa-check-double mr-1"></i> Rechtsgültig signiert
+                            </span>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            container.innerHTML = visualSheetHtml + iframeHtml;
             document.getElementById('modal-pdf-preview').classList.remove('hidden');
         };
 
+        // Schließt die PDF-Vorschau und springt direkt in die History (Protokolle), wo der Eintrag hinterlegt ist
         window.closePdfPreviewModal = function() {
             document.getElementById('modal-pdf-preview').classList.add('hidden');
+            // Filter zurücksetzen, damit auch nachgetragene Protokolle aus anderen Monaten/Jahren sofort sichtbar sind
+            const fY = document.getElementById('filter-year');
+            const fM = document.getElementById('filter-month');
+            const fC = document.getElementById('filter-category');
+            if (fY) fY.value = 'all';
+            if (fM) fM.value = 'all';
+            if (fC) fC.value = 'all';
             switchTab('history');
         };
 
@@ -735,15 +1048,12 @@
                 protocolName: null
             };
 
-            if (!dguvDevices.some(d => d.id === newDev.id)) {
-                dguvDevices.unshift(newDev);
-            }
-            await savePersistentStorage();
+            dguvDevices.unshift(newDev);
+            saveLocalCacheOnly();
 
             if (db) {
                 try {
-                    const appId = 'ecb-maintenance-live';
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', newDev.id), newDev);
+                    await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'dguv_devices', newDev.id), newDev);
                 } catch(e) {}
             }
 
@@ -772,19 +1082,23 @@
             const file = fileInput.files[0];
             const reader = new FileReader();
             reader.onload = async function(e) {
-                const base64Data = e.target.result;
+                let base64Data = e.target.result;
+                if (base64Data.startsWith('data:image')) {
+                    base64Data = await compressImageDataUrl(base64Data, 1000, 0.75);
+                }
                 const dev = dguvDevices.find(d => d.id === devId);
                 if (dev) {
                     dev.protocolData = base64Data;
                     dev.protocolName = file.name;
                     dev.status = 'Erledigt';
 
-                    await savePersistentStorage();
+                    saveLocalCacheOnly();
                     if (db) {
                         try {
-                            const appId = 'ecb-maintenance-live';
-                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', dev.id), dev);
-                        } catch(e) {}
+                            await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'dguv_devices', dev.id), dev);
+                        } catch(err) {
+                            console.warn("DGUV Cloud Upload Hinweis:", err);
+                        }
                     }
 
                     updateUI();
@@ -820,34 +1134,70 @@
             document.getElementById('modal-dguv-view').classList.add('hidden');
         };
 
-        window.deleteProtocol = async function(protocolId) {
-            const idx = protocols.findIndex(p => p.id === protocolId);
-            if (idx > -1) {
-                protocols.splice(idx, 1);
-                await savePersistentStorage();
-                if (db) {
-                    try {
-                        const appId = 'ecb-maintenance-live';
-                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'protocols', protocolId));
-                    } catch(e) {}
-                }
-                updateUI();
-            }
+        // Custom Confirm Dialog Workflow (ohne window.confirm)
+        function askConfirmation(title, text, onConfirm) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-text').innerText = text;
+            confirmActionCallback = onConfirm;
+            const yesBtn = document.getElementById('confirm-yes-btn');
+            yesBtn.onclick = async () => {
+                const cb = confirmActionCallback;
+                closeConfirmModal();
+                if (cb) await cb();
+            };
+            document.getElementById('modal-confirm').classList.remove('hidden');
+        }
+
+        window.closeConfirmModal = function() {
+            document.getElementById('modal-confirm').classList.add('hidden');
+            confirmActionCallback = null;
         };
 
-        window.deleteDguvDevice = async function(deviceId) {
-            const idx = dguvDevices.findIndex(d => d.id === deviceId);
-            if (idx > -1) {
-                dguvDevices.splice(idx, 1);
-                await savePersistentStorage();
+        window.deleteProtocol = function(protocolId) {
+            askConfirmation('Protokoll löschen', `Möchten Sie das Protokoll "${protocolId}" wirklich unwiderruflich löschen?`, async () => {
+                const idx = protocols.findIndex(p => p.id === protocolId);
+                if (idx > -1) {
+                    protocols.splice(idx, 1);
+                    saveLocalCacheOnly();
+                    if (db) {
+                        try {
+                            await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'protocols', protocolId));
+                        } catch(e) {}
+                    }
+                    updateUI();
+                }
+            });
+        };
+
+        window.clearHistory = function() {
+            askConfirmation('Gesamten Verlauf leeren', 'Möchten Sie wirklich alle gespeicherten Protokolle löschen?', async () => {
+                const oldIds = protocols.map(p => p.id);
+                protocols = [];
+                saveLocalCacheOnly();
                 if (db) {
-                    try {
-                        const appId = 'ecb-maintenance-live';
-                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dguv_devices', deviceId));
-                    } catch(e) {}
+                    for (let id of oldIds) {
+                        try { await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'protocols', id)); } catch(e) {}
+                    }
                 }
                 updateUI();
-            }
+                showModal('Gelöscht', 'Der Protokoll-Verlauf wurde geleert.', true);
+            });
+        };
+
+        window.deleteDguvDevice = function(deviceId) {
+            askConfirmation('DGUV Gerät löschen', 'Möchten Sie dieses DGUV V3 Gerät wirklich löschen?', async () => {
+                const idx = dguvDevices.findIndex(d => d.id === deviceId);
+                if (idx > -1) {
+                    dguvDevices.splice(idx, 1);
+                    saveLocalCacheOnly();
+                    if (db) {
+                        try {
+                            await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'dguv_devices', deviceId));
+                        } catch(e) {}
+                    }
+                    updateUI();
+                }
+            });
         };
 
         window.handleLogin = function(event) {
@@ -862,8 +1212,9 @@
                 localStorage.setItem('ecb_current_fullname', found.fullname || user);
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('login-error').classList.add('hidden');
+                initRetroDefaultInputs();
                 checkAdminNav();
-                forceCloudRecovery();
+                forceCloudRecovery(false);
                 updateUI();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
@@ -891,6 +1242,7 @@
                 document.getElementById('tab-calendar').classList.remove('hidden');
                 renderMaintenanceCalendar();
             } else if (tabId === 'retro') {
+                initRetroDefaultInputs();
                 document.getElementById('tab-retro').classList.remove('hidden');
             } else if (tabId === 'dguv') {
                 document.getElementById('tab-dguv').classList.remove('hidden');
@@ -901,7 +1253,7 @@
                 renderHistory();
             } else if (tabId === 'form') {
                 document.getElementById('form-view').classList.remove('hidden');
-                setTimeout(() => initSignaturePad(), 200);
+                setTimeout(() => initSignaturePad(), 150);
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
@@ -936,7 +1288,7 @@
             const newPass = document.getElementById('new-pass').value.trim();
             const currentUser = localStorage.getItem('ecb_current_user');
             const found = cloudUsers.find(u => u.user === currentUser);
-            if (found) { found.pass = newPass; savePersistentStorage(); }
+            if (found) { found.pass = newPass; saveLocalCacheOnly(); }
             closePasswordModal();
             showModal('Erfolg', 'Passwort aktualisiert!', true);
         };
@@ -948,7 +1300,7 @@
             const newPass = document.getElementById('reg-pass').value.trim();
             if (cloudUsers.some(u => u.user === newUser)) { document.getElementById('reg-error').classList.remove('hidden'); return; }
             cloudUsers.push({ fullname, user: newUser, pass: newPass, active: true });
-            savePersistentStorage();
+            saveLocalCacheOnly();
             document.getElementById('reg-fullname').value = ''; document.getElementById('reg-user').value = ''; document.getElementById('reg-pass').value = '';
             document.getElementById('reg-error').classList.add('hidden');
             renderAdminUsersList();
@@ -959,25 +1311,25 @@
             const usr = cloudUsers.find(u => u.user === username);
             if (usr) {
                 usr.active = usr.active === false ? true : false;
-                savePersistentStorage();
+                saveLocalCacheOnly();
                 renderAdminUsersList();
             }
         };
 
-        window.deleteUserAccount = async function(username) {
+        window.deleteUserAccount = function(username) {
             if (username === 'ECB_Wartung') {
                 showModal('Hinweis', 'Das Haupt-Admin-Konto kann nicht gelöscht werden.', false);
                 return;
             }
-            if (confirm(`Möchten Sie das Konto "${username}" wirklich löschen?`)) {
+            askConfirmation('Mitarbeiter löschen', `Möchten Sie das Konto "${username}" wirklich löschen?`, () => {
                 const idx = cloudUsers.findIndex(u => u.user === username);
                 if (idx > -1) {
                     cloudUsers.splice(idx, 1);
-                    savePersistentStorage();
+                    saveLocalCacheOnly();
                     renderAdminUsersList();
                     showModal('Erfolg', 'Mitarbeiter-Konto gelöscht.', true);
                 }
-            }
+            });
         };
 
         function renderAdminUsersList() {
@@ -1018,6 +1370,7 @@
         function updateUI() {
             document.getElementById('protocol-count').innerText = protocols.length;
             document.getElementById('dguv-count').innerText = dguvDevices.length;
+            populateYearFilter();
             renderHistory();
             renderDguvDevices();
             updateDashboardDueDates();
@@ -1033,7 +1386,7 @@
             ];
             const now = new Date(); now.setHours(0,0,0,0);
             cats.forEach(cat => {
-                const matching = protocols.filter(p => p.category === cat.key || (cat.key === 'Kompressor 2-Wochen' && p.category.includes('Kompressor 2-Wochen')));
+                const matching = protocols.filter(p => p.category === cat.key || (cat.key === 'Kompressor 2-Wochen' && p.category && p.category.includes('Kompressor 2-Wochen')));
                 const dueEl = document.getElementById(`due-${cat.key}`);
                 const badgeEl = document.getElementById(`badge-${cat.key}`);
                 if (!dueEl || !badgeEl) return;
@@ -1063,7 +1416,7 @@
             let html = '';
             const now = new Date(); now.setHours(0,0,0,0);
             cats.forEach(cat => {
-                const matching = protocols.filter(p => p.category === cat.key || (cat.key === 'Kompressor 2-Wochen' && p.category.includes('Kompressor 2-Wochen')));
+                const matching = protocols.filter(p => p.category === cat.key || (cat.key === 'Kompressor 2-Wochen' && p.category && p.category.includes('Kompressor 2-Wochen')));
                 if (matching.length === 0) {
                     html += `<tr class="border-b"><td class="py-3 px-4 font-bold">${cat.name}</td><td class="py-3 px-4 text-slate-400">-</td><td class="py-3 px-4 text-amber-600 font-bold">Sofort fällig</td><td><span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full">Offen</span></td></tr>`;
                 } else {
@@ -1077,13 +1430,14 @@
             tableBody.innerHTML = html;
         }
 
+        // Startet das Formular aus dem "Nachtragen"-Tab
         window.startRetroactiveForm = function() {
             const selectVal = document.getElementById('retro-category-select').value;
             const dateVal = document.getElementById('retro-date-input').value;
             const timeVal = document.getElementById('retro-time-input').value;
             const techVal = document.getElementById('retro-technician-input').value.trim();
 
-            if (!dateVal) { showModal('Fehler', 'Bitte ein Datum auswählen.', false); return; }
+            if (!dateVal) { showModal('Fehler', 'Bitte ein Durchführungsdatum auswählen.', false); return; }
             if (!timeVal) { showModal('Fehler', 'Bitte eine Uhrzeit auswählen.', false); return; }
             if (!techVal) { showModal('Fehler', 'Bitte einen Techniker angeben.', false); return; }
 
@@ -1093,31 +1447,49 @@
 
             if (selectVal.startsWith('Waschmaschine')) {
                 const num = selectVal.split('-')[1];
-                openWashingMachineMenu(num, techVal);
+                openWashingMachineMenu(num, techVal, true);
             } else if (selectVal.startsWith('Trockner')) {
                 const num = selectVal.split('-')[1];
-                openDryerMenu(num, techVal);
+                openDryerMenu(num, techVal, true);
             } else if (selectVal === 'Kompressor 2-Wochen') {
-                openCompressorRoutine(techVal);
+                openCompressorRoutine(techVal, true);
             } else if (selectVal === 'Kompressor Jahreswartung') {
-                openCompressorAnnual(techVal);
+                openCompressorAnnual(techVal, true);
             }
         };
 
         function renderCommonHeaderFields(customTech) {
             const techName = customTech || retroCustomTechnician || localStorage.getItem('ecb_current_fullname') || 'Mitarbeiter';
+            const retroBadgeHtml = retroCustomDate ? `
+                <div class="p-4 bg-purple-50 border border-purple-200 rounded-2xl flex flex-wrap items-center justify-between gap-2 text-xs text-purple-900">
+                    <div class="font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-purple-600 text-base"></i>
+                        <span>Nachträgliche Erfassung für den <strong>${retroCustomDate.split('-').reverse().join('.')}</strong> um <strong>${retroCustomTime || '08:00'} Uhr</strong></span>
+                    </div>
+                    <span class="px-2.5 py-1 bg-purple-200 text-purple-900 rounded-lg font-extrabold uppercase text-[10px]">Modus: Nachtragen</span>
+                    <input type="hidden" id="form-retro-date" value="${retroCustomDate}">
+                    <input type="hidden" id="form-retro-time" value="${retroCustomTime || '08:00'}">
+                </div>
+            ` : '';
+
             return `
-                <div class="p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-4 mb-8 shadow-sm">
-                    <div class="font-bold text-sm text-ecbDarkGreen"><i class="fa-solid fa-user mr-1"></i> Zuständiger Techniker</div>
-                    <input type="text" id="employee-name" required value="${techName}" class="w-full border rounded-xl p-3 text-sm font-bold bg-white shadow-inner" readonly>
+                ${retroBadgeHtml}
+                <div class="p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-3 mb-6 shadow-sm">
+                    <label for="employee-name" class="block font-bold text-sm text-ecbDarkGreen"><i class="fa-solid fa-user-check mr-1.5"></i> Zuständiger Techniker (Name editierbar):</label>
+                    <input type="text" id="employee-name" required value="${techName}" class="w-full border border-emerald-200 rounded-xl p-3.5 text-sm font-bold bg-white shadow-inner focus:ring-2 focus:ring-ecbGreen focus:outline-none">
                 </div>
             `;
         }
 
-        window.openWashingMachineMenu = function(preselectedNum, customTech) {
+        window.openWashingMachineMenu = function(preselectedNum, customTech, isRetroMode = false) {
+            if (!isRetroMode) {
+                retroCustomDate = null;
+                retroCustomTime = null;
+                retroCustomTechnician = null;
+            }
             const defaultNum = preselectedNum || '1';
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Milnor Waschmaschinen Wartung ${retroCustomDate ? `(Nachträglich für ${retroCustomDate} um ${retroCustomTime} Uhr)` : ''}</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Milnor Waschmaschinen Wartung</h2>
                 <form onsubmit="submitProtocol(event, 'Waschmaschine')" class="space-y-6">
                     ${renderCommonHeaderFields(customTech)}
                     <div>
@@ -1135,16 +1507,23 @@
                     ${renderCheckPoint(4, 'Maschine auf Mängelfreiheit überprüfen')}
                     ${renderCheckPoint(5, 'Keine Mängel festgestellt')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white font-bold rounded-xl shadow-lg transition cursor-pointer">Protokoll speichern &amp; PDF</button>
+                    <button type="submit" id="protocol-submit-btn" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white font-bold rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-pdf"></i> Protokoll speichern &amp; PDF-Ansicht öffnen
+                    </button>
                 </form>
             `;
             activePhotos = []; switchTab('form');
         };
 
-        window.openDryerMenu = function(preselectedNum, customTech) {
+        window.openDryerMenu = function(preselectedNum, customTech, isRetroMode = false) {
+            if (!isRetroMode) {
+                retroCustomDate = null;
+                retroCustomTime = null;
+                retroCustomTechnician = null;
+            }
             const defaultNum = preselectedNum || '1';
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Trockner Wartung ${retroCustomDate ? `(Nachträglich für ${retroCustomDate} um ${retroCustomTime} Uhr)` : ''}</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Trockner Wartung</h2>
                 <form onsubmit="submitProtocol(event, 'Trockner')" class="space-y-6">
                     ${renderCommonHeaderFields(customTech)}
                     <div>
@@ -1162,37 +1541,51 @@
                     ${renderCheckPoint(4, 'Abluftrohre reinigen ggf. Flexrohr erneuern')}
                     ${renderCheckPoint(5, 'Sicht- und Funktionsprüfung auf Mängel')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white font-bold rounded-xl shadow-lg transition cursor-pointer">Protokoll speichern &amp; PDF</button>
+                    <button type="submit" id="protocol-submit-btn" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white font-bold rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-pdf"></i> Protokoll speichern &amp; PDF-Ansicht öffnen
+                    </button>
                 </form>
             `;
             activePhotos = []; switchTab('form');
         };
 
-        window.openCompressorRoutine = function(customTech) {
+        window.openCompressorRoutine = function(customTech, isRetroMode = false) {
+            if (!isRetroMode) {
+                retroCustomDate = null;
+                retroCustomTime = null;
+                retroCustomTechnician = null;
+            }
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Wartung (2-Wochen) ${retroCustomDate ? `(Nachträglich für ${retroCustomDate} um ${retroCustomTime} Uhr)` : ''}</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Wartung (2-Wochen)</h2>
                 <form onsubmit="submitProtocol(event, 'Kompressor 2-Wochen')" class="space-y-6">
                     ${renderCommonHeaderFields(customTech)}
                     <input type="hidden" id="machine-select" value="Kompressor (2-Wochen)">
-                    <div class="space-y-1"><label class="block font-bold text-sm text-slate-700">Betriebsstunden:</label><input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Betriebsstunden"></div>
-                    ${renderCheckPoint(1, 'Ölstand am Schauglas prüfen und bei Bedarf öl auffüllen.')}
+                    <div class="space-y-1"><label class="block font-bold text-sm text-slate-700">Betriebsstunden (optional falls nicht zur Hand):</label><input type="number" id="runtime-hours" class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="z.B. 1450"></div>
+                    ${renderCheckPoint(1, 'Ölstand am Schauglas prüfen und bei Bedarf Öl auffüllen')}
                     ${renderCheckPoint(2, 'Ansaugfilter reinigen ggf. erneuern')}
                     ${renderCheckPoint(3, 'Kältetrockner reinigen')}
                     ${renderCheckPoint(4, 'Kompressor & Umgebung reinigen')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white font-bold rounded-xl shadow-lg transition cursor-pointer">Protokoll speichern &amp; PDF</button>
+                    <button type="submit" id="protocol-submit-btn" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white font-bold rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-pdf"></i> Protokoll speichern &amp; PDF-Ansicht öffnen
+                    </button>
                 </form>
             `;
             activePhotos = []; switchTab('form');
         };
 
-        window.openCompressorAnnual = function(customTech) {
+        window.openCompressorAnnual = function(customTech, isRetroMode = false) {
+            if (!isRetroMode) {
+                retroCustomDate = null;
+                retroCustomTime = null;
+                retroCustomTechnician = null;
+            }
             document.getElementById('dynamic-form-content').innerHTML = `
-                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Jahreswartung ${retroCustomDate ? `(Nachträglich für ${retroCustomDate} um ${retroCustomTime} Uhr)` : ''}</h2>
+                <h2 class="text-2xl font-extrabold mb-6 text-slate-900">Kompressor Jahreswartung</h2>
                 <form onsubmit="submitProtocol(event, 'Kompressor Jahreswartung')" class="space-y-6">
                     ${renderCommonHeaderFields(customTech)}
                     <input type="hidden" id="machine-select" value="Kompressor (Jahreswartung)">
-                    <div class="space-y-1"><label class="block font-bold text-sm text-slate-700">Betriebsstunden:</label><input type="number" id="runtime-hours" required class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Betriebsstunden"></div>
+                    <div class="space-y-1"><label class="block font-bold text-sm text-slate-700">Betriebsstunden (optional falls nicht zur Hand):</label><input type="number" id="runtime-hours" class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="z.B. 4200"></div>
                     ${renderCheckPoint(1, 'Kompletten Ölwechsel durchführen (Altöl ablassen, spülen, neues Kompressoröl einfüllen)')}
                     ${renderCheckPoint(2, 'Ölfilter erneuern und auf Dichtigkeit achten')}
                     ${renderCheckPoint(3, 'Luftfilter / Ansaugfilter komplett erneuern & reinigen')}
@@ -1206,7 +1599,9 @@
                     ${renderCheckPoint(11, 'Gesamtanlage auf Dichtigkeit, ungewöhnliche Geräusche und Vibrationsfreiheit prüfen')}
                     ${renderCheckPoint(12, 'Nachlauf- und Probelauf unter Betriebsdruck durchführen')}
                     ${renderPhotoSection()}${renderRemarksSection()}${renderSignatureSection()}
-                    <button type="submit" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white font-bold rounded-xl shadow-lg transition cursor-pointer">Protokoll speichern &amp; PDF</button>
+                    <button type="submit" id="protocol-submit-btn" class="w-full py-4 bg-ecbDarkGreen hover:bg-ecbGreen text-white font-bold rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-pdf"></i> Protokoll speichern &amp; PDF-Ansicht öffnen
+                    </button>
                 </form>
             `;
             activePhotos = []; switchTab('form');
@@ -1234,7 +1629,7 @@
         function renderPhotoSection() {
             return `
                 <div class="p-5 bg-slate-50 rounded-2xl border space-y-3">
-                    <label class="block font-bold text-sm text-slate-800"><i class="fa-solid fa-camera mr-1.5 text-ecbDarkGreen"></i> Fotos hinzufügen:</label>
+                    <label class="block font-bold text-sm text-slate-800"><i class="fa-solid fa-camera mr-1.5 text-ecbDarkGreen"></i> Fotos hinzufügen (optional):</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <label class="flex items-center justify-center gap-2 p-3.5 bg-ecbDarkGreen hover:bg-ecbGreen text-white rounded-xl font-bold text-xs cursor-pointer shadow transition">
                             <i class="fa-solid fa-camera text-base"></i> Foto mit Kamera machen
@@ -1251,12 +1646,17 @@
         }
 
         function renderRemarksSection() { return `<div class="space-y-1"><label class="block font-bold text-sm text-slate-700">Bemerkungen / Feststellungen:</label><textarea id="remarks-input" class="w-full border rounded-xl p-3 text-sm focus:ring-2 focus:ring-ecbGreen focus:outline-none" placeholder="Zusätzliche Notizen..."></textarea></div>`; }
-        function renderSignatureSection() { return `<div class="space-y-1"><div class="flex justify-between items-center"><label class="font-bold text-sm text-slate-700">Unterschrift des Technikers:</label><button type="button" onclick="clearSignature()" class="text-xs font-bold text-red-600 hover:underline cursor-pointer">Löschen</button></div><canvas id="signature-canvas" class="signature-canvas w-full h-36 border rounded-xl bg-white shadow-inner"></canvas></div>`; }
+        function renderSignatureSection() { return `<div class="space-y-1"><div class="flex justify-between items-center"><label class="font-bold text-sm text-slate-700">Unterschrift des Technikers:</label><button type="button" onclick="clearSignature()" class="text-xs font-bold text-red-600 hover:underline cursor-pointer">Unterschrift löschen</button></div><canvas id="signature-canvas" class="signature-canvas w-full h-36 border-2 border-slate-300 rounded-xl bg-white shadow-inner cursor-crosshair"></canvas></div>`; }
 
         window.handlePhotoCapture = function(e) {
-            Array.from(e.target.files).forEach(f => {
+            const files = Array.from(e.target.files || []);
+            files.forEach(f => {
                 const r = new FileReader();
-                r.onload = (evt) => { activePhotos.push(evt.target.result); updatePhotoPreview(); };
+                r.onload = async (evt) => {
+                    const compressed = await compressImageDataUrl(evt.target.result, 850, 0.7);
+                    activePhotos.push(compressed);
+                    updatePhotoPreview();
+                };
                 r.readAsDataURL(f);
             });
             e.target.value = '';
@@ -1268,7 +1668,7 @@
             grid.innerHTML = activePhotos.map((p, i) => `
                 <div class="relative group">
                     <img src="${p}" class="w-full h-20 object-cover rounded-xl border shadow-sm">
-                    <button type="button" onclick="removePhoto(${i})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">&times;</button>
+                    <button type="button" onclick="removePhoto(${i})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs cursor-pointer">&times;</button>
                 </div>
             `).join('');
         }
@@ -1278,32 +1678,52 @@
         function initSignaturePad() {
             const canvas = document.getElementById('signature-canvas');
             if (!canvas) return;
-            canvas.width = canvas.parentElement.clientWidth || 400; canvas.height = 144;
-            const ctx = canvas.getContext('2d'); ctx.lineWidth = 3; ctx.lineCap = 'round';
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = (rect.width > 0 ? rect.width : canvas.parentElement.clientWidth) || 400;
+            canvas.height = 144;
+            const ctx = canvas.getContext('2d');
+            ctx.lineWidth = 2.8;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#0f172a';
             let drawing = false;
+
             const pos = (e) => { 
                 const r = canvas.getBoundingClientRect(); 
-                const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-                const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+                const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+                const clientY = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
                 return { x: clientX - r.left, y: clientY - r.top }; 
             };
-            canvas.onmousedown = (e) => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+
+            canvas.onmousedown = (e) => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 0.1, p.y + 0.1); ctx.stroke(); signaturePadInstance.hasSigned = true; };
             canvas.onmousemove = (e) => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); signaturePadInstance.hasSigned = true; };
-            canvas.onmouseup = () => drawing = false;
-            canvas.ontouchstart = (e) => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); };
+            window.addEventListener('mouseup', () => { drawing = false; });
+
+            canvas.ontouchstart = (e) => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 0.1, p.y + 0.1); ctx.stroke(); signaturePadInstance.hasSigned = true; e.preventDefault(); };
             canvas.ontouchmove = (e) => { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); signaturePadInstance.hasSigned = true; e.preventDefault(); };
-            canvas.ontouchend = () => drawing = false;
+            canvas.ontouchend = () => { drawing = false; };
+
             signaturePadInstance = { canvas, ctx, hasSigned: false };
         }
+
         window.clearSignature = function() {
-            if (signaturePadInstance) { signaturePadInstance.ctx.clearRect(0, 0, signaturePadInstance.canvas.width, signaturePadInstance.canvas.height); signaturePadInstance.hasSigned = false; }
+            if (signaturePadInstance) {
+                signaturePadInstance.ctx.clearRect(0, 0, signaturePadInstance.canvas.width, signaturePadInstance.canvas.height);
+                signaturePadInstance.hasSigned = false;
+            }
         };
 
         function populateYearFilter() {
             const sel = document.getElementById('filter-year');
+            if (!sel) return;
+            const currentVal = sel.value || 'all';
             const years = new Set();
-            protocols.forEach(p => { const m = p.date?.match(/\b(20\d{2})\b/); if (m) years.add(m[1]); });
+            protocols.forEach(p => {
+                const m = p.date?.match(/\b(20\d{2})\b/);
+                if (m) years.add(m[1]);
+                else if (p.timestamp) years.add(String(new Date(Number(p.timestamp)).getFullYear()));
+            });
             sel.innerHTML = '<option value="all">Alle Jahre</option>' + Array.from(years).sort().reverse().map(y => `<option value="${y}">${y}</option>`).join('');
+            if (Array.from(years).includes(currentVal)) sel.value = currentVal;
         }
 
         window.renderHistory = function() {
@@ -1315,37 +1735,46 @@
             const fC = document.getElementById('filter-category')?.value || 'all';
 
             const filtered = protocols.filter(p => {
-                if (fC !== 'all' && !p.category.includes(fC)) return false;
-                if (fY !== 'all' && !p.date?.includes(fY)) return false;
-                if (fM !== 'all' && p.date?.split('.')[1]?.padStart(2, '0') !== fM) return false;
+                if (!p) return false;
+                if (fC !== 'all' && !(p.category || '').includes(fC)) return false;
+                if (fY !== 'all' && !(p.date || '').includes(fY)) return false;
+                if (fM !== 'all') {
+                    const parts = (p.date || '').split('.');
+                    if (parts.length < 2 || parts[1].padStart(2, '0') !== fM) return false;
+                }
                 return true;
             });
 
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500 border">Keine Protokolle gefunden.</div>';
+                container.innerHTML = '<div class="bg-white rounded-3xl p-12 text-center text-slate-500 border">Keine Protokolle für diesen Filter gefunden.</div>';
                 return;
             }
 
             container.innerHTML = filtered.map((p) => {
-                const pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status.toUpperCase()}</strong></div>`).join('');
+                const pts = (p.points || []).map(pt => `<div class="text-xs flex justify-between py-1 border-b border-slate-200/60"><span>${pt.title}</span><strong class="${pt.status==='erledigt'?'text-ecbGreen':'text-red-500'}">${pt.status === 'erledigt' ? 'OK' : 'MANGEL'}</strong></div>`).join('');
                 const photosHtml = (p.photos && p.photos.length > 0) ? `<div class="flex gap-2 overflow-x-auto py-2">${p.photos.map(pho => `<img src="${pho}" class="w-16 h-16 object-cover rounded-lg border">`).join('')}</div>` : '';
+                const isRetro = (p.date || '').includes('Nachgetragen') || (p.date || '').includes('Nachträglich');
 
                 return `
-                    <div class="bg-white rounded-3xl p-6 border shadow-sm space-y-4">
-                        <div class="flex justify-between items-start">
+                    <div class="bg-white rounded-3xl p-6 border shadow-sm space-y-4 hover:border-ecbGreen/50 transition">
+                        <div class="flex flex-wrap justify-between items-start gap-3">
                             <div>
-                                <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold">${p.category}</span>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="px-3 py-1 bg-ecbLightGreen text-ecbDarkGreen rounded-full text-xs font-bold">${p.category}</span>
+                                    ${isRetro ? `<span class="px-2.5 py-0.5 bg-purple-100 text-purple-800 rounded-full text-[11px] font-bold"><i class="fa-solid fa-clock-rotate-left mr-1"></i>Nachgetragen</span>` : ''}
+                                </div>
                                 <h3 class="text-xl font-bold mt-2 text-slate-900">${p.machine}</h3>
-                                <p class="text-xs text-slate-500 mt-1">Nr.: ${p.id} | ${p.date} | ${p.employee} ${p.runtime ? `| ${p.runtime} Std.` : ''}</p>
+                                <p class="text-xs text-slate-500 mt-1">Nr.: <strong>${p.id}</strong> | ${p.date} | Techniker: <strong>${p.employee}</strong> ${p.runtime ? `| ${p.runtime} Std.` : ''}</p>
                             </div>
                             <div class="flex gap-2">
-                                <button type="button" onclick='openPdfPreviewModalById("${p.id}")' class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold cursor-pointer hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf mr-1"></i> PDF</button>
-                                <button type="button" onclick="deleteProtocol('${p.id}')" class="text-red-500 p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+                                <button type="button" onclick='openPdfPreviewModalById("${p.id}")' class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold cursor-pointer shadow-sm transition flex items-center gap-1.5"><i class="fa-solid fa-file-pdf"></i> PDF-Ansicht</button>
+                                <button type="button" onclick='downloadProtocolById("${p.id}")' class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition" title="Direkt herunterladen"><i class="fa-solid fa-download"></i></button>
+                                <button type="button" onclick="deleteProtocol('${p.id}')" class="text-red-500 hover:bg-red-50 p-2 rounded-xl cursor-pointer transition"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
-                        <div class="bg-slate-50 p-4 rounded-xl space-y-2">${pts}</div>
+                        <div class="bg-slate-50 p-4 rounded-xl space-y-1.5">${pts}</div>
                         ${photosHtml}
-                        ${p.remarks ? `<p class="text-xs text-slate-600 bg-amber-50/50 p-3 rounded-xl border"><strong>Bemerkung:</strong> ${p.remarks}</p>` : ''}
+                        ${p.remarks ? `<p class="text-xs text-slate-600 bg-amber-50/60 p-3 rounded-xl border border-amber-200/60"><strong>Bemerkung:</strong> ${p.remarks}</p>` : ''}
                     </div>
                 `;
             }).join('');
@@ -1354,6 +1783,11 @@
         window.openPdfPreviewModalById = function(protocolId) {
             const p = protocols.find(item => item.id === protocolId);
             if (p) openPdfPreviewModal(p);
+        };
+
+        window.downloadProtocolById = function(protocolId) {
+            const p = protocols.find(item => item.id === protocolId);
+            if (p) generatePDF(p);
         };
 
         window.renderDguvDevices = function() {
@@ -1396,7 +1830,12 @@
             if (dash) dash.innerHTML = html;
         };
 
-        function generatePDFDataUri(p) {
+        // Erzeugt das jsPDF-Dokument-Objekt (fehlertolerant)
+        function createJsPdfInstance(p) {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                console.error("jsPDF Bibliothek nicht geladen.");
+                return null;
+            }
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -1437,7 +1876,7 @@
             doc.setFontSize(9);
             doc.text(`Protokoll-Nr: ${p.id}`, pageWidth - 15, 17, { align: 'right' });
 
-            y = 40;
+            y = 42;
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(12);
             doc.setTextColor(15, 23, 42);
@@ -1448,7 +1887,7 @@
             doc.setFontSize(10);
             doc.setTextColor(71, 85, 105);
             doc.text(`Kategorie: ${p.category}`, 15, y);
-            doc.text(`Datum & Uhrzeit: ${p.date}`, pageWidth - 15, y, { align: 'right' });
+            doc.text(`Datum: ${p.date}`, pageWidth - 15, y, { align: 'right' });
 
             y += 6;
             doc.text(`Zuständiger Techniker: ${p.employee}`, 15, y);
@@ -1466,14 +1905,15 @@
             doc.setDrawColor(226, 232, 240);
             doc.line(15, y, pageWidth - 15, y);
 
-            y += 6;
+            y += 7;
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
+            doc.setFontSize(9.5);
 
             (p.points || []).forEach((pt, idx) => {
-                if (y > pageHeight - 65) { doc.addPage(); y = 20; }
+                if (y > pageHeight - 60) { doc.addPage(); y = 20; }
                 doc.setTextColor(15, 23, 42);
-                doc.text(`${idx + 1}. ${pt.title}`, 18, y);
+                const splitTitle = doc.splitTextToSize(`${idx + 1}. ${pt.title}`, pageWidth - 60);
+                doc.text(splitTitle, 18, y);
                 
                 doc.setFont('helvetica', 'bold');
                 if (pt.status === 'erledigt') {
@@ -1484,7 +1924,7 @@
                     doc.text('[ MANGEL ]', pageWidth - 18, y, { align: 'right' });
                 }
                 doc.setFont('helvetica', 'normal');
-                y += 8;
+                y += (splitTitle.length * 5.5) + 3;
             });
 
             if (p.remarks) {
@@ -1498,7 +1938,7 @@
                 doc.setTextColor(71, 85, 105);
                 const splitRemarks = doc.splitTextToSize(p.remarks, pageWidth - 30);
                 doc.text(splitRemarks, 15, y);
-                y += (splitRemarks.length * 6) + 4;
+                y += (splitRemarks.length * 5.5) + 4;
             }
 
             if (p.photos && p.photos.length > 0) {
@@ -1512,7 +1952,11 @@
                 p.photos.forEach((pho) => {
                     if (xPos + 35 > pageWidth - 15) { xPos = 15; y += 38; }
                     if (y > pageHeight - 45) { doc.addPage(); y = 20; xPos = 15; }
-                    try { doc.addImage(pho, 'JPEG', xPos, y, 32, 32); xPos += 38; } catch(e) {}
+                    try {
+                        const fmt = pho.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+                        doc.addImage(pho, fmt, xPos, y, 32, 32);
+                        xPos += 38;
+                    } catch(e) {}
                 });
                 y += 38;
             }
@@ -1529,16 +1973,15 @@
                 try { doc.addImage(p.signature, 'PNG', 15, y, 55, 22); } catch(e) {}
             }
 
-            return doc.output('datauristring');
+            return doc;
         }
 
         window.generatePDF = function(p) {
-            const uri = generatePDFDataUri(p);
-            const link = document.createElement('a');
-            link.href = uri;
-            link.download = `ECB_Wartungsprotokoll_${p.id}.pdf`;
-            link.click();
-        }
+            const pdfDoc = createJsPdfInstance(p);
+            if (pdfDoc) {
+                pdfDoc.save(`ECB_Wartungsprotokoll_${p.id}.pdf`);
+            }
+        };
     </script>
 </body>
 </html>
