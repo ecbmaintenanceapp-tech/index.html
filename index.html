@@ -923,12 +923,12 @@ function rebuildProtocolHistory(){
  };
  const richness=p=>(p.points?.length||0)+(p.photos?.length||0)*3+(p.signature?4:0)+(dateValue(p)>0?2:0)-(p.__missingPhotos||0)*6;
  for(const d of legacyProtocolDocs){
-  if(['ECB_PHOTO_V1','ECB_SERIAL_COUNTER_V1','ECB_SERIAL_USED_V1'].includes(d.data?.__kind))continue;
+  if(['ECB_PHOTO_V1','ECB_SERIAL_COUNTER_V1','ECB_SERIAL_USED_V1','ECB_SAVE_REQUEST_V1','ECB_SERIAL_RESERVED_V1'].includes(d.data?.__kind))continue;
   const p=hydrate(normalizeProtocol(d.id,d.data,'protocols/'+d.id));
   merged.set(p.id,p);
  }
  for(const d of currentProtocolDocs){
-  if(['ECB_PHOTO_V1','ECB_SERIAL_COUNTER_V1','ECB_SERIAL_USED_V1'].includes(d.data?.__kind))continue;
+  if(['ECB_PHOTO_V1','ECB_SERIAL_COUNTER_V1','ECB_SERIAL_USED_V1','ECB_SAVE_REQUEST_V1','ECB_SERIAL_RESERVED_V1'].includes(d.data?.__kind))continue;
   const p=hydrate(normalizeProtocol(d.id,d.data,'artifacts/ecb-maintenance-live/public/data/protocols/'+d.id));
   const other=merged.get(p.id);
   if(!other||richness(p)>=richness(other))merged.set(p.id,p);
