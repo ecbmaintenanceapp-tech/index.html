@@ -192,7 +192,7 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
  <form id="auth-form" autocomplete="on"><div class="field-grid"><div class="field"><label for="firebase-email">E-Mail</label><input type="email" id="firebase-email" autocomplete="username" required placeholder="E-Mail-Adresse"></div><div class="field"><label for="firebase-password">Passwort</label><input type="password" id="firebase-password" autocomplete="current-password" required placeholder="Firebase-Passwort"></div></div>
  <button class="button primary" style="margin-top:16px" id="auth-submit" type="submit">Anmelden</button><button type="button" class="button subtle" style="margin:16px 0 0 8px;white-space:normal" id="ecb-owner-reset">Admin-Passwort zurücksetzen</button><span class="muted" id="auth-feedback" style="display:block;margin-top:12px" role="status">Alte lokal gespeicherte App-Passwörter sind keine Firebase-Anmeldedaten.</span></form></section>
  <div id="auth-identity" style="display:none;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:13px;flex-wrap:wrap"><button type="button" class="button primary" id="ecb-admin-shortcut" style="display:none">⚙ Admin-Bereich</button><button type="button" class="button subtle" id="ecb-owner-verify" style="display:none">Admin-E-Mail bestätigen</button><button type="button" class="button subtle" id="ecb-owner-check" style="display:none">Freischaltung prüfen</button><button type="button" class="button subtle" id="ecb-my-account">Mein Konto · Passwort ändern</button><button class="button subtle" id="auth-logout" type="button">Abmelden</button></div>
- <div id="ecb-owner-notice" class="ecb-admin-warning" role="status" style="display:none;margin-bottom:14px">Der Admin-Bereich ist noch nicht freigeschaltet. Bitte die Admin-E-Mail bestätigen und anschließend auf „Freischaltung prüfen“ tippen. Bestehende Protokolle bleiben erhalten.</div><div class="notice" id="cloud-message" role="status"><span>ⓘ</span><span id="cloud-message-text">Anmeldung erforderlich: Die Originaldaten werden nach erfolgreicher Authentifizierung synchronisiert.</span></div>
+ <div id="ecb-legacy-warning" class="ecb-admin-warning" role="status" style="display:none;margin-bottom:14px"></div><div id="ecb-owner-notice" class="ecb-admin-warning" role="status" style="display:none;margin-bottom:14px">Der Admin-Bereich ist noch nicht freigeschaltet. Bitte die Admin-E-Mail bestätigen und anschließend auf „Freischaltung prüfen“ tippen. Bestehende Protokolle bleiben erhalten.</div><div class="notice" id="cloud-message" role="status"><span>ⓘ</span><span id="cloud-message-text">Anmeldung erforderlich: Die Originaldaten werden nach erfolgreicher Authentifizierung synchronisiert.</span></div>
  <section id="view-dashboard" class="view active"><div class="hero"><div><div class="eyebrow">Wartung & Qualitätssicherung</div><h1>Wartungsübersicht</h1><p>Alle Anlagen, anstehenden Prüfungen und Wartungsprotokolle übersichtlich an einem Ort.</p></div><button class="button primary" data-action="new">＋ Neue Wartung</button></div>
  <div class="metric-grid"><div class="metric"><div class="metric-top">Anlagen im System <span class="metric-icon">⚙</span></div><strong>10</strong><small>8 Maschinen · 2 Kompressorprüfungen</small></div><div class="metric"><div class="metric-top">Wartungen fällig <span class="metric-icon" style="background:#fff3de;color:#bd8529">◷</span></div><strong id="metric-due">–</strong><small id="metric-due-note">Fälligkeit aus Wartungsverlauf</small></div><div class="metric"><div class="metric-top">DGUV Prüfgeräte <span class="metric-icon" style="background:#e7f2f7;color:#387e98">♧</span></div><strong id="metric-dguv">–</strong><small>Bestand aus Firebase</small></div><div class="metric"><div class="metric-top">Gespeicherte Protokolle <span class="metric-icon">▣</span></div><strong id="metric-proto">–</strong><small class="good">Aus der originalen Cloud-Historie</small></div></div>
  <div class="section-head"><div><h2>Wartungsbereiche</h2><p>Wähle eine Anlage und beginne direkt die Kontrolle.</p></div><button class="link" data-page="calendar">Alle Termine ansehen ↗</button></div>
@@ -350,8 +350,8 @@ function start(type,retro=false){currentType=type;retroActive=retro;let obj=mach
 document.querySelectorAll('[data-start]').forEach(b=>b.addEventListener('click',()=>start(b.dataset.start)));document.querySelectorAll('[data-action="new"]').forEach(b=>b.addEventListener('click',()=>openModal('Neue Wartung','Bereich auswählen, um die Prüfpunkte zu öffnen.',Object.entries(machines).map(([key,m])=>`<button class="button subtle" style="width:100%;margin-bottom:10px;justify-content:flex-start" data-modal-start="${key}">⚙ ${esc(m.title)} →</button>`).join(''))));
 document.getElementById('retro-next').onclick=()=>{if(!document.getElementById('retro-name').value.trim()){toast('Bitte Techniker angeben.');return;}start(document.getElementById('retro-type').value,true)};document.getElementById('retro-type').onchange=e=>document.getElementById('retro-machine').disabled=!['wash','dry'].includes(e.target.value);
 
-function normalizeProtocol(id,data){
-  const p={...data,id:data.id||id,__docId:id,__path:'artifacts/ecb-maintenance-live/public/data/protocols/'+id};
+function normalizeProtocol(id,data,sourcePath){
+  const p={...data,id:data.id||id,__docId:id,__path:sourcePath||'artifacts/ecb-maintenance-live/public/data/protocols/'+id};
   p.category=String(p.category||p.type||'');
   p.type=p.category || String(p.machine||'');
   p.employee=String(p.employee||p.technician||p.name||'');
@@ -732,7 +732,37 @@ document.querySelectorAll('[data-action="dguv"]').forEach(b=>b.onclick=()=>openM
 document.getElementById('dguv-body').addEventListener('click',e=>{const b=e.target.closest('[data-dguv-index]');if(!b)return;const p=dguv[Number(b.dataset.dguvIndex)];if(!p)return;const raw=p.raw;const docs=[...(Array.isArray(raw.documents)?raw.documents:[]),...(Array.isArray(raw.attachments)?raw.attachments:[])];const linkHtml=docs.map((v,i)=>{const u=typeof v==='string'?v:v.url||v.dataUrl||'';return /^https:\/\//.test(u)?`<p><a href="${esc(u)}" target="_blank" rel="noopener">Dokument ${i+1} öffnen</a></p>`:u.startsWith('data:application/pdf;base64,')?`<p><a href="${esc(u)}" download="DGUV_Dokument_${i+1}.pdf">Dokument ${i+1} herunterladen</a></p>`:''}).join('');openModal(p.name,'Gespeicherter DGUV-Datensatz',`<div class="field-grid"><p><b>Inventar:</b> ${esc(p.inventory)}</p><p><b>Standort:</b> ${esc(p.location)}</p><p><b>Fällig:</b> ${esc(p.due)}</p><p><b>Status:</b> ${esc(p.status)}</p></div>${linkHtml||'<p>Keine PDF-Anlagen direkt im Dokument referenziert.</p>'}`)});
 document.getElementById('cloud-backup').onclick=()=>{if(!cloudProtocolsReady){toast('Cloud ist noch nicht geladen. Export nicht möglich.');return}const data=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),source:'ecb-maintenance',protocols:history,dguv_devices:dguv.map(x=>({id:x.id,...x.raw}))},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(data);a.download='ECB_Firebase_Protokolle_Export_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
 function cloudLoadError(where,e){cloudError=where+': '+(e?.message||String(e));cloudState('Firebase-Verbindung fehlgeschlagen',cloudError,true);toast('Cloud-Fehler: '+where);}
-window.ECB_ACCEPT_SNAPSHOT=(docs,fromCache)=>{history=docs.map(d=>normalizeProtocol(d.id,d.data)).sort((a,b)=>dateValue(b)-dateValue(a));cloudProtocolsReady=!fromCache;cloudState(cloudProtocolsReady?'Firebase verbunden':'Lokaler Firebase-Zwischenspeicher',cloudProtocolsReady?`${history.length} Protokolle geladen`:'Warte auf bestätigte Serverdaten',false);renderHistory();renderCalendar();if(window.ECB_ADMIN_ACCESS)renderAdminPanel();};
+let currentProtocolDocs=[],legacyProtocolDocs=[],currentProtocolCache=true,legacyDataStatus='pending',legacyDataError='';
+function rebuildProtocolHistory(){
+ const merged=new Map();
+ const richness=p=>(p.points?.length||0)+(p.photos?.length||0)*3+(p.signature?4:0)+(dateValue(p)>0?2:0);
+ for(const d of legacyProtocolDocs){
+  const p=normalizeProtocol(d.id,d.data,'protocols/'+d.id);
+  merged.set(p.id,p);
+ }
+ for(const d of currentProtocolDocs){
+  const p=normalizeProtocol(d.id,d.data,'artifacts/ecb-maintenance-live/public/data/protocols/'+d.id);
+  const other=merged.get(p.id);
+  if(!other||richness(p)>=richness(other))merged.set(p.id,p);
+ }
+ history=[...merged.values()].sort((a,b)=>dateValue(b)-dateValue(a));
+ cloudProtocolsReady=!currentProtocolCache;
+ const warning=document.getElementById('ecb-legacy-warning');
+ if(legacyDataStatus==='denied'){
+  warning.style.display='block';
+  warning.textContent='Hinweis: Der alte Firebase-Pfad „protocols“ ist nicht lesbar ('+legacyDataError+'). Die neue Cloud funktioniert; ältere Protokolle können fehlen. Die Originaldaten wurden nicht verändert.';
+ }else if(legacyDataStatus==='pending'&&cloudProtocolsReady){
+  warning.style.display='block';
+  warning.textContent='Historische Wartungsprotokolle aus dem alten Cloud-Pfad werden noch überprüft.';
+ }else warning.style.display='none';
+ cloudState(cloudProtocolsReady?'Firebase verbunden':'Lokaler Firebase-Zwischenspeicher',
+  cloudProtocolsReady?history.length+' Protokolle geladen'+(legacyDataStatus==='ready'?' (inklusive alter Firebase-Datenquelle)':''):'Warte auf bestätigte Serverdaten',false);
+ renderHistory();renderCalendar();if(window.ECB_ADMIN_ACCESS)renderAdminPanel();
+}
+window.ECB_ACCEPT_SNAPSHOT=(docs,fromCache)=>{currentProtocolDocs=docs;currentProtocolCache=fromCache;rebuildProtocolHistory();};
+window.ECB_ACCEPT_LEGACY=(docs,fromCache)=>{legacyProtocolDocs=docs;legacyDataStatus=fromCache?'pending':'ready';legacyDataError='';rebuildProtocolHistory();};
+window.ECB_LEGACY_ERROR=err=>{legacyDataStatus='denied';legacyDataError=String(err?.code||err?.message||'Zugriff nicht möglich').slice(0,110);rebuildProtocolHistory();};
+window.ECB_RESET_LEGACY=()=>{legacyProtocolDocs=[];currentProtocolDocs=[];currentProtocolCache=true;legacyDataStatus='pending';legacyDataError='';};
 window.ECB_ACCEPT_DGUV=(docs,fromCache)=>{dguv=docs.map(d=>normalizeDguv(d.id,d.data));cloudDguvReady=!fromCache;cloudState(cloudProtocolsReady&&cloudDguvReady?'Firebase live synchronisiert':'Firebase wird geladen',`${history.length} Protokolle · ${dguv.length} DGUV-Geräte`,false);renderDguv();};
 window.ECB_CLOUD_ERROR=cloudLoadError;
 
@@ -992,9 +1022,10 @@ const config={apiKey:'AIzaSyDAYbTwQd8aDeTSHzuxWtEVon6SHIVRB5k',authDomain:'ecb-m
 try {
  const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app);
  const protocols=collection(db,'artifacts','ecb-maintenance-live','public','data','protocols');
+ const historicProtocols=collection(db,'protocols');
  const devices=collection(db,'artifacts','ecb-maintenance-live','public','data','dguv_devices');
- let unsubProtocols=null,unsubDevices=null;
- const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubProtocols=null;unsubDevices=null;window.ECB_SAVE=null;window.ECB_SEND_SAVED_MAIL=null;window.ECB_RESET_SAVED_MAIL?.();};
+ let unsubProtocols=null,unsubDevices=null,unsubLegacy=null;
+ const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubLegacy?.();unsubProtocols=null;unsubDevices=null;unsubLegacy=null;window.ECB_SAVE=null;window.ECB_SEND_SAVED_MAIL=null;window.ECB_RESET_SAVED_MAIL?.();window.ECB_RESET_LEGACY?.();};
  window.ECB_LOGIN=async(email,password)=>signInWithEmailAndPassword(auth,email,password);
  window.ECB_PASSWORD_RESET=async()=>sendPasswordResetEmail(auth,'ecbmaintenanceapp@gmail.com');
  window.ECB_SEND_VERIFY=async()=>{const u=auth.currentUser;if(!u||u.email?.toLowerCase()!=='ecbmaintenanceapp@gmail.com')throw Error('Bitte zuerst mit dem Haupt-Admin anmelden.');return sendEmailVerification(u);};
@@ -1079,6 +1110,7 @@ try {
      return result;
    };
    unsubProtocols=onSnapshot(protocols,{includeMetadataChanges:true},snap=>window.ECB_ACCEPT_SNAPSHOT(snap.docs.map(d=>({id:d.id,data:d.data()})),snap.metadata.fromCache),err=>window.ECB_CLOUD_ERROR('Protokolle',err));
+   unsubLegacy=onSnapshot(historicProtocols,{includeMetadataChanges:true},snap=>window.ECB_ACCEPT_LEGACY(snap.docs.map(d=>({id:d.id,data:d.data()})),snap.metadata.fromCache),err=>window.ECB_LEGACY_ERROR(err));
    unsubDevices=onSnapshot(devices,{includeMetadataChanges:true},snap=>window.ECB_ACCEPT_DGUV(snap.docs.map(d=>({id:d.id,data:d.data()})),snap.metadata.fromCache),err=>window.ECB_CLOUD_ERROR('DGUV',err));
  },err=>window.ECB_CLOUD_ERROR('Anmeldung',err));
 } catch(e){window.ECB_CLOUD_ERROR('Firebase',e);}
