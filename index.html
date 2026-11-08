@@ -1394,10 +1394,9 @@ try {
        throw Error('Die Gesamtdatenmenge überschreitet das Firebase-Limit für eine atomare Speicherung.');
      batch.set(parent,record);
      onProgress('Speichere '+photos.length+' Fotos und Wartungsprotokoll gemeinsam in Firebase …');
+     // commit() wird erst nach erfolgreicher Annahme der gesamten atomaren Schreiboperation erfüllt.
+     // Kein separates Readback: Ein kurzzeitiger Lesefehler danach darf kein Doppelprotokoll erzeugen.
      await batch.commit();
-     const saved=await getDocFromServer(parent);
-     if(!saved.exists()||saved.data()?.photos?.length!==photos.length)
-       throw Error('Firebase hat die vollständige Fotoliste noch nicht bestätigt.');
      onProgress('✓ '+photos.length+' Fotos und Protokoll in Firebase gespeichert');
      return parent.id;
    };
