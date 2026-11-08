@@ -481,10 +481,11 @@ function renderHistory(){
 function photoUrl(p){return typeof p==='string'?p:(p?.dataUrl||p?.data||p?.url||p?.src||'');}
 function showReport(p){
  previewP=p;
+ if(p.__missingPhotos)toast('Achtung: '+p.__missingPhotos+' Dokumentationsfotos sind noch nicht vollständig verfügbar.');
  const photos=(p.photos||[]).map(photoUrl).filter(Boolean);
  const photoContent=photos.map((img,i)=>`<div><img class="report-image" src="${esc(img)}" alt="Dokumentationsfoto ${i+1}"><small>Foto ${i+1}</small></div>`).join('');
  const signature=typeof p.signature==='string'?p.signature:(p.signature?.dataUrl||'');
- document.getElementById('report-content').innerHTML=`<div class="ecb-pdf-preview-header"><img alt="Original-Logo ECB Wartungssystem" src="${ECB_WARTUNG_PDF_LOGO}"><div class="ecb-pdf-preview-heading"><strong>E.C.B. Reinigungssysteme GmbH</strong><span>ECB Wartungssystem · Wartungs- und Prüfprotokoll</span></div></div><div class="field-grid"><p><b>Protokoll-Nr.</b><br>${esc(p.id)}</p><p><b>Datum</b><br>${esc(p.date)}</p><p><b>Anlage</b><br>${esc(p.machine)}</p><p><b>Techniker</b><br>${esc(p.employee)}</p>${p.runtime?`<p><b>Betriebsstunden</b><br>${esc(p.runtime)}</p>`:''}</div><h3>Prüfpunkte</h3>${(p.points||[]).map((x,i)=>`<div class="check"><label>${esc(x.title||x.name||('Prüfpunkt '+(i+1)))}</label><span class="status ${x.status==='Mangel'?'danger':''}">${esc(x.status||'–')}</span></div>`).join('')}<p><b>Bemerkungen:</b> ${esc(p.remarks||'–')}</p><h3>Dokumentationsfotos (${photos.length})</h3>${photos.length?`<div class="report-photos">${photoContent}</div>`:'<p class="muted">Keine Fotos hinterlegt.</p>'}<h3>Unterschrift</h3>${signature?`<img class="report-sign" src="${esc(signature)}" alt="Gespeicherte Unterschrift">`:'<p class="muted">Keine Unterschrift im Datensatz vorhanden.</p>'}`;
+ document.getElementById('report-content').innerHTML=`<div class="ecb-pdf-preview-header"><img alt="Original-Logo ECB Wartungssystem" src="${ECB_WARTUNG_PDF_LOGO}"><div class="ecb-pdf-preview-heading"><strong>E.C.B. Reinigungssysteme GmbH</strong><span>ECB Wartungssystem · Wartungs- und Prüfprotokoll</span></div></div><div class="field-grid"><p><b>Protokoll-Nr.</b><br>${esc(p.id)}</p><p><b>Datum</b><br>${esc(p.date)}</p><p><b>Anlage</b><br>${esc(p.machine)}</p><p><b>Techniker</b><br>${esc(p.employee)}</p>${p.runtime?`<p><b>Betriebsstunden</b><br>${esc(p.runtime)}</p>`:''}</div><h3>Prüfpunkte</h3>${(p.points||[]).map((x,i)=>`<div class="check"><label>${esc(x.title||x.name||('Prüfpunkt '+(i+1)))}</label><span class="status ${x.status==='Mangel'?'danger':''}">${esc(x.status||'–')}</span></div>`).join('')}<p><b>Bemerkungen:</b> ${esc(p.remarks||'–')}</p><h3>Dokumentationsfotos (${(p.photos||[]).length})</h3>${p.__missingPhotos?`<p class="ecb-admin-warning">${p.__missingPhotos} Foto(s) fehlen in der Cloud-Vorschau. PDF-Export vorerst gesperrt, damit keine Dokumentation verloren geht.</p>`:''}${photos.length?`<div class="report-photos">${photoContent}</div>`:'<p class="muted">Keine Fotos hinterlegt.</p>'}<h3>Unterschrift</h3>${signature?`<img class="report-sign" src="${esc(signature)}" alt="Gespeicherte Unterschrift">`:'<p class="muted">Keine Unterschrift im Datensatz vorhanden.</p>'}`;
  goto('preview');
 }
 const ECB_WARTUNG_PDF_LOGO='./icons/icon-512.png?v=20261106-approved';
@@ -495,6 +496,7 @@ async function imageToPdfData(url,format='JPEG'){
 }
 async function downloadPdf(){
  const p=previewP;if(!p)return toast('Bitte zuerst ein Protokoll auswählen.');
+ if(p.__missingPhotos)return alert('PDF wird nicht als vollständig ausgegeben: '+p.__missingPhotos+' Foto(s) fehlen in der Firebase-Antwort. Bitte die Cloud-Verbindung prüfen.');
  let JsPDF;try{JsPDF=await loadMailPdf();}catch(e){toast('PDF-Bibliothek nicht verfügbar: '+(e.message||e));return;}
  const btn=document.getElementById('print-report');btn.disabled=true;btn.textContent='PDF wird erstellt …';
  try{
@@ -695,6 +697,7 @@ async function loadMailPdf(){
  return mailPdfPromise;
 }
 async function pdfForManualMail(p){
+ if(p?.__missingPhotos)throw Error('PDF nicht vollständig: '+p.__missingPhotos+' Dokumentationsfotos fehlen.');
  if(!p?.id||!p.signature||!Array.isArray(p.points)||!Array.isArray(p.photos))throw Error('Originalprotokoll ist unvollständig.');
  const JsPDF=await loadMailPdf(),pdf=new JsPDF({format:'a4',unit:'mm'});
  const margin=16,usable=178;let y=45;
@@ -748,6 +751,7 @@ async function pdfForManualMail(p){
 function openSavedMail(p){
  if(!p||!p.id)return;
  if(mailSending)return toast('Ein Versand wird bereits vorbereitet.');
+ if(p.__missingPhotos)return toast('PDF-Versand gesperrt: '+p.__missingPhotos+' Foto(s) fehlen in Firebase.');
  if(!p.signature||!Array.isArray(p.points)||!Array.isArray(p.photos))return toast('Prüfpunkte, Fotos oder Unterschrift fehlen.');
  const raw=p.__docId||p.id,sourcePath=p.__path||'artifacts/ecb-maintenance-live/public/data/protocols/'+raw;
  const content='<div style="background:#305b39;color:white;padding:15px;border-radius:12px"><small>E.C.B. REINIGUNGSSYSTEME GMBH</small><h3 style="margin:7px 0 4px">Wartungsprotokoll per E-Mail versenden</h3><small>Gespeichertes Originaldokument mit PDF-Anhang</small></div>'
@@ -892,13 +896,28 @@ function cloudLoadError(where,e){cloudError=where+': '+(e?.message||String(e));c
 let currentProtocolDocs=[],legacyProtocolDocs=[],currentProtocolCache=true,legacyDataStatus='pending',legacyDataError='';
 function rebuildProtocolHistory(){
  const merged=new Map();
- const richness=p=>(p.points?.length||0)+(p.photos?.length||0)*3+(p.signature?4:0)+(dateValue(p)>0?2:0);
+ const photoDocuments=new Map(currentProtocolDocs.filter(d=>d.data?.__kind==='ECB_PHOTO_V1').map(d=>[d.id,d.data]));
+ const hydrate=p=>{
+  let missing=0;
+  p.photos=(p.photos||[]).map(entry=>{
+   if(!entry||typeof entry!=='object'||!entry.photoId)return entry;
+   const stored=photoDocuments.get(entry.photoId);
+   // Nur ein Foto mit korrekter Protokoll-Zuordnung verwenden.
+   if(!stored?.imageData||stored.forProtocol!==p.__docId){missing++;return {photoId:entry.photoId,missing:true};}
+   return {dataUrl:stored.imageData,name:stored.filename||entry.name||'Dokumentationsfoto'};
+  });
+  p.__missingPhotos=missing;
+  return p;
+ };
+ const richness=p=>(p.points?.length||0)+(p.photos?.length||0)*3+(p.signature?4:0)+(dateValue(p)>0?2:0)-(p.__missingPhotos||0)*6;
  for(const d of legacyProtocolDocs){
-  const p=normalizeProtocol(d.id,d.data,'protocols/'+d.id);
+  if(d.data?.__kind==='ECB_PHOTO_V1')continue;
+  const p=hydrate(normalizeProtocol(d.id,d.data,'protocols/'+d.id));
   merged.set(p.id,p);
  }
  for(const d of currentProtocolDocs){
-  const p=normalizeProtocol(d.id,d.data,'artifacts/ecb-maintenance-live/public/data/protocols/'+d.id);
+  if(d.data?.__kind==='ECB_PHOTO_V1')continue;
+  const p=hydrate(normalizeProtocol(d.id,d.data,'artifacts/ecb-maintenance-live/public/data/protocols/'+d.id));
   const other=merged.get(p.id);
   if(!other||richness(p)>=richness(other))merged.set(p.id,p);
  }
