@@ -247,7 +247,7 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
  <div class="lower-grid"><section class="panel"><div class="section-head" style="margin:0 0 8px"><div><h3>Bevorstehende Wartungen</h3><p class="desc">Berechnet aus den letzten gespeicherten Wartungen</p></div><button class="link" data-page="calendar">Kalender ↗</button></div><div id="due-list" class="muted">Cloud-Verbindung wird hergestellt …</div></section><section class="panel"><h3>Letzte Aktivitäten</h3><p class="desc">Aus der echten Protokollhistorie</p><div id="activity-list" class="muted">Cloud-Verbindung wird hergestellt …</div></section></div></section>
  <section id="view-calendar" class="view"><div class="hero"><div><div class="eyebrow">Termine und Intervalle</div><h1>Wartungskalender</h1><p>Fälligkeiten aus den tatsächlich gespeicherten Wartungen. Fehlende Daten werden ausdrücklich gekennzeichnet.</p></div><button class="button primary" data-action="new">＋ Wartung erfassen</button></div><div class="calendar-grid" id="calendar-cards"></div></section>
  <section id="view-retro" class="view"><div class="hero"><div><div class="eyebrow">Nachträgliche Dokumentation</div><h1>Wartung nachtragen</h1><p>Historische Arbeiten mit originalem Datum, Uhrzeit und zuständigem Techniker erfassen.</p></div></div><div class="panel form-panel"><div class="field-grid"><div class="field"><label for="retro-type">Anlage / Wartungsart</label><select id="retro-type"><option value="wash">Milnor Waschmaschine</option><option value="dry">Trockner</option><option value="comp">Kompressor 2-Wochen</option><option value="annual">Kompressor umfangreiche Wartung</option></select></div><div class="field"><label for="retro-machine">Maschine</label><select id="retro-machine"><option>1</option><option>2</option><option>3</option><option>4</option></select></div><div class="field"><label for="retro-date">Durchführungsdatum</label><input type="date" id="retro-date" value="2026-11-04"></div><div class="field"><label for="retro-time">Uhrzeit</label><input type="time" id="retro-time" value="08:00"></div><div class="field" style="grid-column:1/-1"><label for="retro-name">Techniker</label><input id="retro-name" placeholder="Name eingeben"></div></div><div style="margin-top:20px"><button class="button primary" id="retro-next">Prüfpunkte öffnen →</button></div></div></section>
- <section id="view-dguv" class="view"><div class="hero"><div><div class="eyebrow">Prüfmanagement</div><h1>DGUV V3 Prüfungen</h1><p>Gerätebestand, Prüffälligkeiten und zugehörige Messprotokolle – übersichtlich dokumentiert.</p></div><button class="button subtle" data-action="dguv">Gerätebestand ansehen</button></div><div class="metric-grid" style="margin-bottom:20px"><div class="metric"><div class="metric-top">Erfasste Geräte</div><strong id="dguv-total">–</strong></div><div class="metric"><div class="metric-top">Geprüft</div><strong id="dguv-completed">–</strong></div><div class="metric"><div class="metric-top">Bald fällig</div><strong id="dguv-due">–</strong></div><div class="metric"><div class="metric-top">Dokumente</div><strong id="dguv-attachments">–</strong></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Gerät</th><th>Inventarnr.</th><th>Standort</th><th>Fällig</th><th>Status</th><th>Aktion</th></tr></thead><tbody id="dguv-body"></tbody></table></div></section>
+ <section id="view-dguv" class="view"><div class="hero"><div><div class="eyebrow">Prüfmanagement</div><h1>DGUV V3 Prüfungen</h1><p>Gerätebestand, Prüffälligkeiten und zugehörige Messprotokolle – übersichtlich dokumentiert.</p></div><button class="button primary" data-action="dguv">＋ DGUV-Gerät erfassen</button></div><div class="metric-grid" style="margin-bottom:20px"><div class="metric"><div class="metric-top">Erfasste Geräte</div><strong id="dguv-total">–</strong></div><div class="metric"><div class="metric-top">Geprüft</div><strong id="dguv-completed">–</strong></div><div class="metric"><div class="metric-top">Bald fällig</div><strong id="dguv-due">–</strong></div><div class="metric"><div class="metric-top">Dokumente</div><strong id="dguv-attachments">–</strong></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Gerät</th><th>Inventarnr.</th><th>Standort</th><th>Fällig</th><th>Status</th><th>Aktion</th></tr></thead><tbody id="dguv-body"></tbody></table></div></section>
  <section id="view-history" class="view"><div class="hero"><div><div class="eyebrow">Archiv und Dokumentation</div><h1>Gespeicherte Protokolle</h1><p>Alle Wartungsnachweise inklusive Checklisten, Fotos und Unterschriften im Blick.</p></div><button class="button subtle" id="cloud-backup" title="Freigabe nach Prüfung der Firebase-Zugriffsregeln" disabled>Cloud-Sicherung nach Sicherheitsprüfung</button></div><div id="ecb-saved-alert" class="ecb-saved-alert" style="display:none"><div><strong>✓ In der Cloud gespeichert</strong><p id="ecb-saved-label">Das Wartungsprotokoll ist sicher gespeichert. Der E-Mail-Versand ist optional.</p></div><div class="actions"><button type="button" class="button primary" id="ecb-mail-last">✉ Per E-Mail versenden</button><button type="button" class="button subtle" id="ecb-mail-later">Später</button></div></div><div class="toolbar"><input class="search" id="history-search" placeholder="⌕  Protokoll, Anlage oder Techniker suchen ..."><select class="select" id="history-filter"><option value="all">Alle Kategorien</option><option value="Waschmaschine">Waschmaschinen</option><option value="Trockner">Trockner</option><option value="Kompressor">Kompressoren</option></select><button class="button subtle" id="reset-filter">Zurücksetzen</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Protokoll</th><th>Maschine</th><th>Datum</th><th>Techniker</th><th>Ergebnis</th><th>Aktion</th></tr></thead><tbody id="history-body"></tbody></table></div><p class="muted" style="margin-top:15px">Die bisherigen echten Protokolle werden hier im Entwurf bewusst nicht angezeigt oder bearbeitet.</p></section>
  
 <section id="view-admin" class="view">
@@ -451,14 +451,14 @@ function renderCalendar(){
  const rows=[...machines.wash.names.map(n=>dueFor(n,'wash')),...machines.dry.names.map(n=>dueFor(n,'dry')),dueFor(machines.comp.names[0],'comp'),dueFor(machines.annual.names[0],'annual')];
  document.getElementById('calendar-cards').innerHTML=!cloudProtocolsReady?'<p class="muted">Firebase wird geladen …</p>':rows.map(x=>`<div class="calitem"><div style="display:flex;justify-content:space-between;gap:10px"><b>${esc(x.name)}</b><span class="status ${x.state==='Überfällig'?'danger':x.state==='Bald fällig'?'warn':''}">${esc(x.state)}</span></div><div class="big">${x.date?x.date.toLocaleDateString('de-DE'):'–'}</div><small>${x.last?(x.date?'Letzte Wartung: ':'Wartung vorhanden – Datum prüfen: ')+esc(x.last.date):'Keine letzte Wartung dokumentiert'}</small></div>`).join('');
 }
-function normalizeDguv(id,x){return {id,raw:x,name:x.name||x.deviceName||x.bezeichnung||x.device||'Unbenanntes Gerät',inventory:x.inventoryNumber||x.serialNumber||x.inventarNr||x.inventarnummer||'–',location:x.location||x.standort||'–',due:humanDate(x.nextDue||x.nextInspection||x.dueDate||x.nextDate||x.naechstePruefung),status:x.status||'Gespeichert'};}
+function normalizeDguv(id,x){return {id,raw:x,name:x.name||x.deviceName||x.bezeichnung||x.device||'Unbenanntes Gerät',inventory:x.inventoryNumber||x.serialNumber||x.inventarNr||x.inventarnummer||'–',location:x.location||x.standort||'–',due:humanDate(x.nextDue||x.nextInspection||x.dueDate||x.nextDate||x.naechstePruefung),status:x.status||(x.protocolData?'Erledigt':'Offen')};}
 function renderDguv(){
- document.getElementById('dguv-body').innerHTML=!cloudDguvReady?'<tr><td colspan="6">Firebase wird geladen …</td></tr>':dguv.map((r,i)=>`<tr><td><b>${esc(r.name)}</b></td><td>${esc(r.inventory)}</td><td>${esc(r.location)}</td><td>${esc(r.due)}</td><td><span class="status">${esc(r.status)}</span></td><td><button class="icon-btn" data-dguv-index="${i}">Details</button></td></tr>`).join('')||'<tr><td colspan="6">Keine DGUV-Geräte in Firebase gefunden.</td></tr>';
+ document.getElementById('dguv-body').innerHTML=!cloudDguvReady?'<tr><td colspan="6">Firebase wird geladen …</td></tr>':dguv.map((r,i)=>`<tr><td><b>${esc(r.name)}</b></td><td>${esc(r.inventory)}</td><td>${esc(r.location)}</td><td>${esc(r.due)}</td><td><span class="status">${esc(r.status)}</span></td><td><div class="actions" style="flex-wrap:wrap"><button class="icon-btn" data-dguv-index="${i}">Details</button><button type="button" class="icon-btn" data-dguv-upload="${i}">Messprotokoll hochladen</button>${window.ECB_ADMIN_ACCESS?`<button type="button" class="icon-btn" data-dguv-edit="${i}">Bearbeiten</button><button type="button" class="icon-btn" data-dguv-delete="${i}">Löschen</button>`:''}</div></td></tr>`).join('')||'<tr><td colspan="6">Keine DGUV-Geräte in Firebase gefunden.</td></tr>';
  document.getElementById('metric-dguv').textContent=cloudDguvReady?dguv.length:'–';
  document.getElementById('dguv-total').textContent=cloudDguvReady?dguv.length:'–';
- document.getElementById('dguv-completed').textContent=cloudDguvReady?dguv.filter(x=>/geprüft|bestanden|aktuell|ok|i\.o\./i.test(x.status)).length:'–';
- document.getElementById('dguv-due').textContent=cloudDguvReady?dguv.filter(x=>/fällig|überfällig/i.test(x.status)).length:'–';
- document.getElementById('dguv-attachments').textContent=cloudDguvReady?dguv.reduce((n,x)=>n+(Array.isArray(x.raw.documents)?x.raw.documents.length:0)+(Array.isArray(x.raw.attachments)?x.raw.attachments.length:0),0):'–';
+ document.getElementById('dguv-completed').textContent=cloudDguvReady?dguv.filter(x=>/geprüft|bestanden|erledigt|aktuell|ok|i\.o\./i.test(x.status)).length:'–';
+ document.getElementById('dguv-due').textContent=cloudDguvReady?dguv.filter(x=>/fällig|überfällig/i.test(x.status)||(dateValue({date:x.due})>0&&dateValue({date:x.due})<Date.now())).length:'–';
+ document.getElementById('dguv-attachments').textContent=cloudDguvReady?dguv.reduce((n,x)=>n+(Array.isArray(x.raw.documents)?x.raw.documents.length:0)+(Array.isArray(x.raw.attachments)?x.raw.attachments.length:0)+(x.raw.protocolData?1:0),0):'–';
  document.getElementById('side-dguv-count').textContent=cloudDguvReady?dguv.length:'–';
  renderDashboard();
 }
@@ -920,6 +920,7 @@ function setAdminAccess(granted){
  document.getElementById('ecb-admin-shortcut').style.display=window.ECB_ADMIN_ACCESS?'':'none';
  if(!window.ECB_ADMIN_ACCESS&&document.getElementById('view-admin').classList.contains('active'))goto('dashboard');
  if(window.ECB_ADMIN_ACCESS)renderAdminPanel();
+ if(cloudDguvReady)renderDguv();
 }
 function renderAdminPanel(){
  if(!window.ECB_ADMIN_ACCESS)return;
@@ -1016,7 +1017,7 @@ renderHistory();renderDguv();renderCalendar();
 
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-import {getFirestore,collection,onSnapshot,doc,setDoc,getDocFromServer} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import {getFirestore,collection,onSnapshot,doc,setDoc,getDocFromServer,deleteDoc} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,EmailAuthProvider,reauthenticateWithCredential,updatePassword,sendPasswordResetEmail,sendEmailVerification} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 const config={apiKey:'AIzaSyDAYbTwQd8aDeTSHzuxWtEVon6SHIVRB5k',authDomain:'ecb-maintenance.firebaseapp.com',projectId:'ecb-maintenance',storageBucket:'ecb-maintenance.firebasestorage.app',messagingSenderId:'229926423123',appId:'1:229926423123:web:a309c14c708fc88c62d4a6'};
 try {
@@ -1025,7 +1026,7 @@ try {
  const historicProtocols=collection(db,'protocols');
  const devices=collection(db,'artifacts','ecb-maintenance-live','public','data','dguv_devices');
  let unsubProtocols=null,unsubDevices=null,unsubLegacy=null;
- const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubLegacy?.();unsubProtocols=null;unsubDevices=null;unsubLegacy=null;window.ECB_SAVE=null;window.ECB_SEND_SAVED_MAIL=null;window.ECB_RESET_SAVED_MAIL?.();window.ECB_RESET_LEGACY?.();};
+ const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubLegacy?.();unsubProtocols=null;unsubDevices=null;unsubLegacy=null;window.ECB_SAVE=null;window.ECB_SAVE_DGUV=null;window.ECB_DELETE_DGUV=null;window.ECB_SEND_SAVED_MAIL=null;window.ECB_RESET_SAVED_MAIL?.();window.ECB_RESET_LEGACY?.();};
  window.ECB_LOGIN=async(email,password)=>signInWithEmailAndPassword(auth,email,password);
  window.ECB_PASSWORD_RESET=async()=>sendPasswordResetEmail(auth,'ecbmaintenanceapp@gmail.com');
  window.ECB_SEND_VERIFY=async()=>{const u=auth.currentUser;if(!u||u.email?.toLowerCase()!=='ecbmaintenanceapp@gmail.com')throw Error('Bitte zuerst mit dem Haupt-Admin anmelden.');return sendEmailVerification(u);};
@@ -1089,6 +1090,28 @@ try {
      const body=await response.json().catch(()=>({}));
      if(!response.ok||!body.ok)throw Error(body.error||'Admin-Dienst antwortet nicht (HTTP '+response.status+').');
      return body;
+   };
+   window.ECB_SAVE_DGUV=async record=>{
+     if(!auth.currentUser||!navigator.onLine)throw Error('Für die Speicherung ist eine aktive Firebase-Anmeldung erforderlich.');
+     if(!record?.id||!/^[a-zA-Z0-9_-]{5,140}$/.test(record.id))throw Error('Ungültige Geräte-ID.');
+     if(JSON.stringify(record).length>890000)throw Error('Der Datensatz ist zu groß für Firebase Firestore. Bitte eine kleinere Datei wählen.');
+     const ref=doc(devices,record.id);
+     await setDoc(ref,record);
+     const saved=await getDocFromServer(ref);
+     if(!saved.exists())throw Error('Firebase hat die Gerätespeicherung nicht bestätigt.');
+     return saved.data();
+   };
+   window.ECB_DELETE_DGUV=async id=>{
+     const u=auth.currentUser;
+     if(!u||!window.ECB_ADMIN_ACCESS)throw Error('Nur für Administratoren.');
+     const verifiedOwner=u.email?.toLowerCase()==='ecbmaintenanceapp@gmail.com'&&u.emailVerified===true;
+     const claims=(await u.getIdTokenResult(true)).claims;
+     if(!verifiedOwner&&claims.ecbAdmin!==true)throw Error('Admin-Berechtigung nicht bestätigt.');
+     if(!/^[a-zA-Z0-9_-]{5,140}$/.test(id))throw Error('Ungültige Geräte-ID.');
+     const ref=doc(devices,id);
+     await deleteDoc(ref);
+     if((await getDocFromServer(ref)).exists())throw Error('Firebase hat die Löschung nicht bestätigt.');
+     return true;
    };
    window.ECB_SAVE=async protocol=>{
      if(!navigator.onLine)throw Error('Offline: Speichern nicht möglich');
