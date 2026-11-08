@@ -367,7 +367,7 @@ function humanDate(v){
   if(!v)return '–';
   if(typeof v==='object'&&typeof v.toDate==='function')return v.toDate().toLocaleDateString('de-DE');
   if(typeof v==='object'&&typeof v.seconds==='number')return new Date(v.seconds*1000).toLocaleDateString('de-DE');
-  if(typeof v==='string'&&/^\d{2}\.\d{2}\.\d{4}$/.test(v))return v;
+  if(typeof v==='string'&&/^\d{1,2}\.\d{1,2}\.\d{4}(?:\D|$)/.test(v.trim()))return v.trim();
   let d=new Date(v);return isNaN(d.getTime())?String(v):d.toLocaleDateString('de-DE');
 }
 function dateValue(p){
