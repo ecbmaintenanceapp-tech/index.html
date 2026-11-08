@@ -190,7 +190,7 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
  <div class="eyebrow">Geschützter Zugriff</div><h2 style="margin:7px 0 5px">Mit Firebase anmelden</h2>
  <p style="color:#6a7d71;margin-bottom:18px">Aus Datenschutzgründen werden Protokolle, Dokumentationsfotos und Unterschriften erst nach einer bestätigten Firebase-Anmeldung geladen.</p>
  <form id="auth-form" autocomplete="on"><div class="field-grid"><div class="field"><label for="firebase-email">E-Mail</label><input type="email" id="firebase-email" autocomplete="username" required placeholder="E-Mail-Adresse"></div><div class="field"><label for="firebase-password">Passwort</label><input type="password" id="firebase-password" autocomplete="current-password" required placeholder="Firebase-Passwort"></div></div>
- <button class="button primary" style="margin-top:16px" id="auth-submit" type="submit">Anmelden</button><button type="button" class="button subtle" style="margin:16px 0 0 8px;white-space:normal" id="ecb-owner-reset">Admin-Passwort zurücksetzen</button><span class="muted" id="auth-feedback" style="display:block;margin-top:12px" role="status">Alte lokal gespeicherte App-Passwörter sind keine Firebase-Anmeldedaten.</span></form></section>
+ <button class="button primary" style="margin-top:16px" id="auth-submit" type="submit">Anmelden</button><button type="button" class="button subtle" style="margin:16px 0 0 8px;white-space:normal" id="ecb-owner-reset">Passwort zurücksetzen / Konto aktivieren</button><span class="muted" id="auth-feedback" style="display:block;margin-top:12px" role="status">Anmeldung mit der E-Mail des Mitarbeiters. Frühere lokale Benutzernamen und Passwörter wurden nicht automatisch nach Firebase übernommen.</span></form></section>
  <div id="auth-identity" style="display:none;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:13px;flex-wrap:wrap"><button type="button" class="button primary" id="ecb-admin-shortcut" style="display:none">⚙ Admin-Bereich</button><button type="button" class="button subtle" id="ecb-owner-verify" style="display:none">Admin-E-Mail bestätigen</button><button type="button" class="button subtle" id="ecb-owner-check" style="display:none">Freischaltung prüfen</button><button type="button" class="button subtle" id="ecb-my-account">Mein Konto · Passwort ändern</button><button class="button subtle" id="auth-logout" type="button">Abmelden</button></div>
  <div id="ecb-legacy-warning" class="ecb-admin-warning" role="status" style="display:none;margin-bottom:14px"></div><div id="ecb-owner-notice" class="ecb-admin-warning" role="status" style="display:none;margin-bottom:14px">Der Admin-Bereich ist noch nicht freigeschaltet. Bitte die Admin-E-Mail bestätigen und anschließend auf „Freischaltung prüfen“ tippen. Bestehende Protokolle bleiben erhalten.</div><div class="notice" id="cloud-message" role="status"><span>ⓘ</span><span id="cloud-message-text">Anmeldung erforderlich: Die Originaldaten werden nach erfolgreicher Authentifizierung synchronisiert.</span></div>
  <section id="view-dashboard" class="view active"><div class="hero"><div><div class="eyebrow">Wartung & Qualitätssicherung</div><h1>Wartungsübersicht</h1><p>Alle Anlagen, anstehenden Prüfungen und Wartungsprotokolle übersichtlich an einem Ort.</p></div><button class="button primary" data-action="new">＋ Neue Wartung</button></div>
@@ -1196,7 +1196,21 @@ document.getElementById('auth-form').addEventListener('submit',async e=>{
  try{if(!window.ECB_LOGIN)throw new Error('Firebase-Anmeldung nicht geladen. Bitte Internetverbindung prüfen.');
  await window.ECB_LOGIN(document.getElementById('firebase-email').value.trim(),document.getElementById('firebase-password').value);
  document.getElementById('firebase-password').value='';document.getElementById('auth-feedback').textContent='Anmeldung erfolgreich. Lade Cloud-Daten …';
- }catch(ex){document.getElementById('auth-feedback').textContent='Anmeldung fehlgeschlagen: '+(ex.message||ex);}
+  }catch(ex){
+  const code=ex?.code||'';
+  const feedback=document.getElementById('auth-feedback');
+  if(['auth/invalid-credential','auth/user-not-found','auth/wrong-password','auth/invalid-login-credentials'].includes(code)){
+   feedback.textContent='E-Mail oder Passwort wird von Firebase nicht erkannt. Bitte „Passwort zurücksetzen / Konto aktivieren“ für diese E-Mail verwenden. Falls keine E-Mail ankommt, muss der Administrator das frühere Konto in Firebase prüfen oder einladen.';
+  }else if(code==='auth/user-disabled'){
+   feedback.textContent='Dieses Firebase-Konto ist gesperrt. Bitte den Administrator um Freischaltung bitten.';
+  }else if(code==='auth/too-many-requests'){
+   feedback.textContent='Zu viele Anmeldeversuche. Bitte später mit einem zurückgesetzten Passwort erneut anmelden.';
+  }else if(code==='auth/api-key-not-valid'){
+   feedback.textContent='Firebase-Konfiguration fehlerhaft. Bitte den Betreiber informieren.';
+  }else{
+   feedback.textContent='Anmeldung fehlgeschlagen: '+(ex?.message||ex);
+  }
+ }
  finally{b.disabled=false;}
 });
 document.getElementById('auth-logout').addEventListener('click',()=>window.ECB_LOGOUT?.());
@@ -1220,14 +1234,23 @@ document.getElementById('ecb-owner-verify').addEventListener('click',async()=>{
 document.getElementById('ecb-owner-reset').addEventListener('click',async()=>{
  const b=document.getElementById('ecb-owner-reset');
  const feedback=document.getElementById('auth-feedback');
+ const email=document.getElementById('firebase-email').value.trim().toLowerCase();
+ if(!document.getElementById('firebase-email').checkValidity()||!email){
+  feedback.textContent='Bitte zuerst die E-Mail-Adresse des betroffenen Mitarbeiters eingeben.';
+  document.getElementById('firebase-email').focus();
+  return;
+ }
  b.disabled=true;
- feedback.textContent='Passwort-Zurücksetzung für ecbmaintenanceapp@gmail.com wird angefordert …';
+ feedback.textContent='Passwort-Wiederherstellung für '+email+' wird angefordert …';
  try{
   if(!window.ECB_PASSWORD_RESET)throw Error('Firebase-Anmeldung noch nicht geladen.');
-  await window.ECB_PASSWORD_RESET();
-  feedback.textContent='Wenn das Konto bereits in Firebase existiert, erhält ecbmaintenanceapp@gmail.com eine E-Mail zum Zurücksetzen des Passworts. Bitte auch den Spamordner prüfen.';
- }catch(e){feedback.textContent='Zurücksetzung fehlgeschlagen: '+(e?.message||'Firebase-Fehler');}
- finally{b.disabled=false;}
+  await window.ECB_PASSWORD_RESET(email);
+  feedback.textContent='Wenn '+email+' in Firebase vorhanden und freigeschaltet ist, erhält die Adresse eine E-Mail zum Festlegen eines neuen Passworts. Bitte Posteingang und Spam prüfen. Falls keine Mail kommt, muss der Administrator das Konto in der Benutzerverwaltung prüfen oder neu einladen.';
+ }catch(e){
+  feedback.textContent=e?.code==='auth/too-many-requests'
+   ?'Zu viele Anfragen. Bitte später erneut versuchen.'
+   :'Passwort-Wiederherstellung nicht bestätigt: '+(e?.message||'Firebase-Fehler');
+ }finally{b.disabled=false;}
 });
 renderHistory();renderDguv();renderCalendar();
 </script>
@@ -1245,7 +1268,7 @@ try {
  let unsubProtocols=null,unsubDevices=null,unsubLegacy=null;
  const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubLegacy?.();unsubProtocols=null;unsubDevices=null;unsubLegacy=null;window.ECB_SAVE=null;window.ECB_SAVE_DGUV=null;window.ECB_DELETE_DGUV=null;window.ECB_IMPORT_BACKUP_ITEM=null;window.ECB_ARCHIVE_PROTOCOL=null;window.ECB_SEND_SAVED_MAIL=null;window.ECB_RESET_SAVED_MAIL?.();window.ECB_RESET_LEGACY?.();};
  window.ECB_LOGIN=async(email,password)=>signInWithEmailAndPassword(auth,email,password);
- window.ECB_PASSWORD_RESET=async()=>sendPasswordResetEmail(auth,'ecbmaintenanceapp@gmail.com');
+ window.ECB_PASSWORD_RESET=async(email)=>{const target=String(email||'').trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target))throw Error('Bitte eine gültige E-Mail-Adresse angeben.');return sendPasswordResetEmail(auth,target);};
  window.ECB_SEND_VERIFY=async()=>{const u=auth.currentUser;if(!u||u.email?.toLowerCase()!=='ecbmaintenanceapp@gmail.com')throw Error('Bitte zuerst mit dem Haupt-Admin anmelden.');return sendEmailVerification(u);};
  window.ECB_LOGOUT=async()=>signOut(auth);
  window.ECB_REFRESH_ADMIN=async()=>{
