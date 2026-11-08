@@ -350,14 +350,14 @@ document.querySelectorAll('.ecb-logo-path').forEach(p=>p.setAttribute('d',ECB_LO
 const today = new Date(); document.getElementById('today-label').textContent=today.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'long',year:'numeric'});
 const retroDateField=document.getElementById('retro-date');retroDateField.value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
 const machines={wash:{title:'Milnor Waschmaschinen',short:'Waschmaschine',names:['Milnor Waschmaschine 1','Milnor Waschmaschine 2','Milnor Waschmaschine 3','Milnor Waschmaschine 4'],points:['Wassertank reinigen','Maschine reinigen, Zwischenräume','Waschmaschine schmieren','Maschine auf Mängelfreiheit überprüfen','Keine Mängel festgestellt']},dry:{title:'Wäschetrockner',short:'Trockner',names:['Trockner 1','Trockner 2','Trockner 3','Trockner 4'],points:['Gründliche Reinigung der Flusssiebe & Abluftkanäle','Prüfung der Trommeldichtung & Türverriegelung','Trockner aussaugen','Abluftrohre reinigen ggf. Flexrohr erneuern','Sicht- und Funktionsprüfung auf Mängel']},comp:{title:'Kompressor 2-Wochen',short:'Kompressor',names:['Kompressor (2-Wochen)'],points:['Ölstand am Schauglas prüfen und bei Bedarf Öl auffüllen','Ansaugfilter reinigen ggf. erneuern','Kältetrockner reinigen','Kompressor & Umgebung reinigen']},annual:{title:'Kompressor umfangreiche Wartung',short:'Kompressor',names:['Kompressor (Umfangreiche Wartung)'],points:['Kompletten Ölwechsel durchführen','Ölfilter erneuern und auf Dichtigkeit achten','Luftfilter / Ansaugfilter komplett erneuern & reinigen','Kältetrockner gründlich reinigen','Ölabscheider / Feinabscheider prüfen','Riemenspannung prüfen','Sicherheitsventile prüfen','Druckschalter prüfen','Kondensatableiter prüfen','Elektrische Anschlüsse prüfen','Gesamtanlage auf Dichtigkeit und ungewöhnliche Geräusche prüfen','Probelauf unter Betriebsdruck durchführen']}};
-let history=[]; let cloudProtocolsReady=false; let cloudDguvReady=false; let cloudError=''; let saveInProgress=false;
+let history=[]; let cloudProtocolsReady=false; let cloudDguvReady=false; let cloudError=''; let saveInProgress=false; let currentSaveRequestId=null;
 let lastSavedMail=null,mailSending=false;const mailRequests=new Set();
 let dguv=[];
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function goto(page){if(page==='admin'&&!window.ECB_ADMIN_ACCESS){toast('Nur für Administratoren.');return;}if(page==='account'&&!window.ECB_CHANGE_MY_PASSWORD){toast('Bitte zuerst anmelden.');return;}document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='view-'+page));document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.page===page));const title=({dashboard:'Übersicht',calendar:'Wartungskalender',retro:'Nachtragen',dguv:'DGUV V3',history:'Protokolle',form:'Protokoll erstellen',preview:'Protokollvorschau',admin:'Administration',account:'Mein Konto'})[page]||page;document.getElementById('breadcrumb-current').textContent=title;window.scrollTo({top:0,behavior:'smooth'});if(page==='history'){renderHistory();showSavedMailBanner();}if(page==='calendar')renderCalendar();if(page==='dguv')renderDguv();if(page==='admin'){renderAdminPanel();ecbAdminCheck();}}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>goto(b.dataset.page)));
 let currentType='wash',retroActive=false,signed=false,previewP=null;
-function start(type,retro=false){currentType=type;retroActive=retro;let obj=machines[type];const pic=document.getElementById('form-machine-photo');const banner=document.getElementById('form-machine-banner');if(pic && banner){pic.src=ECB_ASSETS[type]||ECB_ASSETS.comp;banner.style.display='flex';document.getElementById('form-machine-photo-title').textContent=obj.title;}document.getElementById('form-title').textContent=obj.title;document.getElementById('form-machine').innerHTML=obj.names.map(n=>`<option>${esc(n)}</option>`).join('');if(retro&&['wash','dry'].includes(type)){let n=document.getElementById('retro-machine').value;document.getElementById('form-machine').selectedIndex=Math.max(0,Math.min(3,Number(n)-1));}document.getElementById('form-name').value=retro?document.getElementById('retro-name').value:'';document.getElementById('form-notes').value='';document.getElementById('form-runtime').value='';document.getElementById('cloud-photo').value='';document.getElementById('photo-names').textContent='';document.getElementById('checklist').innerHTML=obj.points.map((p,i)=>`<div class="check"><label>${i+1}. ${esc(p)}</label><select aria-label="Ergebnis Prüfpunkt ${i+1}"><option value="OK">✓ OK</option><option value="Mangel">⚠ Mangel</option></select></div>`).join('');const canvas=document.getElementById('signature');canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);signed=false;goto('form');}
+function start(type,retro=false){currentSaveRequestId=null;currentType=type;retroActive=retro;let obj=machines[type];const pic=document.getElementById('form-machine-photo');const banner=document.getElementById('form-machine-banner');if(pic && banner){pic.src=ECB_ASSETS[type]||ECB_ASSETS.comp;banner.style.display='flex';document.getElementById('form-machine-photo-title').textContent=obj.title;}document.getElementById('form-title').textContent=obj.title;document.getElementById('form-machine').innerHTML=obj.names.map(n=>`<option>${esc(n)}</option>`).join('');if(retro&&['wash','dry'].includes(type)){let n=document.getElementById('retro-machine').value;document.getElementById('form-machine').selectedIndex=Math.max(0,Math.min(3,Number(n)-1));}document.getElementById('form-name').value=retro?document.getElementById('retro-name').value:'';document.getElementById('form-notes').value='';document.getElementById('form-runtime').value='';document.getElementById('cloud-photo').value='';document.getElementById('photo-names').textContent='';document.getElementById('checklist').innerHTML=obj.points.map((p,i)=>`<div class="check"><label>${i+1}. ${esc(p)}</label><select aria-label="Ergebnis Prüfpunkt ${i+1}"><option value="OK">✓ OK</option><option value="Mangel">⚠ Mangel</option></select></div>`).join('');const canvas=document.getElementById('signature');canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);signed=false;goto('form');}
 document.querySelectorAll('[data-start]').forEach(b=>b.addEventListener('click',()=>start(b.dataset.start)));document.querySelectorAll('[data-action="new"]').forEach(b=>b.addEventListener('click',()=>openModal('Neue Wartung','Bereich auswählen, um die Prüfpunkte zu öffnen.',Object.entries(machines).map(([key,m])=>`<button class="button subtle" style="width:100%;margin-bottom:10px;justify-content:flex-start" data-modal-start="${key}">⚙ ${esc(m.title)} →</button>`).join(''))));
 document.getElementById('retro-next').onclick=()=>{if(!document.getElementById('retro-name').value.trim()){toast('Bitte Techniker angeben.');return;}start(document.getElementById('retro-type').value,true)};document.getElementById('retro-type').onchange=e=>document.getElementById('retro-machine').disabled=!['wash','dry'].includes(e.target.value);
 
@@ -627,7 +627,7 @@ function compressPhoto(file,maxChars=580000){
 }
 async function saveProtocol(){
  if(saveInProgress)return;
- if(!cloudProtocolsReady||!window.ECB_SAVE){toast('Firebase nicht verbunden. Protokoll wurde nicht gespeichert.');return;}
+ if(!window.ECB_SAVE){toast('Bitte zuerst als aktiver Mitarbeiter in Firebase anmelden. Das Formular bleibt erhalten.');return;}
  const name=document.getElementById('form-name').value.trim();if(!name){toast('Bitte Techniker angeben.');return}if(!signed){toast('Bitte im Unterschriftenfeld unterschreiben.');return}
  const files=[...document.getElementById('cloud-photo').files];const button=document.getElementById('save-protocol');button.disabled=true;saveInProgress=true;button.textContent='Speichere in Firebase …';
  try{
@@ -646,7 +646,9 @@ async function saveProtocol(){
    const d=new Date(when+'T'+(time||'12:00'));if(isNaN(d.getTime()))throw new Error('Ungültiges Datum');
    const p={category:machines[currentType].title,type:machines[currentType].short,machine:document.getElementById('form-machine').value,employee:name,runtime:document.getElementById('form-runtime').value.trim(),date:d.toLocaleDateString('de-DE'),timestamp:d.toISOString(),points:pts,remarks:document.getElementById('form-notes').value,photos,photoNames,signature:document.getElementById('signature').toDataURL('image/png')};
    if(JSON.stringify({...p,photos:[]}).length>800000)throw new Error('Protokolltext oder Unterschrift überschreiten die sichere Firebase-Grenze.');
-   const savedId=await window.ECB_SAVE(p,message=>{button.textContent=message;});
+   if(!currentSaveRequestId)currentSaveRequestId=crypto.randomUUID();
+    const savedId=await window.ECB_SAVE(p,message=>{button.textContent=message;},false,currentSaveRequestId);
+    currentSaveRequestId=null;
    lastSavedMail={...p,id:savedId,__docId:savedId,__path:'artifacts/ecb-maintenance-live/public/data/protocols/'+savedId,autoStatus:'pending'};
    toast('Wartungsprotokoll in Firebase bestätigt. Automatischer PDF-Versand startet …');
    goto('history');
@@ -1515,7 +1517,30 @@ try {
      if((await getDocFromServer(ref)).exists())throw Error('Firebase hat die Löschung nicht bestätigt.');
      return true;
    };
-   window.ECB_SAVE=async(protocol,onProgress=()=>{},preserveId=false)=>{
+   window.ECB_SAVE=async(protocol,onProgress=()=>{},preserveId=false,requestId=null)=>{
+     if(!preserveId){
+       if(!navigator.onLine||!auth.currentUser)throw Error('Offline oder nicht angemeldet. Bitte die Verbindung prüfen. Das Formular bleibt erhalten.');
+       const key=requestId||crypto.randomUUID();
+       const token=await auth.currentUser.getIdToken(true);
+       const payload={protocol,requestId:key,observedMax:Math.max(0,Number(window.ECB_MAX_PROTOCOL_NUMBER?.()||0))};
+       onProgress('Übertrage vollständiges Protokoll samt Fotos an die geschützte Cloud …');
+       let response;
+       try{
+         response=await fetch('https://ecb-wartung-admin.ecbmaintenance-mail.workers.dev/protocols/save',{
+           method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+           body:JSON.stringify(payload)
+         });
+       }catch(e){
+         throw Error('Verbindung zum Speicherdienst unterbrochen. Bitte im gleichen Formular erneut speichern; dieselbe Auftragskennung verhindert ein doppeltes Protokoll.');
+       }
+       const result=await response.json().catch(()=>({}));
+       if(!response.ok||!result.ok||!/^ECB-\d{6,}$/.test(String(result.id||''))){
+         throw Error('Speichern nicht bestätigt (HTTP '+response.status+'): '+(result.error||'Cloud-Antwort nicht eindeutig.'));
+       }
+       onProgress('✓ Protokoll '+result.id+' und alle '+(result.photoCount??protocol.photos?.length??0)+' Fotos gespeichert.');
+       return result.id;
+     }
+
      if(!navigator.onLine||!auth.currentUser)throw Error('Für die Speicherung wird eine aktive Firebase-Verbindung benötigt.');
      const photos=Array.isArray(protocol?.photos)?protocol.photos:[];
      if(preserveId&&!/^[a-zA-Z0-9_.-]{5,140}$/.test(String(protocol?.id||'')))throw Error('Ungültige Protokoll-ID im Backup.');
