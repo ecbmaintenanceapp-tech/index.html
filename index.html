@@ -603,11 +603,12 @@ async function saveProtocol(){
    const p={category:machines[currentType].title,type:machines[currentType].short,machine:document.getElementById('form-machine').value,employee:name,runtime:document.getElementById('form-runtime').value.trim(),date:d.toLocaleDateString('de-DE'),timestamp:d.toISOString(),points:pts,remarks:document.getElementById('form-notes').value,photos,signature:document.getElementById('signature').toDataURL('image/png')};
    if(JSON.stringify(p).length>900000)throw new Error('Fotos zu groß für Firestore (1-MB-Dokumentgrenze). Bitte weniger Bilder auswählen oder kleinere Fotos verwenden. Nichts wurde gespeichert.');
    const savedId=await window.ECB_SAVE(p);
-   lastSavedMail={...p,id:savedId,__docId:savedId,__path:'artifacts/ecb-maintenance-live/public/data/protocols/'+savedId};
+   lastSavedMail={...p,id:savedId,__docId:savedId,__path:'artifacts/ecb-maintenance-live/public/data/protocols/'+savedId,autoStatus:'pending'};
    toast('Wartungsprotokoll in Firebase bestätigt. Automatischer PDF-Versand startet …');
    goto('history');
    // Original-PDF inklusive Fotos und Unterschrift erst nach bestätigter Cloud-Speicherung versenden.
    // Der Cloudflare-Maildienst dedupliziert automatische Aufträge anhand des Protokollpfades.
+   mailSending=true;
    try{
      button.textContent='Versende PDF an pb@ecb-system.de …';
      const pdfBase64=await pdfForManualMail(lastSavedMail);
@@ -619,8 +620,9 @@ async function saveProtocol(){
      lastSavedMail=null;showSavedMailBanner();
      toast('Protokoll gespeichert und automatischer PDF-Versand bestätigt.');
    }catch(mailError){
+     if(lastSavedMail){lastSavedMail.autoStatus='unconfirmed';showSavedMailBanner();}
      alert('Das Wartungsprotokoll wurde in Firebase gespeichert. Der automatische E-Mail-Versand ist nicht bestätigt: '+(mailError.message||mailError)+'. Bitte zuerst die Versandhistorie prüfen. Anschließend kann das PDF aus „Protokolle“ manuell gesendet werden – ohne die Wartung erneut zu speichern.');
-   }
+   }finally{mailSending=false;}
  }catch(e){console.error(e);alert('Speichern fehlgeschlagen. Es wurde kein erfolgreiches Speichern bestätigt.\n'+(e.message||e));}
  finally{saveInProgress=false;button.disabled=false;button.textContent='✓ Protokoll in Firebase speichern';}
 }
@@ -630,7 +632,7 @@ document.getElementById('save-protocol').onclick=saveProtocol;
 function showSavedMailBanner(){
  const el=document.getElementById('ecb-saved-alert');
  if(!lastSavedMail){el.style.display='none';return;}
- document.getElementById('ecb-saved-label').textContent='Protokoll '+lastSavedMail.id+' · '+(lastSavedMail.machine||lastSavedMail.category||'Wartung')+' wurde bereits gespeichert. Jetzt versenden oder später im Archiv.';
+ document.getElementById('ecb-saved-label').textContent='Protokoll '+lastSavedMail.id+' · '+(lastSavedMail.machine||lastSavedMail.category||'Wartung')+' ist gespeichert. '+(lastSavedMail.autoStatus==='pending'?'Der automatische PDF-Versand läuft.':lastSavedMail.autoStatus==='unconfirmed'?'Der automatische Versandstatus ist unklar. Vor erneutem Senden Versandhistorie prüfen.':'Manueller PDF-Versand verfügbar.');
  el.style.display='flex';
 }
 document.getElementById('ecb-mail-last').onclick=()=>lastSavedMail&&openSavedMail(lastSavedMail);
