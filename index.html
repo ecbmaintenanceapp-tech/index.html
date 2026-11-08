@@ -425,7 +425,7 @@ function cloudState(label,details,error=false){
 }
 function dueFor(name,which){
  const canonical=x=>String(x||'').trim().replace(/\s+/g,' ').toLowerCase();
- const items=history.filter(x=>keyFor(x)===which&&(which==='comp'||which==='annual'||canonical(x.machine)===canonical(name)));
+ const items=history.filter(x=>!x.archived&&keyFor(x)===which&&(which==='comp'||which==='annual'||canonical(x.machine)===canonical(name)));
  if(!items.length)return {name,state:'Noch keine dokumentierte Wartung',date:null,last:null};
  // Ein älteres Protokoll mit gültigem Datum darf nicht von einem undatierten Eintrag verdeckt werden.
  const dated=items.filter(x=>dateValue(x)>0).sort((a,b)=>dateValue(b)-dateValue(a));
@@ -472,7 +472,7 @@ function updateHistoryYears(){
 function renderHistory(){
  const q=document.getElementById('history-search').value.toLowerCase(),type=document.getElementById('history-filter').value;
  const year=document.getElementById('history-year').value;
- let rows=history.filter(p=>typeMatches(p,type)&&(year==='all'||new Date(dateValue(p)).getFullYear()===Number(year))&&(`${p.id} ${p.machine} ${p.category} ${p.employee}`).toLowerCase().includes(q));
+ let rows=history.filter(p=>!p.archived&&typeMatches(p,type)&&(year==='all'||new Date(dateValue(p)).getFullYear()===Number(year))&&(`${p.id} ${p.machine} ${p.category} ${p.employee}`).toLowerCase().includes(q));
  document.getElementById('history-body').innerHTML=!cloudProtocolsReady?'<tr><td colspan="6">Firebase-Verbindung wird hergestellt …</td></tr>':rows.map(p=>`<tr><td><b>${esc(p.id)}</b></td><td>${esc(p.machine)}</td><td>${esc(p.date)}</td><td>${esc(p.employee)}</td><td><span class="status ${p.result==='Mangel'?'danger':''}">${esc(p.result)}</span></td><td><div class="actions"><button class="icon-btn" data-report="${esc(p.id)}">Ansehen / PDF</button><button type="button" class="icon-btn" data-mail-report="${esc(p.id)}">✉ Senden</button></div></td></tr>`).join('')||'<tr><td colspan="6">Keine passenden Protokolle in Firebase gefunden.</td></tr>';
  document.getElementById('side-history-count').textContent=cloudProtocolsReady?history.length:'–';
  document.getElementById('metric-proto').textContent=cloudProtocolsReady?history.length:'–';
@@ -1058,10 +1058,19 @@ function renderAdminPanel(){
  found.slice(0,100).forEach(p=>{
   const row=document.createElement('div');row.className='ecb-admin-row';
   const info=document.createElement('div');const name=document.createElement('strong');name.textContent=p.id;
-  const desc=document.createElement('small');desc.textContent=(p.machine||p.category||'Anlage')+' · '+p.date+' · '+(p.photos?.length||0)+' Fotos';
+  const desc=document.createElement('small');desc.textContent=(p.machine||p.category||'Anlage')+' · '+p.date+' · '+(p.photos?.length||0)+' Fotos'+(p.archived?' · ARCHIVIERT':'');
   info.append(name,desc);
   const btn=document.createElement('button');btn.type='button';btn.className='button subtle';btn.textContent='Prüfen';btn.addEventListener('click',()=>showReport(p));
-  row.append(info,btn);list.append(row);
+  const archive=document.createElement('button');archive.type='button';archive.className='button subtle';archive.textContent=p.archived?'Wiederherstellen':'Archivieren';
+  archive.addEventListener('click',async()=>{
+   if(!window.ECB_ADMIN_ACCESS||!window.ECB_ARCHIVE_PROTOCOL)return toast('Nur Administratoren.');
+   if(!confirm(p.archived?'Protokoll '+p.id+' wieder in die aktive Historie übernehmen?':'Protokoll '+p.id+' archivieren? Das Original bleibt in Firebase gespeichert und kann jederzeit wiederhergestellt werden.'))return;
+   archive.disabled=true;
+   try{await window.ECB_ARCHIVE_PROTOCOL(p,!p.archived);toast(p.archived?'Protokoll wiederhergestellt.':'Protokoll archiviert.');}
+   catch(e){alert('Aktion fehlgeschlagen, Originaldaten bleiben erhalten: '+(e.message||e));}
+   finally{archive.disabled=false;}
+  });
+  row.append(info,btn,archive);list.append(row);
  });
 }
 document.getElementById('ecb-admin-filter').addEventListener('input',renderAdminPanel);
@@ -1172,7 +1181,7 @@ renderHistory();renderDguv();renderCalendar();
 
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-import {getFirestore,collection,onSnapshot,doc,setDoc,getDocFromServer,deleteDoc} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import {getFirestore,collection,onSnapshot,doc,setDoc,getDocFromServer,deleteDoc,updateDoc} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,EmailAuthProvider,reauthenticateWithCredential,updatePassword,sendPasswordResetEmail,sendEmailVerification} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 const config={apiKey:'AIzaSyDAYbTwQd8aDeTSHzuxWtEVon6SHIVRB5k',authDomain:'ecb-maintenance.firebaseapp.com',projectId:'ecb-maintenance',storageBucket:'ecb-maintenance.firebasestorage.app',messagingSenderId:'229926423123',appId:'1:229926423123:web:a309c14c708fc88c62d4a6'};
 try {
@@ -1181,7 +1190,7 @@ try {
  const historicProtocols=collection(db,'protocols');
  const devices=collection(db,'artifacts','ecb-maintenance-live','public','data','dguv_devices');
  let unsubProtocols=null,unsubDevices=null,unsubLegacy=null;
- const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubLegacy?.();unsubProtocols=null;unsubDevices=null;unsubLegacy=null;window.ECB_SAVE=null;window.ECB_SAVE_DGUV=null;window.ECB_DELETE_DGUV=null;window.ECB_IMPORT_BACKUP_ITEM=null;window.ECB_SEND_SAVED_MAIL=null;window.ECB_RESET_SAVED_MAIL?.();window.ECB_RESET_LEGACY?.();};
+ const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubLegacy?.();unsubProtocols=null;unsubDevices=null;unsubLegacy=null;window.ECB_SAVE=null;window.ECB_SAVE_DGUV=null;window.ECB_DELETE_DGUV=null;window.ECB_IMPORT_BACKUP_ITEM=null;window.ECB_ARCHIVE_PROTOCOL=null;window.ECB_SEND_SAVED_MAIL=null;window.ECB_RESET_SAVED_MAIL?.();window.ECB_RESET_LEGACY?.();};
  window.ECB_LOGIN=async(email,password)=>signInWithEmailAndPassword(auth,email,password);
  window.ECB_PASSWORD_RESET=async()=>sendPasswordResetEmail(auth,'ecbmaintenanceapp@gmail.com');
  window.ECB_SEND_VERIFY=async()=>{const u=auth.currentUser;if(!u||u.email?.toLowerCase()!=='ecbmaintenanceapp@gmail.com')throw Error('Bitte zuerst mit dem Haupt-Admin anmelden.');return sendEmailVerification(u);};
@@ -1245,6 +1254,20 @@ try {
      const body=await response.json().catch(()=>({}));
      if(!response.ok||!body.ok)throw Error(body.error||'Admin-Dienst antwortet nicht (HTTP '+response.status+').');
      return body;
+   };
+   window.ECB_ARCHIVE_PROTOCOL=async(record,archive)=>{
+     const u=auth.currentUser;
+     if(!u||!window.ECB_ADMIN_ACCESS)throw Error('Nur Administratoren.');
+     const {claims}=await u.getIdTokenResult(true);
+     if(claims.ecbAdmin!==true&&!(u.email?.toLowerCase()==='ecbmaintenanceapp@gmail.com'&&u.emailVerified))throw Error('Adminrechte nicht bestätigt.');
+     const path=String(record?.__path||'');
+     if(!(/^protocols\/[a-zA-Z0-9_.-]{5,140}$/.test(path)||/^artifacts\/ecb-maintenance-live\/public\/data\/protocols\/[a-zA-Z0-9_.-]{5,140}$/.test(path)))throw Error('Der Quellpfad ist für Archivierung nicht freigegeben.');
+     const ref=doc(db,...path.split('/'));
+     if(!(await getDocFromServer(ref)).exists())throw Error('Originalprotokoll nicht mehr in Firebase vorhanden.');
+     await updateDoc(ref,{archived:Boolean(archive),archivedAt:archive?new Date().toISOString():null});
+     const saved=await getDocFromServer(ref);
+     if(!saved.exists()||saved.data()?.archived!==Boolean(archive))throw Error('Archivstatus nicht von Firebase bestätigt.');
+     return true;
    };
    window.ECB_IMPORT_BACKUP_ITEM=async(type,record)=>{
      const u=auth.currentUser;
