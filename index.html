@@ -588,7 +588,31 @@ canvas.addEventListener('pointercancel',e=>{if(e.pointerType!=='touch'&&activePo
 canvas.addEventListener('lostpointercapture',e=>{if(e.pointerType!=='touch'&&activePointer===e.pointerId)endSignature()});
 document.getElementById('clear-sign').onclick=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);endSignature();signed=false};document.getElementById('cloud-photo').onchange=e=>document.getElementById('photo-names').textContent=[...e.target.files].map(f=>f.name).join(', ');
 
-function compressPhoto(file,maxEdge=1150,quality=.62){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{try{const ratio=Math.min(1,maxEdge/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*ratio));c.height=Math.max(1,Math.round(img.naturalHeight*ratio));const ctx=c.getContext('2d');ctx.fillStyle='white';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);resolve(c.toDataURL('image/jpeg',quality));}catch(err){URL.revokeObjectURL(url);reject(err)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Bild nicht lesbar'))};img.src=url;});}
+function compressPhoto(file,maxChars=580000){
+ return new Promise((resolve,reject)=>{
+  const img=new Image(),url=URL.createObjectURL(file);
+  img.onload=()=>{
+   try{
+    const presets=[[1650,.82],[1450,.77],[1300,.72],[1150,.65],[990,.58],[860,.52],[730,.45],[620,.42]];
+    let result='';
+    for(const [edge,quality] of presets){
+     const ratio=Math.min(1,edge/Math.max(img.naturalWidth,img.naturalHeight));
+     const c=document.createElement('canvas');
+     c.width=Math.max(1,Math.round(img.naturalWidth*ratio));
+     c.height=Math.max(1,Math.round(img.naturalHeight*ratio));
+     const x=c.getContext('2d');
+     x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
+     result=c.toDataURL('image/jpeg',quality);
+     if(result.length<=maxChars)break;
+    }
+    if(result.length>maxChars)throw Error('Foto kann nicht innerhalb der sicheren Einzeldatei-Grenze verarbeitet werden.');
+    resolve(result);
+   }catch(e){reject(e);}finally{URL.revokeObjectURL(url);}
+  };
+  img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Foto nicht lesbar: '+file.name));};
+  img.src=url;
+ });
+}
 async function saveProtocol(){
  if(saveInProgress)return;
  if(!cloudProtocolsReady||!window.ECB_SAVE){toast('Firebase nicht verbunden. Protokoll wurde nicht gespeichert.');return;}
@@ -596,13 +620,21 @@ async function saveProtocol(){
  const files=[...document.getElementById('cloud-photo').files];const button=document.getElementById('save-protocol');button.disabled=true;saveInProgress=true;button.textContent='Speichere in Firebase …';
  try{
    const pts=[...document.querySelectorAll('#checklist .check')].map((x,i)=>({pointNumber:i+1,title:x.querySelector('label').textContent.replace(/^\d+\.\s*/,''),status:x.querySelector('select').value}));
-   const photos=[];for(const f of files){if(!f.type.startsWith('image/'))throw new Error('Nur Bilder hochladen');photos.push(await compressPhoto(f));}
+   const photos=[],photoNames=[];
+    // Ein Bild pro Firestore-Dokument; Qualität nur bei Bedarf anpassen.
+    const targetChars=Math.min(580000,Math.floor(7000000/Math.max(1,files.length)));
+    for(const [index,f] of files.entries()){
+      if(!f.type.startsWith('image/'))throw new Error('Nur Bilder hochladen');
+      button.textContent='Foto '+(index+1)+' / '+files.length+' wird vorbereitet …';
+      photos.push(await compressPhoto(f,targetChars));
+      photoNames.push(f.name);
+    }
    const when=retroActive?document.getElementById('retro-date').value:new Date().toISOString().slice(0,10);
    const time=retroActive?document.getElementById('retro-time').value:new Date().toTimeString().slice(0,5);
    const d=new Date(when+'T'+(time||'12:00'));if(isNaN(d.getTime()))throw new Error('Ungültiges Datum');
-   const p={category:machines[currentType].title,type:machines[currentType].short,machine:document.getElementById('form-machine').value,employee:name,runtime:document.getElementById('form-runtime').value.trim(),date:d.toLocaleDateString('de-DE'),timestamp:d.toISOString(),points:pts,remarks:document.getElementById('form-notes').value,photos,signature:document.getElementById('signature').toDataURL('image/png')};
-   if(JSON.stringify(p).length>900000)throw new Error('Fotos zu groß für Firestore (1-MB-Dokumentgrenze). Bitte weniger Bilder auswählen oder kleinere Fotos verwenden. Nichts wurde gespeichert.');
-   const savedId=await window.ECB_SAVE(p);
+   const p={category:machines[currentType].title,type:machines[currentType].short,machine:document.getElementById('form-machine').value,employee:name,runtime:document.getElementById('form-runtime').value.trim(),date:d.toLocaleDateString('de-DE'),timestamp:d.toISOString(),points:pts,remarks:document.getElementById('form-notes').value,photos,photoNames,signature:document.getElementById('signature').toDataURL('image/png')};
+   if(JSON.stringify({...p,photos:[]}).length>800000)throw new Error('Protokolltext oder Unterschrift überschreiten die sichere Firebase-Grenze.');
+   const savedId=await window.ECB_SAVE(p,message=>{button.textContent=message;});
    lastSavedMail={...p,id:savedId,__docId:savedId,__path:'artifacts/ecb-maintenance-live/public/data/protocols/'+savedId,autoStatus:'pending'};
    toast('Wartungsprotokoll in Firebase bestätigt. Automatischer PDF-Versand startet …');
    goto('history');
