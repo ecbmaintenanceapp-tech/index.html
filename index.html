@@ -191,7 +191,7 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
  <p style="color:#6a7d71;margin-bottom:18px">Aus Datenschutzgründen werden Protokolle, Dokumentationsfotos und Unterschriften erst nach einer bestätigten Firebase-Anmeldung geladen.</p>
  <form id="auth-form" autocomplete="on"><div class="field-grid"><div class="field"><label for="firebase-email">E-Mail</label><input type="email" id="firebase-email" autocomplete="username" required placeholder="E-Mail-Adresse"></div><div class="field"><label for="firebase-password">Passwort</label><input type="password" id="firebase-password" autocomplete="current-password" required placeholder="Firebase-Passwort"></div></div>
  <button class="button primary" style="margin-top:16px" id="auth-submit" type="submit">Anmelden</button><button type="button" class="button subtle" style="margin:16px 0 0 8px;white-space:normal" id="ecb-owner-reset">Admin-Passwort zurücksetzen</button><span class="muted" id="auth-feedback" style="display:block;margin-top:12px" role="status">Alte lokal gespeicherte App-Passwörter sind keine Firebase-Anmeldedaten.</span></form></section>
- <div id="auth-identity" style="display:none;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:13px;flex-wrap:wrap"><button type="button" class="button subtle" id="ecb-my-account">Mein Konto · Passwort ändern</button><button class="button subtle" id="auth-logout" type="button">Abmelden</button></div>
+ <div id="auth-identity" style="display:none;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:13px;flex-wrap:wrap"><button type="button" class="button subtle" id="ecb-owner-verify" style="display:none">Admin-E-Mail bestätigen</button><button type="button" class="button subtle" id="ecb-my-account">Mein Konto · Passwort ändern</button><button class="button subtle" id="auth-logout" type="button">Abmelden</button></div>
  <div class="notice" id="cloud-message" role="status"><span>ⓘ</span><span id="cloud-message-text">Anmeldung erforderlich: Die Originaldaten werden nach erfolgreicher Authentifizierung synchronisiert.</span></div>
  <section id="view-dashboard" class="view active"><div class="hero"><div><div class="eyebrow">Wartung & Qualitätssicherung</div><h1>Wartungsübersicht</h1><p>Alle Anlagen, anstehenden Prüfungen und Wartungsprotokolle übersichtlich an einem Ort.</p></div><button class="button primary" data-action="new">＋ Neue Wartung</button></div>
  <div class="metric-grid"><div class="metric"><div class="metric-top">Anlagen im System <span class="metric-icon">⚙</span></div><strong>10</strong><small>8 Maschinen · 2 Kompressorprüfungen</small></div><div class="metric"><div class="metric-top">Wartungen fällig <span class="metric-icon" style="background:#fff3de;color:#bd8529">◷</span></div><strong id="metric-due">–</strong><small id="metric-due-note">Fälligkeit aus Wartungsverlauf</small></div><div class="metric"><div class="metric-top">DGUV Prüfgeräte <span class="metric-icon" style="background:#e7f2f7;color:#387e98">♧</span></div><strong id="metric-dguv">–</strong><small>Bestand aus Firebase</small></div><div class="metric"><div class="metric-top">Gespeicherte Protokolle <span class="metric-icon">▣</span></div><strong id="metric-proto">–</strong><small class="good">Aus der originalen Cloud-Historie</small></div></div>
@@ -914,6 +914,12 @@ document.getElementById('auth-form').addEventListener('submit',async e=>{
  finally{b.disabled=false;}
 });
 document.getElementById('auth-logout').addEventListener('click',()=>window.ECB_LOGOUT?.());
+document.getElementById('ecb-owner-verify').addEventListener('click',async()=>{
+ const b=document.getElementById('ecb-owner-verify');b.disabled=true;
+ try{if(!window.ECB_SEND_VERIFY)throw Error('Firebase-Anmeldung nicht verfügbar.');await window.ECB_SEND_VERIFY();alert('Die Bestätigungs-E-Mail wurde angefordert. Bestätige den Link in Gmail und lade die Wartungs-App danach neu.');}
+ catch(e){alert('E-Mail-Bestätigung fehlgeschlagen: '+(e?.message||'Firebase-Fehler'));}
+ finally{b.disabled=false;}
+});
 document.getElementById('ecb-owner-reset').addEventListener('click',async()=>{
  const b=document.getElementById('ecb-owner-reset');
  const feedback=document.getElementById('auth-feedback');
@@ -932,7 +938,7 @@ renderHistory();renderDguv();renderCalendar();
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getFirestore,collection,onSnapshot,doc,setDoc,getDocFromServer} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,EmailAuthProvider,reauthenticateWithCredential,updatePassword,sendPasswordResetEmail} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,EmailAuthProvider,reauthenticateWithCredential,updatePassword,sendPasswordResetEmail,sendEmailVerification} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 const config={apiKey:'AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k',authDomain:'ecb-maintenance.firebaseapp.com',projectId:'ecb-maintenance',appId:'1:229926423123:web:a309c14c708fc886c62d4a6'};
 try {
  const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app);
@@ -942,6 +948,7 @@ try {
  const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubProtocols=null;unsubDevices=null;window.ECB_SAVE=null;window.ECB_SEND_SAVED_MAIL=null;window.ECB_RESET_SAVED_MAIL?.();};
  window.ECB_LOGIN=async(email,password)=>signInWithEmailAndPassword(auth,email,password);
  window.ECB_PASSWORD_RESET=async()=>sendPasswordResetEmail(auth,'ecbmaintenanceapp@gmail.com');
+ window.ECB_SEND_VERIFY=async()=>{const u=auth.currentUser;if(!u||u.email?.toLowerCase()!=='ecbmaintenanceapp@gmail.com')throw Error('Bitte zuerst mit dem Haupt-Admin anmelden.');return sendEmailVerification(u);};
  window.ECB_LOGOUT=async()=>signOut(auth);
  onAuthStateChanged(auth,user=>{
    teardown();
@@ -962,6 +969,7 @@ try {
    }
    document.getElementById('auth-panel').style.display='none';
    document.getElementById('auth-identity').style.display='flex';
+   document.getElementById('ecb-owner-verify').style.display=(user.email?.toLowerCase()==='ecbmaintenanceapp@gmail.com'&&!user.emailVerified)?'':'none';
    window.ECB_CHANGE_MY_PASSWORD=async(previous,next)=>{
      const current=auth.currentUser;
      if(!current?.email)throw Error('Bitte zuerst mit E-Mail und Passwort anmelden.');
