@@ -648,7 +648,7 @@ async function saveProtocol(){
    if(JSON.stringify({...p,photos:[]}).length>800000)throw new Error('Protokolltext oder Unterschrift überschreiten die sichere Firebase-Grenze.');
    if(!currentSaveRequestId)currentSaveRequestId=crypto.randomUUID();
     const savedId=await window.ECB_SAVE(p,message=>{button.textContent=message;},false,currentSaveRequestId);
-    currentSaveRequestId=null;
+    // Kennung bis zum nächsten NEUEN Formular beibehalten: erneutes Tippen auf Speichern erzeugt kein Duplikat.
    lastSavedMail={...p,id:savedId,__docId:savedId,__path:'artifacts/ecb-maintenance-live/public/data/protocols/'+savedId,autoStatus:'pending'};
    toast('Wartungsprotokoll in Firebase bestätigt. Automatischer PDF-Versand startet …');
    goto('history');
