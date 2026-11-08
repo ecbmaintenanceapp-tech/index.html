@@ -1088,7 +1088,7 @@ function ecbDrawLegacyUsers(){
    if(!email.checkValidity()||!target){report.textContent='Bitte eine gültige E-Mail-Adresse eingeben.';return;}
    const existing=ecbUsersList.find(u=>String(u.email).toLowerCase()===target);
    if(existing?.disabled){report.textContent='Konto bereits vorhanden, aber gesperrt. Bitte über „Vorhandene Benutzer“ freischalten.';return;}
-   if(!confirm('Zugang für '+person.name+' unter '+target+' aktivieren? Das alte Passwort wird NICHT übernommen. '+(existing?'Das vorhandene Firebase-Konto erhält eine neue Einladung.':'Ein neues Mitarbeiterkonto wird erstellt und per E-Mail eingeladen.'))))return;
+   if(!confirm('Zugang für '+person.name+' unter '+target+' aktivieren? Das alte Passwort wird NICHT übernommen. '+(existing?'Das vorhandene Firebase-Konto erhält eine neue Einladung.':'Ein neues Mitarbeiterkonto wird erstellt und per E-Mail eingeladen.')))return;
    action.disabled=true;report.textContent='Firebase-Einladung wird angefordert …';
    try{
     if(existing&&existing.role!=='admin'){
