@@ -302,7 +302,7 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
  <div class="ecb-admin-card">
   <h2>Dokumente und Wartungsprotokolle</h2>
   <p>Alle gespeicherten Protokolle mit Fotos und Unterschriften. Vor dem Löschen immer eine Sicherung erstellen.</p>
-  <div class="ecb-admin-actions"><button class="button primary" id="ecb-admin-export" type="button">Gesamtsicherung herunterladen</button><a class="button subtle" target="_blank" rel="noopener noreferrer" href="https://console.firebase.google.com/project/ecb-maintenance/firestore/databases/-default-/data">Firebase-Dokumente verwalten ↗</a></div>
+  <div class="ecb-admin-actions"><button class="button primary" id="ecb-admin-export" type="button">Gesamtsicherung herunterladen</button><label class="button subtle" style="cursor:pointer">Backup importieren (JSON)<input id="ecb-admin-import-input" type="file" accept=".json,application/json" style="display:none"></label><a class="button subtle" target="_blank" rel="noopener noreferrer" href="https://console.firebase.google.com/project/ecb-maintenance/firestore/databases/-default-/data">Firebase-Dokumente verwalten ↗</a></div>
   <div class="ecb-admin-warning">Ein endgültiger Löschvorgang erfolgt vorerst nur in der geschützten Firebase-Konsole. Beim Löschen eines Protokolls können auch Bilder und Unterschriften gelöscht werden.</div>
   <div class="field" style="margin-top:17px"><label for="ecb-admin-filter">Protokolle suchen</label><input type="search" class="search" id="ecb-admin-filter" placeholder="Protokollnummer, Maschine, Techniker"></div>
   <p class="muted" id="ecb-admin-count-note"></p><div id="ecb-admin-list"></div>
@@ -1140,7 +1140,7 @@ try {
  const historicProtocols=collection(db,'protocols');
  const devices=collection(db,'artifacts','ecb-maintenance-live','public','data','dguv_devices');
  let unsubProtocols=null,unsubDevices=null,unsubLegacy=null;
- const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubLegacy?.();unsubProtocols=null;unsubDevices=null;unsubLegacy=null;window.ECB_SAVE=null;window.ECB_SAVE_DGUV=null;window.ECB_DELETE_DGUV=null;window.ECB_SEND_SAVED_MAIL=null;window.ECB_RESET_SAVED_MAIL?.();window.ECB_RESET_LEGACY?.();};
+ const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubLegacy?.();unsubProtocols=null;unsubDevices=null;unsubLegacy=null;window.ECB_SAVE=null;window.ECB_SAVE_DGUV=null;window.ECB_DELETE_DGUV=null;window.ECB_IMPORT_BACKUP_ITEM=null;window.ECB_SEND_SAVED_MAIL=null;window.ECB_RESET_SAVED_MAIL?.();window.ECB_RESET_LEGACY?.();};
  window.ECB_LOGIN=async(email,password)=>signInWithEmailAndPassword(auth,email,password);
  window.ECB_PASSWORD_RESET=async()=>sendPasswordResetEmail(auth,'ecbmaintenanceapp@gmail.com');
  window.ECB_SEND_VERIFY=async()=>{const u=auth.currentUser;if(!u||u.email?.toLowerCase()!=='ecbmaintenanceapp@gmail.com')throw Error('Bitte zuerst mit dem Haupt-Admin anmelden.');return sendEmailVerification(u);};
@@ -1204,6 +1204,22 @@ try {
      const body=await response.json().catch(()=>({}));
      if(!response.ok||!body.ok)throw Error(body.error||'Admin-Dienst antwortet nicht (HTTP '+response.status+').');
      return body;
+   };
+   window.ECB_IMPORT_BACKUP_ITEM=async(type,record)=>{
+     const u=auth.currentUser;
+     if(!u||!window.ECB_ADMIN_ACCESS)throw Error('Nur Administratoren dürfen Backups einspielen.');
+     if(!record||typeof record!=='object'||Array.isArray(record))throw Error('Ungültiger Datensatz.');
+     const id=String(record.id||'').trim();
+     if(!/^[a-zA-Z0-9_.-]{5,140}$/.test(id))throw Error('Ungültige Datensatz-ID.');
+     const reference=doc(type==='protocol'?protocols:devices,id);
+     if(type!=='protocol'&&type!=='dguv')throw Error('Unbekannter Datensatztyp.');
+     if((await getDocFromServer(reference)).exists())return {skipped:true,id};
+     const clean={...record,id};
+     for(const key of Object.keys(clean))if(key.startsWith('__'))delete clean[key];
+     if(JSON.stringify(clean).length>890000)throw Error('Datensatz '+id+' überschreitet die Firestore-Größengrenze.');
+     await setDoc(reference,clean);
+     if(!(await getDocFromServer(reference)).exists())throw Error('Firebase konnte '+id+' nicht bestätigen.');
+     return {created:true,id};
    };
    window.ECB_SAVE_DGUV=async record=>{
      if(!auth.currentUser||!navigator.onLine)throw Error('Für die Speicherung ist eine aktive Firebase-Anmeldung erforderlich.');
