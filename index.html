@@ -281,6 +281,15 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
    <div class="ecb-user-list-head"><h3 class="ecb-user-subtitle">Vorhandene Benutzer</h3><button class="button subtle" type="button" id="ecb-users-refresh">Aktualisieren</button></div>
    <p id="ecb-users-list-status" class="muted" aria-live="polite"></p>
    <div id="ecb-users-list" class="ecb-users-list"></div>
+    <div class="ecb-user-divider"></div>
+    <h3 class="ecb-user-subtitle">Frühere Benutzer übernehmen</h3>
+    <p class="muted">Konten aus der alten Wartungs-App können mit ihrer E-Mail-Adresse sicher in Firebase übernommen werden. Bisherige Passwörter werden weder angezeigt noch übernommen. Bereits vorhandene Firebase-Konten bleiben erhalten.</p>
+    <div class="actions" style="flex-wrap:wrap;margin:12px 0">
+      <button class="button subtle" type="button" id="ecb-legacy-scan">Alte Benutzer auf diesem Gerät suchen</button>
+      <label class="button subtle" style="cursor:pointer">Altes Benutzer-Backup einlesen<input type="file" id="ecb-legacy-user-backup" accept=".json,application/json" style="display:none"></label>
+    </div>
+    <div id="ecb-legacy-user-list"></div>
+    <p id="ecb-legacy-user-status" class="muted" role="status"></p>
    <form id="ecb-user-edit-form" class="ecb-user-edit" style="display:none" autocomplete="off">
     <h3>Benutzer bearbeiten</h3>
     <p class="muted" id="ecb-user-edit-identity"></p>
@@ -1032,6 +1041,86 @@ function ecbAdminEdit(uid){
  form.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 document.getElementById('ecb-users-check').addEventListener('click',ecbAdminCheck);
+let ecbLegacyUsers=[];
+function ecbMergeOldUsers(raw){
+ const entries=Array.isArray(raw)?raw:
+  Array.isArray(raw?.cloudUsers)?raw.cloudUsers:
+  Array.isArray(raw?.users)?raw.users:[];
+ const map=new Map(ecbLegacyUsers.map(u=>[u.legacy.toLowerCase(),u]));
+ for(const person of entries){
+  if(!person||typeof person!=='object')continue;
+  const legacy=String(person.user||person.username||person.email||'').trim().slice(0,100);
+  const name=String(person.fullname||person.name||legacy).trim().slice(0,90);
+  const possibleEmail=String(person.email||(legacy.includes('@')?legacy:'')).trim().toLowerCase().slice(0,254);
+  if(!legacy||!name)continue;
+  if(!map.has(legacy.toLowerCase()))map.set(legacy.toLowerCase(),{legacy,name,email:possibleEmail});
+ }
+ ecbLegacyUsers=[...map.values()].sort((a,b)=>a.name.localeCompare(b.name,'de'));
+ ecbDrawLegacyUsers();
+}
+function ecbDrawLegacyUsers(){
+ const list=document.getElementById('ecb-legacy-user-list'),status=document.getElementById('ecb-legacy-user-status');
+ list.textContent='';
+ if(!ecbLegacyUsers.length){
+  status.textContent='Keine alten Benutzer auf diesem Gerät gefunden. Falls die früheren Konten in einem Backup liegen, kannst du eine alte JSON-Sicherung einlesen.';
+  return;
+ }
+ status.textContent=ecbLegacyUsers.length+' frühere Konten gefunden. Jeder Mitarbeiter muss eine gültige E-Mail-Adresse erhalten, um Firebase nutzen zu können.';
+ for(const person of ecbLegacyUsers){
+  const row=document.createElement('div');row.className='ecb-user-account';
+  const left=document.createElement('div');
+  const name=document.createElement('strong');name.textContent=person.name;
+  const legacy=document.createElement('small');legacy.textContent='Alter Benutzername: '+person.legacy;
+  left.append(name,legacy);
+  const right=document.createElement('div');right.className='actions';right.style.flexWrap='wrap';
+  const email=document.createElement('input');email.type='email';email.placeholder='E-Mail des Mitarbeiters';
+  email.value=person.email||'';email.style.maxWidth='235px';email.setAttribute('aria-label','Firebase-E-Mail für '+person.name);
+  const action=document.createElement('button');action.type='button';action.className='button subtle';action.textContent='Konto übernehmen / einladen';
+  const report=document.createElement('small');report.setAttribute('role','status');
+  action.onclick=async()=>{
+   if(!window.ECB_ADMIN_ACCESS||!ecbUsersReady||!window.ECB_ADMIN_API){report.textContent='Bitte zuerst als Hauptadministrator anmelden.';return;}
+   const target=email.value.trim().toLowerCase();
+   if(!email.checkValidity()||!target){report.textContent='Bitte eine gültige E-Mail-Adresse eingeben.';return;}
+   const existing=ecbUsersList.find(u=>String(u.email).toLowerCase()===target);
+   if(existing?.disabled){report.textContent='Konto bereits vorhanden, aber gesperrt. Bitte über „Vorhandene Benutzer“ freischalten.';return;}
+   if(!confirm('Zugang für '+person.name+' unter '+target+' aktivieren? Das alte Passwort wird NICHT übernommen. '+(existing?'Das vorhandene Firebase-Konto erhält eine neue Einladung.':'Ein neues Mitarbeiterkonto wird erstellt und per E-Mail eingeladen.'))))return;
+   action.disabled=true;report.textContent='Firebase-Einladung wird angefordert …';
+   try{
+    const response=existing
+     ?await window.ECB_ADMIN_API('/admin/users/invite','POST',{uid:existing.uid})
+     :await window.ECB_ADMIN_API('/admin/users/create','POST',{name:person.name,email:target,role:'staff'});
+    if(response.invitationSent){
+     report.textContent='✓ Einladung für '+target+' angefordert. Mitarbeiter legt ein neues Passwort fest.';
+    }else{
+     report.textContent='Firebase-Konto wurde angelegt, die Einladungs-E-Mail ist jedoch noch nicht bestätigt: '+(response.invitationError||'Bitte Benutzerliste prüfen.');
+    }
+    person.email=target;
+    await ecbAdminList();
+   }catch(err){report.textContent='Übernahme fehlgeschlagen: '+(err.message||err);}
+   finally{action.disabled=false;}
+  };
+  right.append(email,action,report);row.append(left,right);list.append(row);
+ }
+}
+document.getElementById('ecb-legacy-scan').addEventListener('click',()=>{
+ if(!ecbUsersReady){document.getElementById('ecb-legacy-user-status').textContent='Bitte zuerst die geschützte Benutzerverwaltung verbinden.';return;}
+ try{
+  const stored=localStorage.getItem('ecb_users_v118');
+  if(stored)ecbMergeOldUsers(JSON.parse(stored));
+  else ecbDrawLegacyUsers();
+ }catch(e){document.getElementById('ecb-legacy-user-status').textContent='Alte Benutzerliste konnte nicht gelesen werden: '+(e.message||e);}
+});
+document.getElementById('ecb-legacy-user-backup').addEventListener('change',async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{
+  if(!ecbUsersReady)throw Error('Bitte zuerst die Admin-Benutzerverwaltung verbinden.');
+  if(file.size>5*1024*1024)throw Error('Benutzer-Backup ist größer als 5 MB.');
+  const data=JSON.parse(await file.text());
+  // Nur Namen und Benutzernamen werden gelesen. Alte Passwortfelder werden bewusst ignoriert.
+  ecbMergeOldUsers(data);
+ }catch(err){document.getElementById('ecb-legacy-user-status').textContent='Einlesen fehlgeschlagen: '+(err.message||err);}
+ finally{e.target.value='';}
+});
 document.getElementById('ecb-users-refresh').addEventListener('click',ecbAdminList);
 document.getElementById('ecb-user-edit-cancel').addEventListener('click',()=>document.getElementById('ecb-user-edit-form').style.display='none');
 document.getElementById('ecb-user-create-form').addEventListener('submit',async event=>{
