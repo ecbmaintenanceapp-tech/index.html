@@ -997,24 +997,29 @@ async function ecbAdminList(){
    const row=document.createElement('div');row.className='ecb-user-account';
    const summary=document.createElement('div');
    const name=document.createElement('strong');name.textContent=user.name||'Mitarbeiter';
-   const extra=document.createElement('small');extra.textContent=[user.email,user.role==='admin'?'Administrator':'Mitarbeiter',user.disabled?'Gesperrt':'Aktiv'].join(' · ');
+   const extra=document.createElement('small');extra.textContent=[user.email,user.role==='admin'?'Administrator':user.role==='staff'?'Mitarbeiter':'Noch nicht freigeschaltet',user.disabled?'Gesperrt':'Aktiv'].join(' · ');
    summary.append(name,extra);
    const buttons=document.createElement('div');buttons.className='ecb-user-account-actions';
    const edit=document.createElement('button');edit.type='button';edit.className='button subtle';edit.textContent='Bearbeiten';
    edit.addEventListener('click',()=>ecbAdminEdit(user.uid));buttons.append(edit);
    if(!user.disabled){
-     const invite=document.createElement('button');invite.type='button';invite.className='button subtle';invite.textContent='✉ Einladung senden';
+     const invite=document.createElement('button');invite.type='button';invite.className='button subtle';invite.textContent=user.role==='unassigned'?'✓ Freischalten & einladen':'✉ Einladung erneut senden';
      invite.addEventListener('click',async()=>{
        if(!window.ECB_ADMIN_API||!ecbUsersReady)return;
-       if(!confirm('Eine neue Aktivierungs-E-Mail an '+user.email+' senden?'))return;
+       if(!confirm((user.role==='unassigned'?'Das bisher nicht freigeschaltete Konto als Mitarbeiter aktivieren und ': 'Eine neue Aktivierungs-E-Mail an ')+user.email+' senden?'))return;
        invite.disabled=true;
        ecbUsersMessage('ecb-users-list-status','Aktivierungs-E-Mail an '+user.email+' wird versendet …');
        try{
+         if(user.role==='unassigned'){
+           await window.ECB_ADMIN_API('/admin/users/update','POST',{
+             uid:user.uid,name:user.name||user.email,role:'staff',disabled:false
+           });
+         }
          const sent=await window.ECB_ADMIN_API('/admin/users/invite','POST',{uid:user.uid});
          if(!sent.invitationSent)throw Error('Einladungsmail nicht bestätigt.');
          ecbUsersMessage('ecb-users-list-status','✓ Einladungsmail an '+user.email+' wurde vom Versanddienst angenommen.');
        }catch(e){ecbUsersMessage('ecb-users-list-status','Einladung nicht bestätigt: '+(e.message||e),true);}
-       finally{invite.disabled=false;}
+       finally{invite.disabled=false;await ecbAdminList();}
      });
      buttons.append(invite);
    }
@@ -1086,6 +1091,11 @@ function ecbDrawLegacyUsers(){
    if(!confirm('Zugang für '+person.name+' unter '+target+' aktivieren? Das alte Passwort wird NICHT übernommen. '+(existing?'Das vorhandene Firebase-Konto erhält eine neue Einladung.':'Ein neues Mitarbeiterkonto wird erstellt und per E-Mail eingeladen.'))))return;
    action.disabled=true;report.textContent='Firebase-Einladung wird angefordert …';
    try{
+    if(existing&&existing.role!=='admin'){
+      await window.ECB_ADMIN_API('/admin/users/update','POST',{
+        uid:existing.uid,name:existing.name||person.name,role:'staff',disabled:false
+      });
+    }
     const response=existing
      ?await window.ECB_ADMIN_API('/admin/users/invite','POST',{uid:existing.uid})
      :await window.ECB_ADMIN_API('/admin/users/create','POST',{name:person.name,email:target,role:'staff'});
