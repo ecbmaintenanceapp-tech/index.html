@@ -920,12 +920,12 @@ function rebuildProtocolHistory(){
  };
  const richness=p=>(p.points?.length||0)+(p.photos?.length||0)*3+(p.signature?4:0)+(dateValue(p)>0?2:0)-(p.__missingPhotos||0)*6;
  for(const d of legacyProtocolDocs){
-  if(d.data?.__kind==='ECB_PHOTO_V1')continue;
+  if(['ECB_PHOTO_V1','ECB_SERIAL_COUNTER_V1','ECB_SERIAL_USED_V1'].includes(d.data?.__kind))continue;
   const p=hydrate(normalizeProtocol(d.id,d.data,'protocols/'+d.id));
   merged.set(p.id,p);
  }
  for(const d of currentProtocolDocs){
-  if(d.data?.__kind==='ECB_PHOTO_V1')continue;
+  if(['ECB_PHOTO_V1','ECB_SERIAL_COUNTER_V1','ECB_SERIAL_USED_V1'].includes(d.data?.__kind))continue;
   const p=hydrate(normalizeProtocol(d.id,d.data,'artifacts/ecb-maintenance-live/public/data/protocols/'+d.id));
   const other=merged.get(p.id);
   if(!other||richness(p)>=richness(other))merged.set(p.id,p);
@@ -944,6 +944,10 @@ function rebuildProtocolHistory(){
   cloudProtocolsReady?history.length+' Protokolle geladen'+(legacyDataStatus==='ready'?' (inklusive alter Firebase-Datenquelle)':''):'Warte auf bestätigte Serverdaten',false);
  updateHistoryYears();renderHistory();renderCalendar();if(window.ECB_ADMIN_ACCESS)renderAdminPanel();
 }
+window.ECB_MAX_PROTOCOL_NUMBER=()=>history.reduce((maximum,p)=>{
+ const values=[p.id,p.protocolNumber].map(v=>/^ECB-\d+$/.test(String(v||''))?Number(String(v).slice(4)):0);
+ return Math.max(maximum,...values.filter(Number.isSafeInteger));
+},0);
 window.ECB_ACCEPT_SNAPSHOT=(docs,fromCache)=>{currentProtocolDocs=docs;currentProtocolCache=fromCache;rebuildProtocolHistory();};
 window.ECB_ACCEPT_LEGACY=(docs,fromCache)=>{legacyProtocolDocs=docs;legacyDataStatus=fromCache?'pending':'ready';legacyDataError='';rebuildProtocolHistory();};
 window.ECB_LEGACY_ERROR=err=>{legacyDataStatus='denied';legacyDataError=String(err?.code||err?.message||'Zugriff nicht möglich').slice(0,110);rebuildProtocolHistory();};
@@ -1356,7 +1360,7 @@ renderHistory();renderDguv();renderCalendar();
 
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-import {getFirestore,collection,onSnapshot,doc,setDoc,getDocFromServer,deleteDoc,updateDoc,writeBatch} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import {getFirestore,collection,onSnapshot,doc,setDoc,getDocFromServer,deleteDoc,updateDoc,writeBatch,runTransaction} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,EmailAuthProvider,reauthenticateWithCredential,updatePassword,sendPasswordResetEmail,sendEmailVerification} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 const config={apiKey:'AIzaSyDAYbTwQd8aDeTSHzuxWtEVon6SHIVRB5k',authDomain:'ecb-maintenance.firebaseapp.com',projectId:'ecb-maintenance',storageBucket:'ecb-maintenance.firebasestorage.app',messagingSenderId:'229926423123',appId:'1:229926423123:web:a309c14c708fc88c62d4a6'};
 try {
@@ -1490,37 +1494,71 @@ try {
      if(!navigator.onLine||!auth.currentUser)throw Error('Für die Speicherung wird eine aktive Firebase-Verbindung benötigt.');
      const photos=Array.isArray(protocol?.photos)?protocol.photos:[];
      if(preserveId&&!/^[a-zA-Z0-9_.-]{5,140}$/.test(String(protocol?.id||'')))throw Error('Ungültige Protokoll-ID im Backup.');
-     const parent=preserveId?doc(protocols,String(protocol.id)):doc(protocols);
-     if(preserveId&&(await getDocFromServer(parent)).exists())
-       throw Error('Protokoll '+protocol.id+' existiert bereits. Es wurde nicht überschrieben.');
      if(photos.length>150)throw Error('Bitte höchstens 150 Fotos pro Wartung auswählen.');
-     const batch=writeBatch(db),photoRefs=[];
-     let totalImageChars=0;
+     const imageItems=[],photoRefs=[];let totalImageChars=0;
      for(const [index,photo] of photos.entries()){
-       // Jedes Foto erhält einen eigenen Cloud-Datensatz. Keine Änderungen an Altprotokollen.
        const dataUrl=typeof photo==='string'?photo:photo?.dataUrl||photo?.data||'';
        if(!/^data:image\/(jpeg|png|webp);base64,[a-zA-Z0-9+/=]+$/.test(dataUrl))
-         throw Error('Foto '+(index+1)+' ist nicht lesbar oder fehlt im Backup. Nichts wurde gespeichert.');
+         throw Error('Foto '+(index+1)+' ist nicht lesbar. Nichts wurde gespeichert.');
        const ref=doc(protocols,'ecb-photo-'+crypto.randomUUID());
        const name=String(protocol.photoNames?.[index]||photo?.name||('Foto '+(index+1))).slice(0,180);
-       const asset={__kind:'ECB_PHOTO_V1',id:ref.id,forProtocol:parent.id,index,filename:name,imageData:dataUrl,createdAt:new Date().toISOString()};
-       if(JSON.stringify(asset).length>850000)throw Error('Foto '+(index+1)+' ist für ein Firebase-Einzeldokument zu groß.');
+       imageItems.push({ref,index,name,dataUrl});
        totalImageChars+=dataUrl.length;
        photoRefs.push({photoId:ref.id,name});
-       batch.set(ref,asset);
-       onProgress('Foto '+(index+1)+' / '+photos.length+' für Cloud vorbereitet');
+       onProgress('Foto '+(index+1)+' / '+photos.length+' für Firebase vorbereitet');
      }
-     const record={...protocol,id:parent.id,photos:photoRefs,photoStorage:'ecb-firestore-split-v1'};
-     if(JSON.stringify(record).length>850000)throw Error('Das Wartungsprotokoll ohne Fotos ist zu groß.');
-     if(totalImageChars+JSON.stringify(record).length>8800000)
-       throw Error('Die Gesamtdatenmenge überschreitet das Firebase-Limit für eine atomare Speicherung.');
-     batch.set(parent,record);
-     onProgress('Speichere '+photos.length+' Fotos und Wartungsprotokoll gemeinsam in Firebase …');
-     // commit() wird erst nach erfolgreicher Annahme der gesamten atomaren Schreiboperation erfüllt.
-     // Kein separates Readback: Ein kurzzeitiger Lesefehler danach darf kein Doppelprotokoll erzeugen.
-     await batch.commit();
-     onProgress('✓ '+photos.length+' Fotos und Protokoll in Firebase gespeichert');
-     return parent.id;
+     const baseRecord={...protocol,photos:photoRefs,photoStorage:'ecb-firestore-split-v1'};
+     if(JSON.stringify(baseRecord).length>850000)throw Error('Das Protokoll ohne Fotos ist zu groß.');
+     if(totalImageChars+JSON.stringify(baseRecord).length>8800000)
+       throw Error('Die gesamte Datenmenge überschreitet das Firebase-Limit für eine atomare Speicherung.');
+     const counterRef=doc(protocols,'__ecb_serial_counter_v1__');
+     const observedMax=preserveId?0:Math.max(0,Number(window.ECB_MAX_PROTOCOL_NUMBER?.()||0));
+     onProgress('Eindeutige Protokollnummer wird in Firebase vergeben …');
+     const number=await runTransaction(db,async tx=>{
+       // Alle Leseoperationen erfolgen VOR den Schreiboperationen.
+       const counter=await tx.get(counterRef);
+       const oldNumber=Number(counter.data()?.lastNumber||0);
+       if(!Number.isSafeInteger(oldNumber)||oldNumber<0)throw Error('Firebase-Protokollzähler ungültig.');
+       let chosen=String(protocol.id||'');
+       let next=oldNumber,parent=null,usedRef=null,usedNumber=0;
+       if(preserveId){
+         parent=doc(protocols,chosen);
+         const match=/^ECB-(\d{1,12})$/.exec(chosen);
+         usedNumber=match?Number(match[1]):0;
+         if(match)usedRef=doc(protocols,'__ecb_used_'+chosen);
+         const exists=await tx.get(parent);
+         const used=usedRef?await tx.get(usedRef):null;
+         if(exists.exists()||used?.exists())throw Error('Protokollnummer bereits vergeben. Die Sicherung wurde nicht überschrieben.');
+         next=Math.max(oldNumber,usedNumber);
+       }else{
+         const baseline=Math.max(oldNumber,Number.isSafeInteger(observedMax)?observedMax:0);
+         for(let candidate=baseline+1,attempt=0;attempt<200;candidate++,attempt++){
+           chosen='ECB-'+String(candidate).padStart(6,'0');
+           parent=doc(protocols,chosen);
+           usedRef=doc(protocols,'__ecb_used_'+chosen);
+           const exists=await tx.get(parent);
+           const used=await tx.get(usedRef);
+           if(exists.exists()||used.exists())continue;
+           next=candidate;
+           break;
+         }
+         if(next<=baseline)throw Error('Keine freie Protokollnummer in Firebase gefunden.');
+       }
+       const record={...baseRecord,id:chosen,protocolNumber:chosen};
+       if(JSON.stringify(record).length>850000)throw Error('Wartungsprotokoll überschreitet die Dokumentgrenze.');
+       const now=new Date().toISOString();
+       if(next>oldNumber)tx.set(counterRef,{__kind:'ECB_SERIAL_COUNTER_V1',lastNumber:next,updatedAt:now});
+       if(usedRef)tx.set(usedRef,{__kind:'ECB_SERIAL_USED_V1',number:chosen,reservedAt:now});
+       for(const item of imageItems){
+         const asset={__kind:'ECB_PHOTO_V1',id:item.ref.id,forProtocol:chosen,index:item.index,filename:item.name,imageData:item.dataUrl,createdAt:now};
+         if(JSON.stringify(asset).length>850000)throw Error('Foto '+(item.index+1)+' überschreitet die Firebase-Einzeldateigrenze.');
+         tx.set(item.ref,asset);
+       }
+       tx.set(parent,record);
+       return chosen;
+     },{maxAttempts:8});
+     onProgress('✓ Protokoll '+number+' mit '+photos.length+' Fotos gespeichert');
+     return number;
    };
    window.ECB_SEND_SAVED_MAIL=async(payload,onStart)=>{
      const loggedIn=auth.currentUser;
