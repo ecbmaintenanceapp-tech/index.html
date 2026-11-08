@@ -728,8 +728,107 @@ function openSavedMail(p){
 
 function openModal(title,subtitle,html){document.getElementById('modal-title').textContent=title;document.getElementById('modal-subtitle').textContent=subtitle;document.getElementById('modal-content').innerHTML=html;document.getElementById('modal').classList.add('open')}function closeModal(){document.getElementById('modal').classList.remove('open')}document.getElementById('close-modal').onclick=closeModal;document.getElementById('modal').onclick=e=>{if(e.target.id==='modal')closeModal()};document.getElementById('modal-content').onclick=e=>{const b=e.target.closest('[data-modal-start]');if(b){closeModal();start(b.dataset.modalStart)}};
 
-document.querySelectorAll('[data-action="dguv"]').forEach(b=>b.onclick=()=>openModal('DGUV V3 – Bestand','Der bestehende Gerätebestand wird direkt aus Firebase geladen. Neue Geräte werden nach Prüfung der bestehenden Datenstruktur freigeschaltet.','<p>Alte Geräte und Prüfdokumente bleiben unverändert. Bitte zuerst den Datenbestand überprüfen.</p>'));
-document.getElementById('dguv-body').addEventListener('click',e=>{const b=e.target.closest('[data-dguv-index]');if(!b)return;const p=dguv[Number(b.dataset.dguvIndex)];if(!p)return;const raw=p.raw;const docs=[...(Array.isArray(raw.documents)?raw.documents:[]),...(Array.isArray(raw.attachments)?raw.attachments:[])];const linkHtml=docs.map((v,i)=>{const u=typeof v==='string'?v:v.url||v.dataUrl||'';return /^https:\/\//.test(u)?`<p><a href="${esc(u)}" target="_blank" rel="noopener">Dokument ${i+1} öffnen</a></p>`:u.startsWith('data:application/pdf;base64,')?`<p><a href="${esc(u)}" download="DGUV_Dokument_${i+1}.pdf">Dokument ${i+1} herunterladen</a></p>`:''}).join('');openModal(p.name,'Gespeicherter DGUV-Datensatz',`<div class="field-grid"><p><b>Inventar:</b> ${esc(p.inventory)}</p><p><b>Standort:</b> ${esc(p.location)}</p><p><b>Fällig:</b> ${esc(p.due)}</p><p><b>Status:</b> ${esc(p.status)}</p></div>${linkHtml||'<p>Keine PDF-Anlagen direkt im Dokument referenziert.</p>'}`)});
+function openDguvEditor(deviceIndex=null){
+ if(!cloudDguvReady||!window.ECB_SAVE_DGUV)return toast('Bitte Firebase-Verbindung prüfen.');
+ if(deviceIndex!==null&&!window.ECB_ADMIN_ACCESS)return toast('Bearbeiten nur für Administratoren.');
+ const device=deviceIndex===null?null:dguv[deviceIndex];
+ if(deviceIndex!==null&&!device)return toast('Gerät nicht mehr vorhanden.');
+ const dueInput=(()=>{
+  const raw=device?.raw?.dueDate||device?.raw?.nextDue||'';
+  if(typeof raw==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(raw))return raw;
+  const t=dateValue({date:device?.due});
+  if(!t)return '';
+  const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ })();
+ const html='<form id="ecb-dguv-form" class="form-panel">'
+  +'<div class="field-grid"><div class="field"><label>Gerätebezeichnung</label><input id="ecb-dguv-name" maxlength="140" required value="'+esc(device?.name||'')+'"></div>'
+  +'<div class="field"><label>Inventarnummer</label><input id="ecb-dguv-inventory" maxlength="100" required value="'+esc(device?.inventory==='–'?'':device?.inventory||'')+'"></div>'
+  +'<div class="field"><label>Standort</label><input id="ecb-dguv-location" maxlength="140" required value="'+esc(device?.location==='–'?'':device?.location||'')+'"></div>'
+  +'<div class="field"><label>Nächster Prüftermin</label><input id="ecb-dguv-due" type="date" required value="'+esc(dueInput)+'"></div></div>'
+  +'<div class="actions" style="margin-top:18px"><button type="submit" class="button primary" id="ecb-dguv-submit">In Firebase speichern</button><button type="button" class="button subtle" id="ecb-dguv-cancel">Abbrechen</button></div>'
+  +'<p id="ecb-dguv-feedback" role="status" class="muted"></p></form>';
+ openModal(device?'DGUV-Gerät bearbeiten':'Neues DGUV-Gerät','Gespeicherte Originaldokumente bleiben erhalten.',html);
+ document.getElementById('ecb-dguv-cancel').onclick=closeModal;
+ document.getElementById('ecb-dguv-form').onsubmit=async event=>{
+  event.preventDefault();
+  const button=document.getElementById('ecb-dguv-submit'),feedback=document.getElementById('ecb-dguv-feedback');
+  const name=document.getElementById('ecb-dguv-name').value.trim(),inventory=document.getElementById('ecb-dguv-inventory').value.trim();
+  const location=document.getElementById('ecb-dguv-location').value.trim(),dueDate=document.getElementById('ecb-dguv-due').value;
+  if(!name||!inventory||!location||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(dueDate)){feedback.textContent='Bitte alle Felder ausfüllen.';return;}
+  const id=device?.id||('DGUV-'+crypto.randomUUID());
+  const record={...(device?.raw||{}),id,name,inventoryNumber:inventory,location,dueDate,status:device?.raw?.status||'Offen'};
+  button.disabled=true;feedback.textContent='Wird in Firebase gespeichert …';
+  try{
+   await window.ECB_SAVE_DGUV(record);
+   feedback.textContent='✓ Gerät gespeichert. Firebase-Abgleich läuft.';
+   closeModal();
+  }catch(err){feedback.textContent='Speichern fehlgeschlagen: '+(err.message||err);}
+  finally{button.disabled=false;}
+ };
+}
+function dguvDocumentLink(url,label,filename){
+ if(typeof url!=='string'||!/^(https:\/\/|data:application\/pdf;base64,|data:image\/(?:png|jpeg|webp);base64,)/i.test(url))return '';
+ return '<p><a class="button subtle" target="_blank" rel="noopener noreferrer" href="'+esc(url)+'" download="'+esc(filename||'Messprotokoll')+'">'+esc(label)+'</a></p>';
+}
+function showDguvDetails(device){
+ const raw=device.raw||{};
+ const docs=[...(Array.isArray(raw.documents)?raw.documents:[]),...(Array.isArray(raw.attachments)?raw.attachments:[])];
+ const all=raw.protocolData?[{url:raw.protocolData,name:raw.protocolName||'Messprotokoll'} ,...docs]:docs;
+ const links=all.map((v,i)=>{
+  const url=typeof v==='string'?v:(v?.url||v?.dataUrl||v?.data||'');
+  return dguvDocumentLink(url,'Messprotokoll '+(i+1)+' ansehen / herunterladen',v?.name||raw.protocolName||('DGUV_Messprotokoll_'+(i+1)+'.pdf'));
+ }).join('');
+ openModal(device.name,'Gespeicherter DGUV-Datensatz',
+  '<div class="field-grid"><p><b>Inventar:</b> '+esc(device.inventory)+'</p><p><b>Standort:</b> '+esc(device.location)+'</p><p><b>Nächste Prüfung:</b> '+esc(device.due)+'</p><p><b>Status:</b> '+esc(device.status)+'</p></div>'
+  +(links||'<p>Kein Messprotokoll hinterlegt.</p>'));
+}
+function openDguvUpload(index){
+ if(!cloudDguvReady||!window.ECB_SAVE_DGUV)return toast('Bitte Firebase-Verbindung prüfen.');
+ const device=dguv[index];if(!device)return toast('Gerät nicht vorhanden.');
+ openModal('DGUV-Messprotokoll hochladen',device.name,
+  '<p class="muted">PDF oder Bild. Für Firestore maximal 600 KB pro Datei. Das bestehende Original wird erst nach erfolgreicher Speicherung ersetzt.</p>'
+  +'<div class="field"><input type="file" accept=".pdf,application/pdf,image/jpeg,image/png,image/webp" id="ecb-dguv-file"></div>'
+  +'<div class="actions" style="margin-top:15px"><button class="button primary" id="ecb-dguv-upload-save">In Firebase hochladen</button><button class="button subtle" id="ecb-dguv-upload-cancel">Abbrechen</button></div>'
+  +'<p id="ecb-dguv-upload-msg" role="status" class="muted"></p>');
+ document.getElementById('ecb-dguv-upload-cancel').onclick=closeModal;
+ document.getElementById('ecb-dguv-upload-save').onclick=async()=>{
+  const file=document.getElementById('ecb-dguv-file').files?.[0];
+  const feedback=document.getElementById('ecb-dguv-upload-msg'),button=document.getElementById('ecb-dguv-upload-save');
+  if(!file){feedback.textContent='Bitte zuerst eine Datei auswählen.';return;}
+  if(!(['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type)||/\\.(pdf|png|jpg|jpeg|webp)$/i.test(file.name))){feedback.textContent='Nur PDF oder unterstützte Bilder erlaubt.';return;}
+  if(file.size>600000){feedback.textContent='Datei ist größer als 600 KB. Bitte PDF verkleinern. Kein Cloud-Eintrag wurde verändert.';return;}
+  button.disabled=true;feedback.textContent='Dokument wird verarbeitet und gespeichert …';
+  try{
+   const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(Error('Datei konnte nicht gelesen werden'));reader.readAsDataURL(file);});
+   if(typeof data!=='string'||!data.startsWith('data:'))throw Error('Ungültiger Dateiinhalt.');
+   const record={...device.raw,id:device.id,protocolData:data,protocolName:file.name,status:'Erledigt'};
+   await window.ECB_SAVE_DGUV(record);
+   feedback.textContent='✓ Messprotokoll in Firebase gespeichert.';
+   closeModal();
+  }catch(e){feedback.textContent='Upload fehlgeschlagen: '+(e.message||e);}
+  finally{button.disabled=false;}
+ };
+}
+document.querySelectorAll('[data-action="dguv"]').forEach(b=>b.onclick=()=>openDguvEditor());
+document.getElementById('dguv-body').addEventListener('click',async e=>{
+ const b=e.target.closest('button');if(!b)return;
+ const action=['dguvIndex','dguvUpload','dguvEdit','dguvDelete'].find(k=>b.dataset[k]!==undefined);
+ if(!action)return;
+ const idx=Number(b.dataset[action]),device=dguv[idx];
+ if(!device)return toast('Gerät nicht mehr vorhanden.');
+ if(action==='dguvIndex')return showDguvDetails(device);
+ if(action==='dguvUpload')return openDguvUpload(idx);
+ if(!window.ECB_ADMIN_ACCESS)return toast('Nur Administratoren können Geräte bearbeiten oder löschen.');
+ if(action==='dguvEdit')return openDguvEditor(idx);
+ if(action==='dguvDelete'){
+  const typed=prompt('Gerät endgültig aus Firebase löschen? Bitte die vollständige Gerätebezeichnung eingeben:\\n'+device.name);
+  if(typed!==device.name)return;
+  b.disabled=true;
+  try{await window.ECB_DELETE_DGUV(device.id);toast('DGUV-Gerät in Firebase gelöscht.');}
+  catch(err){alert('Gerät nicht gelöscht: '+(err.message||err));}
+  finally{b.disabled=false;}
+ }
+});
 document.getElementById('cloud-backup').onclick=()=>{if(!cloudProtocolsReady){toast('Cloud ist noch nicht geladen. Export nicht möglich.');return}const data=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),source:'ecb-maintenance',protocols:history,dguv_devices:dguv.map(x=>({id:x.id,...x.raw}))},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(data);a.download='ECB_Firebase_Protokolle_Export_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
 function cloudLoadError(where,e){cloudError=where+': '+(e?.message||String(e));cloudState('Firebase-Verbindung fehlgeschlagen',cloudError,true);toast('Cloud-Fehler: '+where);}
 let currentProtocolDocs=[],legacyProtocolDocs=[],currentProtocolCache=true,legacyDataStatus='pending',legacyDataError='';
