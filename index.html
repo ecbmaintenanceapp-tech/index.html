@@ -190,7 +190,7 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
  <div class="eyebrow">Geschützter Zugriff</div><h2 style="margin:7px 0 5px">Mit Firebase anmelden</h2>
  <p style="color:#6a7d71;margin-bottom:18px">Aus Datenschutzgründen werden Protokolle, Dokumentationsfotos und Unterschriften erst nach einer bestätigten Firebase-Anmeldung geladen.</p>
  <form id="auth-form" autocomplete="on"><div class="field-grid"><div class="field"><label for="firebase-email">E-Mail</label><input type="email" id="firebase-email" autocomplete="username" required placeholder="E-Mail-Adresse"></div><div class="field"><label for="firebase-password">Passwort</label><input type="password" id="firebase-password" autocomplete="current-password" required placeholder="Firebase-Passwort"></div></div>
- <button class="button primary" style="margin-top:16px" id="auth-submit" type="submit">Anmelden</button><span class="muted" id="auth-feedback" style="display:block;margin-top:12px" role="status">Alte lokal gespeicherte App-Passwörter sind keine Firebase-Anmeldedaten.</span></form></section>
+ <button class="button primary" style="margin-top:16px" id="auth-submit" type="submit">Anmelden</button><button type="button" class="button subtle" style="margin:16px 0 0 8px;white-space:normal" id="ecb-owner-reset">Admin-Passwort zurücksetzen</button><span class="muted" id="auth-feedback" style="display:block;margin-top:12px" role="status">Alte lokal gespeicherte App-Passwörter sind keine Firebase-Anmeldedaten.</span></form></section>
  <div id="auth-identity" style="display:none;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:13px;flex-wrap:wrap"><button type="button" class="button subtle" id="ecb-my-account">Mein Konto · Passwort ändern</button><button class="button subtle" id="auth-logout" type="button">Abmelden</button></div>
  <div class="notice" id="cloud-message" role="status"><span>ⓘ</span><span id="cloud-message-text">Anmeldung erforderlich: Die Originaldaten werden nach erfolgreicher Authentifizierung synchronisiert.</span></div>
  <section id="view-dashboard" class="view active"><div class="hero"><div><div class="eyebrow">Wartung & Qualitätssicherung</div><h1>Wartungsübersicht</h1><p>Alle Anlagen, anstehenden Prüfungen und Wartungsprotokolle übersichtlich an einem Ort.</p></div><button class="button primary" data-action="new">＋ Neue Wartung</button></div>
@@ -914,13 +914,25 @@ document.getElementById('auth-form').addEventListener('submit',async e=>{
  finally{b.disabled=false;}
 });
 document.getElementById('auth-logout').addEventListener('click',()=>window.ECB_LOGOUT?.());
+document.getElementById('ecb-owner-reset').addEventListener('click',async()=>{
+ const b=document.getElementById('ecb-owner-reset');
+ const feedback=document.getElementById('auth-feedback');
+ b.disabled=true;
+ feedback.textContent='Passwort-Zurücksetzung für ecbmaintenanceapp@gmail.com wird angefordert …';
+ try{
+  if(!window.ECB_PASSWORD_RESET)throw Error('Firebase-Anmeldung noch nicht geladen.');
+  await window.ECB_PASSWORD_RESET();
+  feedback.textContent='Wenn das Konto bereits in Firebase existiert, erhält ecbmaintenanceapp@gmail.com eine E-Mail zum Zurücksetzen des Passworts. Bitte auch den Spamordner prüfen.';
+ }catch(e){feedback.textContent='Zurücksetzung fehlgeschlagen: '+(e?.message||'Firebase-Fehler');}
+ finally{b.disabled=false;}
+});
 renderHistory();renderDguv();renderCalendar();
 </script>
 
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getFirestore,collection,onSnapshot,doc,setDoc,getDocFromServer} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,EmailAuthProvider,reauthenticateWithCredential,updatePassword} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,EmailAuthProvider,reauthenticateWithCredential,updatePassword,sendPasswordResetEmail} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 const config={apiKey:'AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k',authDomain:'ecb-maintenance.firebaseapp.com',projectId:'ecb-maintenance',appId:'1:229926423123:web:a309c14c708fc886c62d4a6'};
 try {
  const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app);
@@ -929,6 +941,7 @@ try {
  let unsubProtocols=null,unsubDevices=null;
  const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubProtocols=null;unsubDevices=null;window.ECB_SAVE=null;window.ECB_SEND_SAVED_MAIL=null;window.ECB_RESET_SAVED_MAIL?.();};
  window.ECB_LOGIN=async(email,password)=>signInWithEmailAndPassword(auth,email,password);
+ window.ECB_PASSWORD_RESET=async()=>sendPasswordResetEmail(auth,'ecbmaintenanceapp@gmail.com');
  window.ECB_LOGOUT=async()=>signOut(auth);
  onAuthStateChanged(auth,user=>{
    teardown();
@@ -958,7 +971,7 @@ try {
    };
    user.getIdTokenResult().then(({claims})=>{
      if(auth.currentUser?.uid!==user.uid)return;
-     setAdminAccess(claims.ecbAdmin===true||user.email?.toLowerCase()==='u628a9b8002418e770775778dae8759cac10cb8ab032ad589@accounts.ecb.invalid');
+     setAdminAccess(claims.ecbAdmin===true||(user.email?.toLowerCase()==='ecbmaintenanceapp@gmail.com'&&user.emailVerified===true));
    }).catch(()=>setAdminAccess(false));
    window.ECB_ADMIN_API=async(route,method='GET',payload=null)=>{
      const signed=auth.currentUser;
