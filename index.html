@@ -595,8 +595,23 @@ async function saveProtocol(){
    if(JSON.stringify(p).length>900000)throw new Error('Fotos zu groß für Firestore (1-MB-Dokumentgrenze). Bitte weniger Bilder auswählen oder kleinere Fotos verwenden. Nichts wurde gespeichert.');
    const savedId=await window.ECB_SAVE(p);
    lastSavedMail={...p,id:savedId,__docId:savedId,__path:'artifacts/ecb-maintenance-live/public/data/protocols/'+savedId};
-   toast('Wartungsprotokoll sicher gespeichert. E-Mail-Versand ist freiwillig.');
+   toast('Wartungsprotokoll in Firebase bestätigt. Automatischer PDF-Versand startet …');
    goto('history');
+   // Original-PDF inklusive Fotos und Unterschrift erst nach bestätigter Cloud-Speicherung versenden.
+   // Der Cloudflare-Maildienst dedupliziert automatische Aufträge anhand des Protokollpfades.
+   try{
+     button.textContent='Versende PDF an pb@ecb-system.de …';
+     const pdfBase64=await pdfForManualMail(lastSavedMail);
+     const result=await window.ECB_SEND_SAVED_MAIL({
+       mode:'automatic',protocolId:savedId,sourcePath:lastSavedMail.__path,
+       recipient:'pb@ecb-system.de',pdfBase64
+     });
+     if(!result?.ok)throw Error('Versand wurde nicht bestätigt.');
+     lastSavedMail=null;showSavedMailBanner();
+     toast('Protokoll gespeichert und automatischer PDF-Versand bestätigt.');
+   }catch(mailError){
+     alert('Das Wartungsprotokoll wurde in Firebase gespeichert. Der automatische E-Mail-Versand ist nicht bestätigt: '+(mailError.message||mailError)+'. Bitte zuerst die Versandhistorie prüfen. Anschließend kann das PDF aus „Protokolle“ manuell gesendet werden – ohne die Wartung erneut zu speichern.');
+   }
  }catch(e){console.error(e);alert('Speichern fehlgeschlagen. Es wurde kein erfolgreiches Speichern bestätigt.\n'+(e.message||e));}
  finally{saveInProgress=false;button.disabled=false;button.textContent='✓ Protokoll in Firebase speichern';}
 }
