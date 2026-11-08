@@ -371,11 +371,40 @@ function humanDate(v){
   let d=new Date(v);return isNaN(d.getTime())?String(v):d.toLocaleDateString('de-DE');
 }
 function dateValue(p){
-  if(p.timestamp&&typeof p.timestamp.toDate==='function')return p.timestamp.toDate().getTime();
-  if(p.timestamp?.seconds)return p.timestamp.seconds*1000;
-  const d=String(p.date||''); const m=d.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-  if(m)return new Date(Number(m[3]),Number(m[2])-1,Number(m[1])).getTime();
-  const n=Date.parse(d);return Number.isFinite(n)?n:0;
+  // Original ECB-Wartungsprotokolle speichern timestamp als Unix-Millisekunden
+  // und date etwa als "8.11.2026, 14:30 Uhr (Nachträglich erfasst)".
+  const stamp=p?.timestamp;
+  if(stamp&&typeof stamp.toDate==='function'){
+    const n=stamp.toDate().getTime();if(Number.isFinite(n)&&n>0)return n;
+  }
+  if(stamp&&typeof stamp==='object'&&Number.isFinite(Number(stamp.seconds))){
+    const n=Number(stamp.seconds)*1000+(Number(stamp.nanoseconds)||0)/1e6;
+    if(Number.isFinite(n)&&n>0)return n;
+  }
+  if(typeof stamp==='number'||(typeof stamp==='string'&&/^\d{10,13}$/.test(stamp.trim()))){
+    const n=Number(stamp);
+    const millis=n<1e11?n*1000:n;
+    if(Number.isFinite(millis)&&millis>0&&millis<8.64e15)return millis;
+  }
+  const raw=p?.date;
+  if(raw&&typeof raw.toDate==='function'){
+    const n=raw.toDate().getTime();if(Number.isFinite(n)&&n>0)return n;
+  }
+  if(raw&&typeof raw==='object'&&Number.isFinite(Number(raw.seconds))){
+    const n=Number(raw.seconds)*1000;if(Number.isFinite(n)&&n>0)return n;
+  }
+  const d=String(raw??'').trim();
+  const m=d.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\D|$)/);
+  if(m){
+    const day=Number(m[1]),month=Number(m[2]),year=Number(m[3]);
+    const t=d.match(/,\s*(\d{1,2}):(\d{2})/);
+    const hour=t?Number(t[1]):0,minute=t?Number(t[2]):0;
+    const parsed=new Date(year,month-1,day,hour,minute);
+    if(parsed.getFullYear()===year&&parsed.getMonth()===month-1&&parsed.getDate()===day&&hour<24&&minute<60)return parsed.getTime();
+    return 0;
+  }
+  const n=Date.parse(d);
+  return Number.isFinite(n)&&n>0?n:0;
 }
 function keyFor(p){
   const x=(p.machine+' '+p.category+' '+(p.type||'')).toLowerCase();
@@ -394,12 +423,20 @@ function cloudState(label,details,error=false){
  if(error)document.getElementById('cloud-message-text').textContent=details;
 }
 function dueFor(name,which){
- const items=history.filter(x=>x.machine===name&&keyFor(x)===which).sort((a,b)=>dateValue(b)-dateValue(a));
+ const canonical=x=>String(x||'').trim().replace(/\s+/g,' ').toLowerCase();
+ const items=history.filter(x=>keyFor(x)===which&&(which==='comp'||which==='annual'||canonical(x.machine)===canonical(name)));
  if(!items.length)return {name,state:'Noch keine dokumentierte Wartung',date:null,last:null};
- const last=dateValue(items[0]);if(!last)return {name,state:'Datum nicht lesbar',date:null,last:null};
- const due=new Date(last+(which==='annual'?180:14)*86400000);
- const days=Math.ceil((due-Date.now())/86400000);
- return {name,state:days<0?'Überfällig':days<=3?'Bald fällig':'Im Zeitplan',date:due,last:items[0]};
+ // Ein älteres Protokoll mit gültigem Datum darf nicht von einem undatierten Eintrag verdeckt werden.
+ const dated=items.filter(x=>dateValue(x)>0).sort((a,b)=>dateValue(b)-dateValue(a));
+ if(!dated.length)return {name,state:'Datum nicht lesbar',date:null,last:items[0]};
+ const latest=dated[0];
+ const last=new Date(dateValue(latest));
+ const due=new Date(last.getFullYear(),last.getMonth(),last.getDate());
+ due.setDate(due.getDate()+(which==='annual'?180:14));
+ const today=new Date();
+ const calendarDays=d=>Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/86400000;
+ const days=calendarDays(due)-calendarDays(today);
+ return {name,state:days<0?'Überfällig':days<=3?'Bald fällig':'Im Zeitplan',date:due,last:latest};
 }
 function renderDashboard(){
  const rows=[...machines.wash.names.map(n=>dueFor(n,'wash')),...machines.dry.names.map(n=>dueFor(n,'dry')),dueFor(machines.comp.names[0],'comp'),dueFor(machines.annual.names[0],'annual')];
@@ -412,7 +449,7 @@ function renderDashboard(){
 }
 function renderCalendar(){
  const rows=[...machines.wash.names.map(n=>dueFor(n,'wash')),...machines.dry.names.map(n=>dueFor(n,'dry')),dueFor(machines.comp.names[0],'comp'),dueFor(machines.annual.names[0],'annual')];
- document.getElementById('calendar-cards').innerHTML=!cloudProtocolsReady?'<p class="muted">Firebase wird geladen …</p>':rows.map(x=>`<div class="calitem"><div style="display:flex;justify-content:space-between;gap:10px"><b>${esc(x.name)}</b><span class="status ${x.state==='Überfällig'?'danger':x.state==='Bald fällig'?'warn':''}">${esc(x.state)}</span></div><div class="big">${x.date?x.date.toLocaleDateString('de-DE'):'–'}</div><small>${x.last?'Letzte Wartung: '+esc(x.last.date):'Keine letzte Wartung gespeichert'}</small></div>`).join('');
+ document.getElementById('calendar-cards').innerHTML=!cloudProtocolsReady?'<p class="muted">Firebase wird geladen …</p>':rows.map(x=>`<div class="calitem"><div style="display:flex;justify-content:space-between;gap:10px"><b>${esc(x.name)}</b><span class="status ${x.state==='Überfällig'?'danger':x.state==='Bald fällig'?'warn':''}">${esc(x.state)}</span></div><div class="big">${x.date?x.date.toLocaleDateString('de-DE'):'–'}</div><small>${x.last?(x.date?'Letzte Wartung: ':'Wartung vorhanden – Datum prüfen: ')+esc(x.last.date):'Keine letzte Wartung dokumentiert'}</small></div>`).join('');
 }
 function normalizeDguv(id,x){return {id,raw:x,name:x.name||x.deviceName||x.bezeichnung||x.device||'Unbenanntes Gerät',inventory:x.inventoryNumber||x.serialNumber||x.inventarNr||x.inventarnummer||'–',location:x.location||x.standort||'–',due:humanDate(x.nextDue||x.nextInspection||x.dueDate||x.nextDate||x.naechstePruefung),status:x.status||'Gespeichert'};}
 function renderDguv(){
