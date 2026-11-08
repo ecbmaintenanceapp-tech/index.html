@@ -303,7 +303,7 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
   <h2>Dokumente und Wartungsprotokolle</h2>
   <p>Alle gespeicherten Protokolle mit Fotos und Unterschriften. Vor dem Löschen immer eine Sicherung erstellen.</p>
   <div class="ecb-admin-actions"><button class="button primary" id="ecb-admin-export" type="button">Gesamtsicherung herunterladen</button><label class="button subtle" style="cursor:pointer">Backup importieren (JSON)<input id="ecb-admin-import-input" type="file" accept=".json,application/json" style="display:none"></label><a class="button subtle" target="_blank" rel="noopener noreferrer" href="https://console.firebase.google.com/project/ecb-maintenance/firestore/databases/-default-/data">Firebase-Dokumente verwalten ↗</a></div>
-  <div class="ecb-admin-warning">Ein endgültiger Löschvorgang erfolgt vorerst nur in der geschützten Firebase-Konsole. Beim Löschen eines Protokolls können auch Bilder und Unterschriften gelöscht werden.</div>
+  <p id="ecb-import-status" class="muted" role="status">Backup-Import: nur neue Datensätze, keine Überschreibung vorhandener Protokolle.</p><div class="ecb-admin-warning">Ein endgültiger Löschvorgang erfolgt vorerst nur in der geschützten Firebase-Konsole. Beim Löschen eines Protokolls können auch Bilder und Unterschriften gelöscht werden.</div>
   <div class="field" style="margin-top:17px"><label for="ecb-admin-filter">Protokolle suchen</label><input type="search" class="search" id="ecb-admin-filter" placeholder="Protokollnummer, Maschine, Techniker"></div>
   <p class="muted" id="ecb-admin-count-note"></p><div id="ecb-admin-list"></div>
  </div>
@@ -1063,6 +1063,38 @@ document.getElementById('ecb-admin-export').addEventListener('click',()=>{
  const a=document.createElement('a');a.href=url;a.download='ECB_Wartung_Gesamtsicherung_'+new Date().toISOString().slice(0,10)+'.json';document.body.append(a);a.click();a.remove();
  setTimeout(()=>URL.revokeObjectURL(url),1500);
  toast('Gesamtsicherung heruntergeladen.');
+});
+document.getElementById('ecb-admin-import-input').addEventListener('change',async e=>{
+ const input=e.target,file=input.files?.[0],feedback=document.getElementById('ecb-import-status');
+ if(!file)return;
+ try{
+  if(!window.ECB_ADMIN_ACCESS||!window.ECB_IMPORT_BACKUP_ITEM)throw Error('Bitte als Administrator anmelden.');
+  if(!cloudProtocolsReady||!cloudDguvReady)throw Error('Zuerst muss die Cloud-Synchronisierung vollständig sein.');
+  if(file.size>25*1024*1024)throw Error('Backup größer als 25 MB. Bitte Datei aufteilen.');
+  const payload=JSON.parse(await file.text());
+  const ps=Array.isArray(payload.protocols)?payload.protocols:[];
+  const ds=Array.isArray(payload.dguvDevices)?payload.dguvDevices:(Array.isArray(payload.dguv_devices)?payload.dguv_devices:[]);
+  const unique=(records)=>[...new Map(records.filter(p=>p&&typeof p==='object'&&typeof p.id==='string').map(p=>[p.id,p])).values()];
+  const candidates=unique(ps).filter(p=>!history.some(existing=>existing.id===p.id));
+  const devicesToImport=unique(ds).filter(p=>!dguv.some(existing=>existing.id===p.id));
+  if(!candidates.length&&!devicesToImport.length){feedback.textContent='Keine neuen Datensätze im Backup. Vorhandene Einträge wurden nicht verändert.';return;}
+  const accepted=confirm('Backup geprüft: '+candidates.length+' neue Wartungsprotokolle und '+devicesToImport.length+' neue DGUV-Geräte. Nur fehlende Datensätze werden in Firebase eingefügt, vorhandene nicht überschrieben. Benutzer und Passwörter werden NICHT importiert. Import starten?');
+  if(!accepted){feedback.textContent='Import abgebrochen – keine Daten verändert.';return;}
+  input.disabled=true;let created=0,skipped=0,errors=[];
+  const total=candidates.length+devicesToImport.length;let processed=0;
+  for(const [type,items] of [['protocol',candidates],['dguv',devicesToImport]]){
+   for(const item of items){
+    feedback.textContent='Import: '+processed+' von '+total+' geprüft · '+created+' hinzugefügt · '+errors.length+' Fehler';
+    try{
+     const outcome=await window.ECB_IMPORT_BACKUP_ITEM(type,item);
+     if(outcome.created)created++;else skipped++;
+    }catch(err){errors.push(String(item.id||'Unbekannt')+': '+String(err.message||err).slice(0,110));}
+    processed++;
+   }
+  }
+  feedback.textContent='Import beendet: '+created+' hinzugefügt, '+skipped+' bereits vorhanden, '+errors.length+' Fehler.'+(errors.length?' Fehler: '+errors.slice(0,3).join(' | '):'')+' Die Originaldatensätze wurden nicht überschrieben.';
+ }catch(err){feedback.textContent='Backup konnte nicht importiert werden: '+(err.message||err);}
+ finally{input.disabled=false;input.value='';}
 });
 document.getElementById('ecb-my-account').addEventListener('click',()=>goto('account'));
 document.getElementById('ecb-password-form').addEventListener('submit',async event=>{
