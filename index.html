@@ -1561,7 +1561,7 @@ try {
      if(JSON.stringify(baseRecord).length>850000)throw Error('Das Protokoll ohne Fotos ist zu groß.');
      if(totalImageChars+JSON.stringify(baseRecord).length>8800000)
        throw Error('Die gesamte Datenmenge überschreitet das Firebase-Limit für eine atomare Speicherung.');
-     const counterRef=doc(protocols,'__ecb_serial_counter_v1__');
+     const counterRef=doc(protocols,'ecb_serial_counter_v1');
      const observedMax=preserveId?0:Math.max(0,Number(window.ECB_MAX_PROTOCOL_NUMBER?.()||0));
      onProgress('Eindeutige Protokollnummer wird in Firebase vergeben …');
      const number=await runTransaction(db,async tx=>{
